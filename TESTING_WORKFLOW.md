@@ -30,8 +30,7 @@ flutter build web --release
 ls build/web/
 
 # 本地伺服器測試
-cd build/web
-python -m http.server 8000
+python3 -m http.server 8000 --directory build/web
 ```
 
 ## 功能測試清單
