@@ -39,10 +39,13 @@ class _CalculatorPageState extends State<CalculatorPage> {
   final TextEditingController currentLightWattController = TextEditingController();
   final TextEditingController lightCountController = TextEditingController();
   
+  // 第二步：AI燈管相關 - 輸入控制器
+  final TextEditingController drivewayLightController = TextEditingController();
+  final TextEditingController parkingLightController = TextEditingController();
+  
   // 第二步：燈管電力試算 - 唯讀結果控制器
   final TextEditingController monthlyConsumptionBeforeController = TextEditingController();
   final TextEditingController aiLightWattController = TextEditingController();
-  final TextEditingController aiLightCountController = TextEditingController();
   final TextEditingController monthlyConsumptionAfterController = TextEditingController();
   final TextEditingController savingUnitsController = TextEditingController();
   final TextEditingController savingPercentController = TextEditingController();
@@ -52,6 +55,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
   // 第三步：攤提時間試算 - 輸入控制器
   final TextEditingController rentalPriceController = TextEditingController();
   final TextEditingController buyoutPriceController = TextEditingController();
+  final TextEditingController step3LightCountController = TextEditingController();
   
   // 第三步：攤提時間試算 - 唯讀結果控制器
   final TextEditingController monthlyRentalController = TextEditingController();
@@ -85,6 +89,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
   static const double nonSummerUnitPrice = 3.87;
   static const double aiLightWatt = 12.0;
   
+  // AI燈管消耗瓦數常數
+  static const double drivewayLightWatt = 82.12;
+  static const double parkingLightWatt = 2.95;
+  
   // 背景計算暫存
   double backgroundBasicElectricity = 0.0;
   double backgroundFlowElectricity = 0.0;
@@ -113,9 +121,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
     totalElectricityController.dispose();
     currentLightWattController.dispose();
     lightCountController.dispose();
+    drivewayLightController.dispose();
+    parkingLightController.dispose();
     monthlyConsumptionBeforeController.dispose();
     aiLightWattController.dispose();
-    aiLightCountController.dispose();
     monthlyConsumptionAfterController.dispose();
     savingUnitsController.dispose();
     savingPercentController.dispose();
@@ -123,6 +132,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
     totalSavingController.dispose();
     rentalPriceController.dispose();
     buyoutPriceController.dispose();
+    step3LightCountController.dispose();
     monthlyRentalController.dispose();
     buyoutTotalController.dispose();
     totalMonthlySavingController.dispose();
@@ -140,12 +150,6 @@ class _CalculatorPageState extends State<CalculatorPage> {
     }
   }
 
-  // 同步燈管數量到AI燈管數量
-  void _syncLightCount() {
-    setState(() {
-      aiLightCountController.text = lightCountController.text;
-    });
-  }
 
   double _roundUpFirstDecimal(double value) {
     double firstDecimal = (value * 10) % 10;
@@ -176,6 +180,26 @@ class _CalculatorPageState extends State<CalculatorPage> {
       }
     }
 
+    // 檢查車道燈數量
+    if (drivewayLightController.text.isEmpty) {
+      errors.add('請填寫車道燈數量');
+    } else {
+      double? value = double.tryParse(drivewayLightController.text);
+      if (value == null || value <= 0) {
+        errors.add('車道燈數量必須為正整數');
+      }
+    }
+
+    // 檢查車位燈數量
+    if (parkingLightController.text.isEmpty) {
+      errors.add('請填寫車位燈數量');
+    } else {
+      double? value = double.tryParse(parkingLightController.text);
+      if (value == null || value <= 0) {
+        errors.add('車位燈數量必須為正整數');
+      }
+    }
+
     // 檢查第二步是否已填寫（選填）
     bool hasStep2Data = contractCapacityController.text.isNotEmpty && 
                        maxDemandController.text.isNotEmpty && 
@@ -199,18 +223,20 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
     // 檢查第三步是否已填寫（選填）
     bool hasStep3Data = false;
-    if (pricingMethod == '租賃' && rentalPriceController.text.isNotEmpty) {
-      hasStep3Data = true;
-      double? value = double.tryParse(rentalPriceController.text);
-      if (value == null || value <= 0) {
-        errors.add('租賃價格必須為正數');
+    if (step3LightCountController.text.isNotEmpty) {
+      if (pricingMethod == '租賃' && rentalPriceController.text.isNotEmpty) {
+        hasStep3Data = true;
+        double? value = double.tryParse(rentalPriceController.text);
+        if (value == null || value <= 0) {
+          errors.add('租賃價格必須為正數');
+        }
       }
-    }
-    if (pricingMethod == '買斷' && buyoutPriceController.text.isNotEmpty) {
-      hasStep3Data = true;
-      double? value = double.tryParse(buyoutPriceController.text);
-      if (value == null || value <= 0) {
-        errors.add('買斷價格必須為正數');
+      if (pricingMethod == '買斷' && buyoutPriceController.text.isNotEmpty) {
+        hasStep3Data = true;
+        double? value = double.tryParse(buyoutPriceController.text);
+        if (value == null || value <= 0) {
+          errors.add('買斷價格必須為正數');
+        }
       }
     }
 
@@ -228,7 +254,11 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
     // 第一步計算（AI燈管計算，始終執行）
     double monthlyConsumptionBefore = currentLightWatt * lightCount * 24 * 30 / 1000;
-    double monthlyConsumptionAfter = aiLightWatt * lightCount * 8 * 30 / 1000;
+    
+    // AI燈管月耗電：車道燈和車位燈分別計算
+    double drivewayCount = double.parse(drivewayLightController.text);
+    double parkingCount = double.parse(parkingLightController.text);
+    double monthlyConsumptionAfter = (drivewayLightWatt * drivewayCount + parkingLightWatt * parkingCount) * 30 / 1000;
     double savingUnits = monthlyConsumptionBefore - monthlyConsumptionAfter;
     backgroundSavingUnits = savingUnits;
     double savingPercent = (savingUnits / monthlyConsumptionBefore) * 100;
@@ -280,15 +310,21 @@ class _CalculatorPageState extends State<CalculatorPage> {
     double totalMonthlySaving = 0.0;
     double paybackPeriod = 0.0;
 
-    if (hasStep3Data && hasStep2Data) {
+    if (hasStep3Data) {
+      double step3LightCount = double.parse(step3LightCountController.text);
+      
       if (pricingMethod == '租賃' && rentalPriceController.text.isNotEmpty) {
         double rentalPrice = double.parse(rentalPriceController.text);
-        monthlyRental = rentalPrice * lightCount;
-        totalMonthlySaving = totalSaving - monthlyRental;
+        monthlyRental = rentalPrice * step3LightCount;
+        if (hasStep2Data) {
+          totalMonthlySaving = totalSaving - monthlyRental;
+        }
       } else if (pricingMethod == '買斷' && buyoutPriceController.text.isNotEmpty) {
         double buyoutPrice = double.parse(buyoutPriceController.text);
-        buyoutTotal = buyoutPrice * lightCount;
-        paybackPeriod = buyoutTotal / totalSaving;
+        buyoutTotal = buyoutPrice * step3LightCount;
+        if (hasStep2Data) {
+          paybackPeriod = buyoutTotal / totalSaving;
+        }
       }
     }
 
@@ -300,7 +336,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
       // 更新各步驟計算狀態
       step1Calculated = true; // 第一步始終計算
       step2Calculated = hasStep2Data;
-      step3Calculated = hasStep3Data && hasStep2Data;
+      step3Calculated = hasStep3Data;
       
       // 生成狀態訊息
       List<String> successSteps = [];
@@ -333,26 +369,33 @@ class _CalculatorPageState extends State<CalculatorPage> {
         totalSavingController.text = '電費帳單無填寫';
       }
 
-      // 第三步結果（攤提時間，條件性顯示）
-      if (hasStep3Data && hasStep2Data) {
+      // 第三步基本計算（只需第三步數據）
+      if (hasStep3Data) {
         if (pricingMethod == '租賃') {
           monthlyRentalController.text = _roundUpFirstDecimal(monthlyRental).toStringAsFixed(1);
-          totalMonthlySavingController.text = _roundUpFirstDecimal(totalMonthlySaving).toStringAsFixed(1);
         } else {
           buyoutTotalController.text = _roundUpFirstDecimal(buyoutTotal).toStringAsFixed(1);
-          paybackPeriodController.text = _roundUpFirstDecimal(paybackPeriod).toStringAsFixed(1);
         }
       } else {
-        // 清空第三步相關結果
         monthlyRentalController.text = '';
         buyoutTotalController.text = '';
-        if (!hasStep2Data) {
+      }
+
+      // 第三步複合計算（需要第三步+第二步數據）
+      if (hasStep3Data) {
+        if (hasStep2Data) {
+          if (pricingMethod == '租賃') {
+            totalMonthlySavingController.text = _roundUpFirstDecimal(totalMonthlySaving).toStringAsFixed(1);
+          } else {
+            paybackPeriodController.text = _roundUpFirstDecimal(paybackPeriod).toStringAsFixed(1);
+          }
+        } else {
           totalMonthlySavingController.text = '電費帳單無填寫';
           paybackPeriodController.text = '電費帳單無填寫';
-        } else {
-          totalMonthlySavingController.text = '';
-          paybackPeriodController.text = '';
         }
+      } else {
+        totalMonthlySavingController.text = '';
+        paybackPeriodController.text = '';
       }
     });
   }
@@ -395,10 +438,12 @@ class _CalculatorPageState extends State<CalculatorPage> {
     List<String> missing = [];
     
     // 第一步相關欄位檢查
-    if (['每月耗電(度)', 'AI燈管每月耗電(度)', '可節電（度）', '可節電（%）'].contains(fieldName)) {
+    if (['每月耗電(度)', 'AI燈管每月耗電(度)', '可節電（度）', '可節電（%）', '車道燈數量', '車位燈數量'].contains(fieldName)) {
       // 首先檢查相關欄位是否已填寫
       if (currentLightWattController.text.isEmpty) missing.add('目前使用燈管瓦數未填寫');
       if (lightCountController.text.isEmpty) missing.add('燈管數量未填寫');
+      if (drivewayLightController.text.isEmpty) missing.add('車道燈數量未填寫');
+      if (parkingLightController.text.isEmpty) missing.add('車位燈數量未填寫');
       
       // 如果有欄位未填寫，直接返回
       if (missing.isNotEmpty) return missing;
@@ -469,10 +514,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
       return missing;
     }
     
-    // 第三步基本欄位檢查（只需要基本數據填寫）
+    // 第三步基本欄位檢查（只需要基本數據填寫，可獨立顯示結果）
     if (['每月燈管租賃費用', '買斷總費用'].contains(fieldName)) {
       // 檢查燈管數量
-      if (lightCountController.text.isEmpty) missing.add('燈管數量未填寫');
+      if (step3LightCountController.text.isEmpty) missing.add('第三步燈管數量未填寫');
       
       // 檢查對應的價格欄位
       if (fieldName == '每月燈管租賃費用' && rentalPriceController.text.isEmpty) {
@@ -484,28 +529,22 @@ class _CalculatorPageState extends State<CalculatorPage> {
       // 如果有欄位未填寫，直接返回
       if (missing.isNotEmpty) return missing;
       
-      // 所有欄位都填寫了，才檢查是否已計算
-      if (!isCalculated || needsRecalculation) {
-        missing.add('請先點擊「計算結果」按鈕進行計算');
-        return missing;
-      }
-      
-      // 檢查第三步是否計算成功
-      if (!step3Calculated) {
-        missing.add('第三步未計算成功');
-      }
+      // 這兩個欄位只需基本數據即可獨立顯示結果，不受整體計算狀態影響
       
       return missing;
     }
     
     // 第三步相關欄位檢查（需要第一步、第二步和第三步都計算成功）
-    if (['每月總共可節省費用', '多久時間攤提(月)'].contains(fieldName)) {
+    if (['每月總共可節省費用', '多久時間攤提(月)', '燈管數量'].contains(fieldName)) {
       // 首先檢查相關欄位是否已填寫
       if (contractCapacityController.text.isEmpty) missing.add('契約容量未填寫');
       if (maxDemandController.text.isEmpty) missing.add('最高需量未填寫');
       if (billingUnitsController.text.isEmpty) missing.add('計費度數未填寫');
       if (currentLightWattController.text.isEmpty) missing.add('目前使用燈管瓦數未填寫');
       if (lightCountController.text.isEmpty) missing.add('燈管數量未填寫');
+      if (drivewayLightController.text.isEmpty) missing.add('車道燈數量未填寫');
+      if (parkingLightController.text.isEmpty) missing.add('車位燈數量未填寫');
+      if (step3LightCountController.text.isEmpty) missing.add('第三步燈管數量未填寫');
       
       // 檢查第三步自己的數據
       if (pricingMethod == '租賃' && rentalPriceController.text.isEmpty) {
@@ -640,20 +679,49 @@ class _CalculatorPageState extends State<CalculatorPage> {
 =$currentLightWatt*${lightCount.toStringAsFixed(0)}*24*30/1000=${_roundUpFirstDecimal(result).toStringAsFixed(1)}度''';
 
       case 'AI燈管每月耗電(度)':
-        double result = aiLightWatt * lightCount * 8 * 30 / 1000;
-        return '''燈管瓦數*燈管數量*8小時*30天/1000
-＝${aiLightWatt.toStringAsFixed(0)}*${lightCount.toStringAsFixed(0)}*8*30/1000=${_roundUpFirstDecimal(result).toStringAsFixed(1)}度''';
+        double drivewayCount = double.tryParse(drivewayLightController.text) ?? 0;
+        double parkingCount = double.tryParse(parkingLightController.text) ?? 0;
+        double drivewayTotal = drivewayLightWatt * drivewayCount;
+        double parkingTotal = parkingLightWatt * parkingCount;
+        double result = (drivewayTotal + parkingTotal) * 30 / 1000;
+        return '''車道燈：
+尖峰7小時:感應前亮30%，感應後亮70%
+離峰11小時:感應前亮20%，感應後亮60%
+凌晨6小時:感應前0%，感應後50%
+車道燈平均每日消耗瓦數:${drivewayLightWatt}W
+故${drivewayLightWatt}W*${drivewayCount.toStringAsFixed(0)}支燈管=${drivewayTotal}W
+
+車位燈：
+全天候:感應前亮0%，感應後亮50%
+車位燈平均消耗瓦數:${parkingLightWatt}W
+故${parkingLightWatt}W*${parkingCount.toStringAsFixed(0)}支燈管=${parkingTotal}W
+
+(${drivewayTotal}+${parkingTotal})*30天/1000千瓦=${_roundUpFirstDecimal(result).toStringAsFixed(1)}度''';
+
+      case '車道燈數量':
+        return '''尖峰7小時:感應前亮30%，感應後亮70%
+離峰11小時:感應前亮20%，感應後亮60%
+凌晨6小時:感應前0%，感應後50%
+車道燈平均每日消耗瓦數:${drivewayLightWatt}W''';
+
+      case '車位燈數量':
+        return '''全天候:感應前亮0%，感應後亮50%
+車位燈平均消耗瓦數:${parkingLightWatt}W''';
 
       case '可節電（度）':
         double before = currentLightWatt * lightCount * 24 * 30 / 1000;
-        double after = aiLightWatt * lightCount * 8 * 30 / 1000;
+        double drivewayCount = double.tryParse(drivewayLightController.text) ?? 0;
+        double parkingCount = double.tryParse(parkingLightController.text) ?? 0;
+        double after = (drivewayLightWatt * drivewayCount + parkingLightWatt * parkingCount) * 30 / 1000;
         double saving = before - after;
         return '''更換前使用度數-更換後使用度數=共可節電(度)
 ＝${_roundUpFirstDecimal(before).toStringAsFixed(1)}度-${_roundUpFirstDecimal(after).toStringAsFixed(1)}度=${_roundUpFirstDecimal(saving).toStringAsFixed(1)}度''';
 
       case '可節電（%）':
         double before = currentLightWatt * lightCount * 24 * 30 / 1000;
-        double after = aiLightWatt * lightCount * 8 * 30 / 1000;
+        double drivewayCount = double.tryParse(drivewayLightController.text) ?? 0;
+        double parkingCount = double.tryParse(parkingLightController.text) ?? 0;
+        double after = (drivewayLightWatt * drivewayCount + parkingLightWatt * parkingCount) * 30 / 1000;
         double saving = before - after;
         double percent = (saving / before) * 100;
         return '''可節電(度)/更換前使用度數*100%
@@ -681,7 +749,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
         double rentalFee = 0;
         if (pricingMethod == '租賃') {
           double rentalPrice = double.tryParse(rentalPriceController.text) ?? 0;
-          rentalFee = rentalPrice * lightCount;
+          double step3LightCount = double.tryParse(step3LightCountController.text) ?? 0;
+          rentalFee = rentalPrice * step3LightCount;
         }
         double netSaving = totalSaving - rentalFee;
         return '''共節省電費-每月燈管租賃費用
@@ -689,22 +758,25 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
       case '每月燈管租賃費用':
         double rentalPrice = double.tryParse(rentalPriceController.text) ?? 0;
-        double totalRental = rentalPrice * lightCount;
+        double step3LightCount = double.tryParse(step3LightCountController.text) ?? 0;
+        double totalRental = rentalPrice * step3LightCount;
         return '''每支燈管租賃費*燈管支數
-=${rentalPrice.toStringAsFixed(0)}*${lightCount.toStringAsFixed(0)}=${_roundUpFirstDecimal(totalRental).toStringAsFixed(1)}元''';
+=${rentalPrice.toStringAsFixed(0)}*${step3LightCount.toStringAsFixed(0)}=${_roundUpFirstDecimal(totalRental).toStringAsFixed(1)}元''';
 
       case '買斷總費用':
         double buyoutPrice = double.tryParse(buyoutPriceController.text) ?? 0;
-        double totalBuyout = buyoutPrice * lightCount;
+        double step3LightCount = double.tryParse(step3LightCountController.text) ?? 0;
+        double totalBuyout = buyoutPrice * step3LightCount;
         return '''每支燈管買斷費*燈管支數
-=${buyoutPrice.toStringAsFixed(0)}*${lightCount.toStringAsFixed(0)}=${_roundUpFirstDecimal(totalBuyout).toStringAsFixed(1)}元''';
+=${buyoutPrice.toStringAsFixed(0)}*${step3LightCount.toStringAsFixed(0)}=${_roundUpFirstDecimal(totalBuyout).toStringAsFixed(1)}元''';
 
       case '多久時間攤提(月)':
         double totalSaving = backgroundTotalSaving;
         double buyoutTotal = 0;
         if (pricingMethod == '買斷') {
           double buyoutPrice = double.tryParse(buyoutPriceController.text) ?? 0;
-          buyoutTotal = buyoutPrice * lightCount;
+          double step3LightCount = double.tryParse(step3LightCountController.text) ?? 0;
+          buyoutTotal = buyoutPrice * step3LightCount;
         }
         double paybackPeriod = buyoutTotal / totalSaving;
         return '''總費用/共節省電費
@@ -1027,7 +1099,6 @@ class _CalculatorPageState extends State<CalculatorPage> {
                                               SizedBox(height: 12),
                                               _buildInputFieldWithUnit('燈管數量', lightCountController, '支', integerOnly: true, onChanged: (value) {
                                                 _updateNotification();
-                                                _syncLightCount();
                                               }),
                                               SizedBox(height: 12),
                                               _buildReadOnlyFieldWithUnit('每月耗電(度)', monthlyConsumptionBeforeController, '度', hasInfo: true),
@@ -1070,7 +1141,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
                                                   children: [
                                                     _buildReadOnlyFieldWithUnit('目前使用AI燈管瓦數', aiLightWattController, 'W'),
                                                     SizedBox(height: 12),
-                                                    _buildReadOnlyFieldWithUnit('AI燈管數量', aiLightCountController, '支'),
+                                                    _buildInputFieldWithUnit('車道燈數量', drivewayLightController, '支', integerOnly: true, hasInfo: true, onChanged: (_) => _updateNotification()),
+                                                    SizedBox(height: 12),
+                                                    _buildInputFieldWithUnit('車位燈數量', parkingLightController, '支', integerOnly: true, hasInfo: true, onChanged: (_) => _updateNotification()),
                                                     SizedBox(height: 12),
                                                     _buildReadOnlyFieldWithUnit('AI燈管每月耗電(度)', monthlyConsumptionAfterController, '度', hasInfo: true),
                                                   ],
@@ -1286,7 +1359,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           // 固定顯示燈管數量（無論租賃或買斷）
-                                          _buildReadOnlyFieldWithUnit('燈管數量', aiLightCountController, '支'),
+                                          _buildInputFieldWithUnit('燈管數量', step3LightCountController, '支', integerOnly: true, onChanged: (_) => _updateNotification()),
                                           SizedBox(height: 12),
                                           // 根據選擇顯示對應欄位
                                           if (pricingMethod == '租賃') ...[
@@ -1347,7 +1420,6 @@ class _CalculatorPageState extends State<CalculatorPage> {
                               SizedBox(height: 12),
                               _buildInputFieldWithUnit('燈管數量', lightCountController, '支', integerOnly: true, onChanged: (value) {
                                 _updateNotification();
-                                _syncLightCount();
                               }),
                               SizedBox(height: 12),
                               _buildReadOnlyFieldWithUnit('每月耗電(度)', monthlyConsumptionBeforeController, '度', hasInfo: true),
@@ -1374,7 +1446,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
                             children: [
                               _buildReadOnlyFieldWithUnit('目前使用AI燈管瓦數', aiLightWattController, 'W'),
                               SizedBox(height: 12),
-                              _buildReadOnlyFieldWithUnit('AI燈管數量', aiLightCountController, '支'),
+                              _buildInputFieldWithUnit('車道燈數量', drivewayLightController, '支', integerOnly: true, hasInfo: true, onChanged: (_) => _updateNotification()),
+                              SizedBox(height: 12),
+                              _buildInputFieldWithUnit('車位燈數量', parkingLightController, '支', integerOnly: true, hasInfo: true, onChanged: (_) => _updateNotification()),
                               SizedBox(height: 12),
                               _buildReadOnlyFieldWithUnit('AI燈管每月耗電(度)', monthlyConsumptionAfterController, '度', hasInfo: true),
                               SizedBox(height: 12),
@@ -1546,7 +1620,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // 固定顯示燈管數量（無論租賃或買斷）
-                              _buildReadOnlyFieldWithUnit('燈管數量', aiLightCountController, '支'),
+                              _buildInputFieldWithUnit('燈管數量', step3LightCountController, '支', integerOnly: true, onChanged: (_) => _updateNotification()),
                               SizedBox(height: 12),
                               // 根據選擇顯示對應欄位
                               if (pricingMethod == '租賃') ...[

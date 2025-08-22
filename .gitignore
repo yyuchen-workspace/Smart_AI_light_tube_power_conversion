@@ -5,6 +5,10 @@ project_build.md
 claude.md
 CLAUDE.md
 
+# Version documentation files (keep local only)
+prd/版本*.md
+prd/VERSION_*.md
+
 # Flutter build files
 .dart_tool/
 build/
