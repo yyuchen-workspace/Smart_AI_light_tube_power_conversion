@@ -4,12 +4,10 @@ test_process.md
 project_build.md
 claude.md
 CLAUDE.md
-DEPLOYMENT.md
-GITHUB_DEPLOYMENT.md
-TESTING_WORKFLOW.md
 
-# Version and project documentation files (keep local only)
-prd/
+# Version documentation files (keep local only)
+prd/版本*.md
+prd/VERSION_*.md
 
 # Flutter build files
 .dart_tool/

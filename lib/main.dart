@@ -1156,9 +1156,16 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title:
+        title: Column(
+          children: [
             Text('智慧AI燈管電力換算', style: TextStyle(fontSize: isDesktop ? 24 : 20)),
+            Text('電費計算方式:台電於113年10月16起電費計算方式', 
+                 style: TextStyle(fontSize: isDesktop ? 18 : 16, 
+                                fontWeight: FontWeight.normal)),
+          ],
+        ),
         centerTitle: true,
+        toolbarHeight: 85, // 稍微增加AppBar高度以適應更大的副標題
       ),
       body: Center(
         // 卡片置中
