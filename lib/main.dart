@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'widgets/charts/power_saving_chart.dart';
 import 'widgets/charts/electricity_cost_pie_chart.dart';
 import 'widgets/charts/payback_trend_chart.dart';
+import 'constants/electricity_pricing.dart';
+import 'utils/electricity_calculator.dart';
 
 void main() {
   runApp(MyApp());
@@ -99,17 +101,6 @@ class _CalculatorPageState extends State<CalculatorPage> {
   bool showElectricityCostPieChart = false; // 電費組成圓餅圖
   bool showPaybackTrendChart = false; // 攤提時間折線圖
 
-  // 電價常數
-  static const double summerCapacityPrice = 236.2;
-  static const double nonSummerCapacityPrice = 173.2;
-  static const double summerUnitPrice = 4.08;
-  static const double nonSummerUnitPrice = 3.87;
-  static const double aiLightWatt = 12.0;
-
-  // AI燈管消耗瓦數常數
-  static const double drivewayLightWatt = 82.12;
-  static const double parkingLightWatt = 2.95;
-
   // 背景計算暫存
   double backgroundBasicElectricity = 0.0;
   double backgroundFlowElectricity = 0.0;
@@ -121,7 +112,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
   void initState() {
     super.initState();
     statusController.text = '完成所有選項設定後點擊計算結果';
-    aiLightWattController.text = aiLightWatt.toString();
+    aiLightWattController.text = ElectricityPricing.aiLightWatt.toString();
 
     // 不再使用 addListener，改為在 TextField 中使用 onChanged
   }
@@ -168,11 +159,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
   }
 
   double _roundUpFirstDecimal(double value) {
-    double firstDecimal = (value * 10) % 10;
-    if (firstDecimal > 0) {
-      return (value * 10).floor() / 10 + 0.1;
-    }
-    return value;
+    return ElectricityCalculator.roundUpFirstDecimal(value);
   }
 
   void _calculateResults() {
@@ -267,7 +254,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
     double lightCount = double.parse(lightCountController.text);
 
     // 根據時間種類決定電價（為了計算節省電費）
-    double unitPrice = timeTypeSummer ? summerUnitPrice : nonSummerUnitPrice;
+    double unitPrice = ElectricityCalculator.getUnitPrice(timeTypeSummer);
 
     // 第一步計算（AI燈管計算，始終執行）
     double monthlyConsumptionBefore =
@@ -276,10 +263,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
     // AI燈管月耗電：車道燈和車位燈分別計算
     double drivewayCount = double.parse(drivewayLightController.text);
     double parkingCount = double.parse(parkingLightController.text);
-    double monthlyConsumptionAfter =
-        (drivewayLightWatt * drivewayCount + parkingLightWatt * parkingCount) *
-            30 /
-            1000;
+    double monthlyConsumptionAfter = ElectricityCalculator.calculateAIConsumption(
+      drivewayCount: drivewayCount,
+      parkingCount: parkingCount,
+    );
     double savingUnits = monthlyConsumptionBefore - monthlyConsumptionAfter;
     backgroundSavingUnits = savingUnits;
     double savingPercent = (savingUnits / monthlyConsumptionBefore) * 100;
@@ -298,21 +285,33 @@ class _CalculatorPageState extends State<CalculatorPage> {
       double maxDemand = double.parse(maxDemandController.text);
       double billingUnits = double.parse(billingUnitsController.text);
 
-      double capacityPrice =
-          timeTypeSummer ? summerCapacityPrice : nonSummerCapacityPrice;
-
-      basicElectricity = contractCapacity * capacityPrice;
+      // 使用 ElectricityCalculator 計算各項電費
+      basicElectricity = ElectricityCalculator.calculateBasicElectricity(
+        contractCapacity: contractCapacity,
+        isSummer: timeTypeSummer,
+      );
       backgroundBasicElectricity = basicElectricity;
 
-      if (maxDemand > contractCapacity) {
-        excessDemand = (maxDemand - contractCapacity) * 1.5 * capacityPrice;
-        excessText = _roundUpFirstDecimal(excessDemand).toStringAsFixed(1);
+      excessDemand = ElectricityCalculator.calculateExcessDemand(
+        maxDemand: maxDemand,
+        contractCapacity: contractCapacity,
+        isSummer: timeTypeSummer,
+      );
+      if (excessDemand > 0) {
+        excessText = ElectricityCalculator.roundUpFirstDecimal(excessDemand).toStringAsFixed(1);
       }
 
-      flowElectricity = billingUnits * unitPrice;
+      flowElectricity = ElectricityCalculator.calculateFlowElectricity(
+        billingUnits: billingUnits,
+        isSummer: timeTypeSummer,
+      );
       backgroundFlowElectricity = flowElectricity;
 
-      totalElectricity = basicElectricity + flowElectricity + excessDemand;
+      totalElectricity = ElectricityCalculator.calculateTotalElectricity(
+        basicElectricity: basicElectricity,
+        flowElectricity: flowElectricity,
+        excessDemand: excessDemand,
+      );
       backgroundTotalElectricity = totalElectricity;
 
       nextBill = totalElectricity - (savingUnits * unitPrice);
@@ -322,7 +321,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
         return;
       }
 
-      totalSaving = savingUnits * unitPrice;
+      totalSaving = ElectricityCalculator.calculateSaving(
+        savingUnits: savingUnits,
+        isSummer: timeTypeSummer,
+      );
       backgroundTotalSaving = totalSaving;
     }
 
@@ -623,8 +625,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
       // 為AI燈管每月耗電特殊處理，部分文字顯示紅色
       double drivewayCount = double.tryParse(drivewayLightController.text) ?? 0;
       double parkingCount = double.tryParse(parkingLightController.text) ?? 0;
-      double drivewayTotal = drivewayLightWatt * drivewayCount;
-      double parkingTotal = parkingLightWatt * parkingCount;
+      double drivewayTotal = ElectricityPricing.drivewayLightWatt * drivewayCount;
+      double parkingTotal = ElectricityPricing.parkingLightWatt * parkingCount;
       double result = (drivewayTotal + parkingTotal) * 30 / 1000;
 
       return RichText(
@@ -633,18 +635,18 @@ class _CalculatorPageState extends State<CalculatorPage> {
           children: [
             TextSpan(
                 text:
-                    '車道燈：\n尖峰7小時:感應前亮30%，感應後亮70%\n離峰11小時:感應前亮20%，感應後亮60%\n凌晨6小時:感應前0%，感應後50%\n車道燈平均每日消耗瓦數:${drivewayLightWatt}W\n'),
+                    '車道燈：\n尖峰7小時:感應前亮30%，感應後亮70%\n離峰11小時:感應前亮20%，感應後亮60%\n凌晨6小時:感應前0%，感應後50%\n車道燈平均每日消耗瓦數:${ElectricityPricing.drivewayLightWatt}W\n'),
             TextSpan(
               text:
-                  '故${drivewayLightWatt}W*${drivewayCount.toStringAsFixed(0)}支燈管=${drivewayTotal}W',
+                  '故${ElectricityPricing.drivewayLightWatt}W*${drivewayCount.toStringAsFixed(0)}支燈管=${drivewayTotal}W',
               style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
             ),
             TextSpan(
                 text:
-                    '\n\n車位燈：\n全天候:感應前亮0%，感應後亮50%\n車位燈平均消耗瓦數:${parkingLightWatt}W\n'),
+                    '\n\n車位燈：\n全天候:感應前亮0%，感應後亮50%\n車位燈平均消耗瓦數:${ElectricityPricing.parkingLightWatt}W\n'),
             TextSpan(
               text:
-                  '故${parkingLightWatt}W*${parkingCount.toStringAsFixed(0)}支燈管=${parkingTotal}W',
+                  '故${ElectricityPricing.parkingLightWatt}W*${parkingCount.toStringAsFixed(0)}支燈管=${parkingTotal}W',
               style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
             ),
             TextSpan(text: '\n\n'),
@@ -718,9 +720,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
     double lightCount = double.tryParse(lightCountController.text) ?? 0;
 
     // 根據時間種類決定電價
-    double capacityPrice =
-        timeTypeSummer ? summerCapacityPrice : nonSummerCapacityPrice;
-    double unitPrice = timeTypeSummer ? summerUnitPrice : nonSummerUnitPrice;
+    double capacityPrice = ElectricityCalculator.getCapacityPrice(timeTypeSummer);
+    double unitPrice = ElectricityCalculator.getUnitPrice(timeTypeSummer);
     String capacityPriceText = timeTypeSummer ? '236.2' : '173.2';
     String unitPriceText = timeTypeSummer ? '4.08' : '3.87';
 
@@ -771,20 +772,20 @@ class _CalculatorPageState extends State<CalculatorPage> {
         double drivewayCount =
             double.tryParse(drivewayLightController.text) ?? 0;
         double parkingCount = double.tryParse(parkingLightController.text) ?? 0;
-        double drivewayTotal = drivewayLightWatt * drivewayCount;
-        double parkingTotal = parkingLightWatt * parkingCount;
+        double drivewayTotal = ElectricityPricing.drivewayLightWatt * drivewayCount;
+        double parkingTotal = ElectricityPricing.parkingLightWatt * parkingCount;
         double result = (drivewayTotal + parkingTotal) * 30 / 1000;
         return '''車道燈：
 尖峰7小時:感應前亮30%，感應後亮70%
 離峰11小時:感應前亮20%，感應後亮60%
 凌晨6小時:感應前0%，感應後50%
-車道燈平均每日消耗瓦數:${drivewayLightWatt}W
-故${drivewayLightWatt}W*${drivewayCount.toStringAsFixed(0)}支燈管=${drivewayTotal}W
+車道燈平均每日消耗瓦數:${ElectricityPricing.drivewayLightWatt}W
+故${ElectricityPricing.drivewayLightWatt}W*${drivewayCount.toStringAsFixed(0)}支燈管=${drivewayTotal}W
 
 車位燈：
 全天候:感應前亮0%，感應後亮50%
-車位燈平均消耗瓦數:${parkingLightWatt}W
-故${parkingLightWatt}W*${parkingCount.toStringAsFixed(0)}支燈管=${parkingTotal}W
+車位燈平均消耗瓦數:${ElectricityPricing.parkingLightWatt}W
+故${ElectricityPricing.parkingLightWatt}W*${parkingCount.toStringAsFixed(0)}支燈管=${parkingTotal}W
 
 (${drivewayTotal}+${parkingTotal})*30天/1000=${_roundUpFirstDecimal(result).toStringAsFixed(1)}度(kwh)''';
 
@@ -792,21 +793,21 @@ class _CalculatorPageState extends State<CalculatorPage> {
         return '''尖峰7小時:感應前亮30%，感應後亮70%
 離峰11小時:感應前亮20%，感應後亮60%
 凌晨6小時:感應前0%，感應後50%
-車道燈平均每日消耗瓦數:${drivewayLightWatt}W''';
+車道燈平均每日消耗瓦數:${ElectricityPricing.drivewayLightWatt}W''';
 
       case '車位燈數量':
         return '''全天候:感應前亮0%，感應後亮50%
-車位燈平均消耗瓦數:${parkingLightWatt}W''';
+車位燈平均消耗瓦數:${ElectricityPricing.parkingLightWatt}W''';
 
       case '可節電（度）':
         double before = currentLightWatt * lightCount * 24 * 30 / 1000;
         double drivewayCount =
             double.tryParse(drivewayLightController.text) ?? 0;
         double parkingCount = double.tryParse(parkingLightController.text) ?? 0;
-        double after = (drivewayLightWatt * drivewayCount +
-                parkingLightWatt * parkingCount) *
-            30 /
-            1000;
+        double after = ElectricityCalculator.calculateAIConsumption(
+          drivewayCount: drivewayCount,
+          parkingCount: parkingCount,
+        );
         double saving = before - after;
         return '''更換前使用度數-更換後使用度數=共可節電(度)
 ＝${_roundUpFirstDecimal(before).toStringAsFixed(1)}度-${_roundUpFirstDecimal(after).toStringAsFixed(1)}度=${_roundUpFirstDecimal(saving).toStringAsFixed(1)}度''';
@@ -816,10 +817,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
         double drivewayCount =
             double.tryParse(drivewayLightController.text) ?? 0;
         double parkingCount = double.tryParse(parkingLightController.text) ?? 0;
-        double after = (drivewayLightWatt * drivewayCount +
-                parkingLightWatt * parkingCount) *
-            30 /
-            1000;
+        double after = ElectricityCalculator.calculateAIConsumption(
+          drivewayCount: drivewayCount,
+          parkingCount: parkingCount,
+        );
         double saving = before - after;
         double percent = (saving / before) * 100;
         return '''可節電(度)/更換前使用度數*100%
