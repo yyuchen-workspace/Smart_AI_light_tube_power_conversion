@@ -35,7 +35,7 @@ class InputFieldWithUnit extends StatelessWidget {
         // 標題行（包含可選的信息按鈕）
         Row(
           children: [
-            _buildTitle(),
+            Flexible(child: _buildTitle()),
             if (hasInfo) ...[
               SizedBox(width: 8),
               _buildInfoButton(),
@@ -145,7 +145,7 @@ class ReadOnlyFieldWithUnit extends StatelessWidget {
         // 標題行（包含可選的信息按鈕）
         Row(
           children: [
-            _buildTitle(),
+            Flexible(child: _buildTitle()),
             if (hasInfo) ...[
               SizedBox(width: 8),
               _buildInfoButton(),
