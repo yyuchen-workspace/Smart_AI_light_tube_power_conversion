@@ -969,9 +969,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
           title: Row(
             children: [
               Text('租賃', style: TextStyle(fontSize: 16)),
-              SizedBox(width: 16),
+              SizedBox(width: 8),
               if (pricingMethod == '租賃') ...[
-                Expanded(
+                Flexible(
                   child: TextField(
                     controller: rentalPriceController,
                     onChanged: (_) => _updateNotification(),
@@ -1005,9 +1005,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
           title: Row(
             children: [
               Text('買斷', style: TextStyle(fontSize: 16)),
-              SizedBox(width: 16),
+              SizedBox(width: 8),
               if (pricingMethod == '買斷') ...[
-                Expanded(
+                Flexible(
                   child: TextField(
                     controller: buyoutPriceController,
                     onChanged: (_) => _updateNotification(),
