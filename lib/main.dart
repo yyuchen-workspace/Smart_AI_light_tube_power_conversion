@@ -1389,6 +1389,151 @@ class _CalculatorPageState extends State<CalculatorPage> {
     );
   }
 
+  /// 建構攤提時間折線圖（可展開）
+  Widget _buildPaybackTrendChart() {
+    if (!step3Calculated || !step2Calculated) {
+      return SizedBox.shrink(); // 未計算時不顯示
+    }
+
+    double monthlySaving = backgroundTotalSaving;
+    if (monthlySaving <= 0) return SizedBox.shrink();
+
+    // 生成 12 個月的累計數據
+    List<FlSpot> spots = [];
+    for (int i = 0; i <= 12; i++) {
+      double cumulativeSaving = monthlySaving * i;
+      spots.add(FlSpot(i.toDouble(), cumulativeSaving));
+    }
+
+    // 如果是買斷，計算買斷總額以顯示回本線
+    double? buyoutTotal;
+    if (pricingMethod == '買斷' && buyoutTotalController.text.isNotEmpty) {
+      buyoutTotal = double.tryParse(buyoutTotalController.text);
+    }
+
+    return Container(
+      margin: EdgeInsets.only(top: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.orange[300]!, width: 2),
+      ),
+      child: ExpansionTile(
+        title: Row(
+          children: [
+            Icon(Icons.trending_up, color: Colors.orange[700], size: 20),
+            SizedBox(width: 8),
+            Text(
+              '節省金額趨勢分析',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        subtitle: Text(
+          '點擊查看未來 12 個月累計節省',
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+        ),
+        children: [
+          Container(
+            height: 300,
+            padding: EdgeInsets.all(16),
+            child: Column(
+              children: [
+                if (buyoutTotal != null) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 16,
+                        height: 2,
+                        color: Colors.red[300],
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        '買斷總額: ${_roundUpFirstDecimal(buyoutTotal).toStringAsFixed(1)} 元',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                ],
+                Expanded(
+                  child: LineChart(
+                    LineChartData(
+                      gridData: FlGridData(
+                        show: true,
+                        drawVerticalLine: true,
+                        horizontalInterval: monthlySaving * 2,
+                      ),
+                      titlesData: FlTitlesData(
+                        leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 50,
+                            getTitlesWidget: (value, meta) {
+                              return Text(
+                                '${(value / 1000).toStringAsFixed(0)}k',
+                                style: TextStyle(fontSize: 10),
+                              );
+                            },
+                          ),
+                        ),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              return Text(
+                                '${value.toInt()}月',
+                                style: TextStyle(fontSize: 10),
+                              );
+                            },
+                          ),
+                        ),
+                        topTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                        rightTitles: AxisTitles(
+                          sideTitles: SideTitles(showTitles: false),
+                        ),
+                      ),
+                      borderData: FlBorderData(show: true),
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: spots,
+                          isCurved: true,
+                          color: Colors.green[600],
+                          barWidth: 3,
+                          dotData: FlDotData(show: true),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            color: Colors.green[100]!.withValues(alpha: 0.3),
+                          ),
+                        ),
+                      ],
+                      // 如果是買斷模式，添加回本線
+                      extraLinesData: buyoutTotal != null
+                          ? ExtraLinesData(
+                              horizontalLines: [
+                                HorizontalLine(
+                                  y: buyoutTotal,
+                                  color: Colors.red[300]!,
+                                  strokeWidth: 2,
+                                  dashArray: [5, 5],
+                                ),
+                              ],
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildStatusBar() {
     Color statusColor = needsRecalculation
         ? Colors.red
@@ -1945,6 +2090,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
                                         ],
                                       ),
                                     ),
+
+                                    // 添加攤提時間折線圖（可展開）
+                                    _buildPaybackTrendChart(),
                                   ],
                                 ),
                               ),
