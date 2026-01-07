@@ -1138,7 +1138,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
       return SizedBox.shrink(); // 未計算時不顯示
     }
 
-    double before = double.tryParse(monthlyConsumptionBeforeController.text) ?? 0;
+    double before =
+        double.tryParse(monthlyConsumptionBeforeController.text) ?? 0;
     double after = double.tryParse(monthlyConsumptionAfterController.text) ?? 0;
 
     return Container(
@@ -1187,12 +1188,14 @@ class _CalculatorPageState extends State<CalculatorPage> {
                       reservedSize: 40,
                       getTitlesWidget: (value, meta) {
                         return Text('${value.toInt()}',
-                          style: TextStyle(fontSize: 10));
+                            style: TextStyle(fontSize: 10));
                       },
                     ),
                   ),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles:
+                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles:
+                      AxisTitles(sideTitles: SideTitles(showTitles: false)),
                 ),
                 gridData: FlGridData(show: true, drawVerticalLine: false),
                 borderData: FlBorderData(show: false),
@@ -1202,8 +1205,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                     barRods: [
                       BarChartRodData(
                         toY: before,
-                        // TODO(human): 設定長條圖顏色
-                        color: Colors.orange,
+                        color: Colors.red, // 更換前：紅色警示
                         width: 40,
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -1214,8 +1216,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                     barRods: [
                       BarChartRodData(
                         toY: after,
-                        // TODO(human): 設定長條圖顏色
-                        color: Colors.green,
+                        color: Colors.blue, // 更換後：藍色優化
                         width: 40,
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -1227,6 +1228,164 @@ class _CalculatorPageState extends State<CalculatorPage> {
           ),
         ],
       ),
+    );
+  }
+
+  /// 建構電費組成圓餅圖（可展開）
+  Widget _buildElectricityCostPieChart() {
+    if (!step2Calculated) {
+      return SizedBox.shrink(); // 未計算時不顯示
+    }
+
+    double basic = double.tryParse(basicElectricityController.text) ?? 0;
+    double flow = double.tryParse(flowElectricityController.text) ?? 0;
+    double excess = 0;
+    String excessText = excessDemandController.text;
+    if (excessText.isNotEmpty && excessText != '無超約') {
+      excess = double.tryParse(excessText) ?? 0;
+    }
+
+    double total = basic + flow + excess;
+    if (total == 0) return SizedBox.shrink();
+
+    return Container(
+      margin: EdgeInsets.only(top: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue[300]!, width: 2),
+      ),
+      child: ExpansionTile(
+        title: Row(
+          children: [
+            Icon(Icons.pie_chart, color: Colors.blue[700], size: 20),
+            SizedBox(width: 8),
+            Text(
+              '電費組成分析',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        subtitle: Text(
+          '點擊查看電費組成比例',
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+        ),
+        children: [
+          Container(
+            height: 280,
+            padding: EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // 圓餅圖
+                Expanded(
+                  flex: 3,
+                  child: PieChart(
+                    PieChartData(
+                      sectionsSpace: 2,
+                      centerSpaceRadius: 40,
+                      sections: [
+                        PieChartSectionData(
+                          value: basic,
+                          title: '${(basic / total * 100).toStringAsFixed(1)}%',
+                          color: Colors.blue[400],
+                          radius: 80,
+                          titleStyle: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        PieChartSectionData(
+                          value: flow,
+                          title: '${(flow / total * 100).toStringAsFixed(1)}%',
+                          color: Colors.orange[400],
+                          radius: 80,
+                          titleStyle: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        if (excess > 0)
+                          PieChartSectionData(
+                            value: excess,
+                            title: '${(excess / total * 100).toStringAsFixed(1)}%',
+                            color: Colors.red[400],
+                            radius: 80,
+                            titleStyle: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                // 圖例
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildLegendItem('基本電價', basic, Colors.blue[400]!),
+                      SizedBox(height: 8),
+                      _buildLegendItem('流動電價', flow, Colors.orange[400]!),
+                      if (excess > 0) ...[
+                        SizedBox(height: 8),
+                        _buildLegendItem('超約費用', excess, Colors.red[400]!),
+                      ],
+                      SizedBox(height: 16),
+                      Divider(),
+                      _buildLegendItem('總計', total, Colors.grey[700]!, isBold: true),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 建構圖例項目
+  Widget _buildLegendItem(String label, double value, Color color, {bool isBold = false}) {
+    return Row(
+      children: [
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+              Text(
+                '${_roundUpFirstDecimal(value).toStringAsFixed(1)} 元',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+                  color: isBold ? Colors.black : Colors.grey[700],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -1265,9 +1424,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
         title: Column(
           children: [
             Text('智慧AI燈管電力換算', style: TextStyle(fontSize: isDesktop ? 24 : 20)),
-            Text('電費計算方式:台電於113年10月16起電費計算方式', 
-                 style: TextStyle(fontSize: isDesktop ? 18 : 16, 
-                                fontWeight: FontWeight.normal)),
+            Text('電費計算方式:台電於113年10月16起電費計算方式',
+                style: TextStyle(
+                    fontSize: isDesktop ? 18 : 16,
+                    fontWeight: FontWeight.normal)),
           ],
         ),
         centerTitle: true,
@@ -1667,6 +1827,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
                                     ),
                                   ],
                                 ),
+
+                                // 添加電費組成圓餅圖（可展開）
+                                _buildElectricityCostPieChart(),
                               ],
                             ),
                           ),
