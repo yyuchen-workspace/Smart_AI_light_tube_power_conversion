@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'widgets/charts/power_saving_chart.dart';
+import 'widgets/charts/electricity_cost_pie_chart.dart';
+import 'widgets/charts/payback_trend_chart.dart';
 
 void main() {
   runApp(MyApp());
@@ -1130,512 +1132,6 @@ class _CalculatorPageState extends State<CalculatorPage> {
     );
   }
 
-  // ========== 圖表組件 ==========
-
-  /// 建構節電成果環形進度圖（直接顯示）
-  Widget _buildPowerSavingBarChart() {
-    if (!step1Calculated) {
-      return SizedBox.shrink(); // 未計算時不顯示
-    }
-
-    // 獲取關鍵數據
-    double savingUnits = double.tryParse(savingUnitsController.text) ?? 0;
-    double savingPercent = double.tryParse(savingPercentController.text) ?? 0;
-    double totalSaving = double.tryParse(totalSavingController.text) ?? 0;
-
-    return Container(
-      margin: EdgeInsets.only(top: 16),
-      padding: EdgeInsets.all(24),
-      height: 240,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green[50]!, Colors.green[100]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green[400]!, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.green.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // 左側：環形進度圖
-          Expanded(
-            flex: 2,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // 環形進度條
-                SizedBox(
-                  width: 160,
-                  height: 160,
-                  child: PieChart(
-                    PieChartData(
-                      startDegreeOffset: -90,
-                      sectionsSpace: 0,
-                      centerSpaceRadius: 55,
-                      sections: [
-                        // 節省部分（綠色）
-                        PieChartSectionData(
-                          value: savingPercent,
-                          color: Colors.green[600],
-                          radius: 25,
-                          showTitle: false,
-                        ),
-                        // 未節省部分（灰色）
-                        PieChartSectionData(
-                          value: 100 - savingPercent,
-                          color: Colors.grey[300],
-                          radius: 25,
-                          showTitle: false,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // 中央數據
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '${savingPercent.toStringAsFixed(1)}%',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green[700],
-                      ),
-                    ),
-                    Text(
-                      '節電率',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(width: 24),
-
-          // 右側：關鍵數據展示
-          Expanded(
-            flex: 3,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 標題
-                Row(
-                  children: [
-                    Icon(Icons.bolt, color: Colors.orange[700], size: 24),
-                    SizedBox(width: 8),
-                    Text(
-                      '節能成果',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
-
-                // 每月節電度數
-                _buildSavingDataRow(
-                  icon: Icons.electric_bolt,
-                  iconColor: Colors.amber[700]!,
-                  label: '每月節電',
-                  value: '${savingUnits.toStringAsFixed(1)}',
-                  unit: '度',
-                ),
-                SizedBox(height: 12),
-
-                // 每月節省金額
-                _buildSavingDataRow(
-                  icon: Icons.savings,
-                  iconColor: Colors.green[700]!,
-                  label: '每月節省',
-                  value: '${_roundUpFirstDecimal(totalSaving).toStringAsFixed(0)}',
-                  unit: '元',
-                  isHighlight: true,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 建構節省數據行
-  Widget _buildSavingDataRow({
-    required IconData icon,
-    required Color iconColor,
-    required String label,
-    required String value,
-    required String unit,
-    bool isHighlight = false,
-  }) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: isHighlight ? Colors.green[600] : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: isHighlight
-            ? [
-                BoxShadow(
-                  color: Colors.green.withValues(alpha: 0.3),
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
-                )
-              ]
-            : null,
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: isHighlight ? Colors.white : iconColor, size: 20),
-          SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              color: isHighlight ? Colors.white : Colors.grey[700],
-            ),
-          ),
-          Spacer(),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: isHighlight ? Colors.white : Colors.grey[900],
-            ),
-          ),
-          SizedBox(width: 4),
-          Text(
-            unit,
-            style: TextStyle(
-              fontSize: 14,
-              color: isHighlight ? Colors.white70 : Colors.grey[600],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 建構電費組成圓餅圖（可展開）
-  Widget _buildElectricityCostPieChart() {
-    if (!step2Calculated) {
-      return SizedBox.shrink(); // 未計算時不顯示
-    }
-
-    double basic = double.tryParse(basicElectricityController.text) ?? 0;
-    double flow = double.tryParse(flowElectricityController.text) ?? 0;
-    double excess = 0;
-    String excessText = excessDemandController.text;
-    if (excessText.isNotEmpty && excessText != '無超約') {
-      excess = double.tryParse(excessText) ?? 0;
-    }
-
-    double total = basic + flow + excess;
-    if (total == 0) return SizedBox.shrink();
-
-    return Container(
-      margin: EdgeInsets.only(top: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.blue[300]!, width: 2),
-      ),
-      child: ExpansionTile(
-        title: Row(
-          children: [
-            Icon(Icons.pie_chart, color: Colors.blue[700], size: 20),
-            SizedBox(width: 8),
-            Text(
-              '電費組成分析',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        subtitle: Text(
-          '點擊查看電費組成比例',
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-        ),
-        children: [
-          Container(
-            height: 280,
-            padding: EdgeInsets.all(16),
-            child: Row(
-              children: [
-                // 圓餅圖
-                Expanded(
-                  flex: 3,
-                  child: PieChart(
-                    PieChartData(
-                      sectionsSpace: 2,
-                      centerSpaceRadius: 40,
-                      sections: [
-                        PieChartSectionData(
-                          value: basic,
-                          title: '${(basic / total * 100).toStringAsFixed(1)}%',
-                          color: Colors.blue[400],
-                          radius: 80,
-                          titleStyle: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        PieChartSectionData(
-                          value: flow,
-                          title: '${(flow / total * 100).toStringAsFixed(1)}%',
-                          color: Colors.orange[400],
-                          radius: 80,
-                          titleStyle: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        if (excess > 0)
-                          PieChartSectionData(
-                            value: excess,
-                            title: '${(excess / total * 100).toStringAsFixed(1)}%',
-                            color: Colors.red[400],
-                            radius: 80,
-                            titleStyle: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                // 圖例
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildLegendItem('基本電價', basic, Colors.blue[400]!),
-                      SizedBox(height: 8),
-                      _buildLegendItem('流動電價', flow, Colors.orange[400]!),
-                      if (excess > 0) ...[
-                        SizedBox(height: 8),
-                        _buildLegendItem('超約費用', excess, Colors.red[400]!),
-                      ],
-                      SizedBox(height: 16),
-                      Divider(),
-                      _buildLegendItem('總計', total, Colors.grey[700]!, isBold: true),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 建構圖例項目
-  Widget _buildLegendItem(String label, double value, Color color, {bool isBold = false}) {
-    return Row(
-      children: [
-        Container(
-          width: 16,
-          height: 16,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-        ),
-        SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-              Text(
-                '${_roundUpFirstDecimal(value).toStringAsFixed(1)} 元',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                  color: isBold ? Colors.black : Colors.grey[700],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// 建構攤提時間折線圖（可展開）
-  Widget _buildPaybackTrendChart() {
-    if (!step3Calculated || !step2Calculated) {
-      return SizedBox.shrink(); // 未計算時不顯示
-    }
-
-    double monthlySaving = backgroundTotalSaving;
-    if (monthlySaving <= 0) return SizedBox.shrink();
-
-    // 生成 12 個月的累計數據
-    List<FlSpot> spots = [];
-    for (int i = 0; i <= 12; i++) {
-      double cumulativeSaving = monthlySaving * i;
-      spots.add(FlSpot(i.toDouble(), cumulativeSaving));
-    }
-
-    // 如果是買斷，計算買斷總額以顯示回本線
-    double? buyoutTotal;
-    if (pricingMethod == '買斷' && buyoutTotalController.text.isNotEmpty) {
-      buyoutTotal = double.tryParse(buyoutTotalController.text);
-    }
-
-    return Container(
-      margin: EdgeInsets.only(top: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.orange[300]!, width: 2),
-      ),
-      child: ExpansionTile(
-        title: Row(
-          children: [
-            Icon(Icons.trending_up, color: Colors.orange[700], size: 20),
-            SizedBox(width: 8),
-            Text(
-              '節省金額趨勢分析',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        subtitle: Text(
-          '點擊查看未來 12 個月累計節省',
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-        ),
-        children: [
-          Container(
-            height: 300,
-            padding: EdgeInsets.all(16),
-            child: Column(
-              children: [
-                if (buyoutTotal != null) ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 16,
-                        height: 2,
-                        color: Colors.red[300],
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        '買斷總額: ${_roundUpFirstDecimal(buyoutTotal).toStringAsFixed(1)} 元',
-                        style: TextStyle(fontSize: 12, color: Colors.grey[700]),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                ],
-                Expanded(
-                  child: LineChart(
-                    LineChartData(
-                      gridData: FlGridData(
-                        show: true,
-                        drawVerticalLine: true,
-                        horizontalInterval: monthlySaving * 2,
-                      ),
-                      titlesData: FlTitlesData(
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 50,
-                            getTitlesWidget: (value, meta) {
-                              return Text(
-                                '${(value / 1000).toStringAsFixed(0)}k',
-                                style: TextStyle(fontSize: 10),
-                              );
-                            },
-                          ),
-                        ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              return Text(
-                                '${value.toInt()}月',
-                                style: TextStyle(fontSize: 10),
-                              );
-                            },
-                          ),
-                        ),
-                        topTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                      ),
-                      borderData: FlBorderData(show: true),
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: spots,
-                          isCurved: true,
-                          color: Colors.green[600],
-                          barWidth: 3,
-                          dotData: FlDotData(show: true),
-                          belowBarData: BarAreaData(
-                            show: true,
-                            color: Colors.green[100]!.withValues(alpha: 0.3),
-                          ),
-                        ),
-                      ],
-                      // 如果是買斷模式，添加回本線
-                      extraLinesData: buyoutTotal != null
-                          ? ExtraLinesData(
-                              horizontalLines: [
-                                HorizontalLine(
-                                  y: buyoutTotal,
-                                  color: Colors.red[300]!,
-                                  strokeWidth: 2,
-                                  dashArray: [5, 5],
-                                ),
-                              ],
-                            )
-                          : null,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildStatusBar() {
     Color statusColor = needsRecalculation
@@ -1900,7 +1396,12 @@ class _CalculatorPageState extends State<CalculatorPage> {
                                 ),
 
                                 // 添加可節電比較長條圖
-                                _buildPowerSavingBarChart(),
+                                if (step1Calculated)
+                                  PowerSavingChart(
+                                    savingUnits: double.tryParse(savingUnitsController.text) ?? 0,
+                                    savingPercent: double.tryParse(savingPercentController.text) ?? 0,
+                                    totalSaving: double.tryParse(totalSavingController.text) ?? 0,
+                                  ),
                               ],
                             ),
                           ),
@@ -2076,7 +1577,16 @@ class _CalculatorPageState extends State<CalculatorPage> {
                                 ),
 
                                 // 添加電費組成圓餅圖（可展開）
-                                _buildElectricityCostPieChart(),
+                                if (step2Calculated)
+                                  ElectricityCostPieChart(
+                                    basicElectricity: double.tryParse(basicElectricityController.text) ?? 0,
+                                    flowElectricity: double.tryParse(flowElectricityController.text) ?? 0,
+                                    excessDemand: () {
+                                      String excessText = excessDemandController.text;
+                                      if (excessText.isEmpty || excessText == '無超約') return 0.0;
+                                      return double.tryParse(excessText) ?? 0;
+                                    }(),
+                                  ),
                               ],
                             ),
                           ),
@@ -2193,7 +1703,13 @@ class _CalculatorPageState extends State<CalculatorPage> {
                                     ),
 
                                     // 添加攤提時間折線圖（可展開）
-                                    _buildPaybackTrendChart(),
+                                    if (step3Calculated && step2Calculated)
+                                      PaybackTrendChart(
+                                        monthlySaving: backgroundTotalSaving,
+                                        buyoutTotal: (pricingMethod == '買斷' && buyoutTotalController.text.isNotEmpty)
+                                            ? double.tryParse(buyoutTotalController.text)
+                                            : null,
+                                      ),
                                   ],
                                 ),
                               ),
