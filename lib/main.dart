@@ -1589,10 +1589,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
               children: [
                 // 第一步和第二步並排布局
                 if (isDesktop) ...[
-                  IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                         // 第一步：更換AI燈管後電力試算
                         Expanded(
                           flex: 1,
@@ -1981,7 +1980,6 @@ class _CalculatorPageState extends State<CalculatorPage> {
                         ),
                       ],
                     ),
-                  ),
 
                   // 第三步：試算攤提時間 - 位於第一步之下，與第二步對齊
                   Row(
