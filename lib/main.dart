@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 void main() {
   runApp(MyApp());
@@ -90,6 +91,11 @@ class _CalculatorPageState extends State<CalculatorPage> {
   bool step1Calculated = false; // 第一步(AI燈管)計算狀態
   bool step2Calculated = false; // 第二步(台電帳單)計算狀態
   bool step3Calculated = false; // 第三步(攤提時間)計算狀態
+
+  // 圖表展開/收合狀態
+  bool showSavingCostChart = false; // 可節省費用圖表
+  bool showElectricityCostPieChart = false; // 電費組成圓餅圖
+  bool showPaybackTrendChart = false; // 攤提時間折線圖
 
   // 電價常數
   static const double summerCapacityPrice = 236.2;
@@ -1124,6 +1130,106 @@ class _CalculatorPageState extends State<CalculatorPage> {
     );
   }
 
+  // ========== 圖表組件 ==========
+
+  /// 建構可節電比較長條圖（直接顯示）
+  Widget _buildPowerSavingBarChart() {
+    if (!step1Calculated) {
+      return SizedBox.shrink(); // 未計算時不顯示
+    }
+
+    double before = double.tryParse(monthlyConsumptionBeforeController.text) ?? 0;
+    double after = double.tryParse(monthlyConsumptionAfterController.text) ?? 0;
+
+    return Container(
+      margin: EdgeInsets.only(top: 16),
+      padding: EdgeInsets.all(16),
+      height: 220,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.green[300]!, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '每月耗電量比較',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8),
+          Expanded(
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: before * 1.2,
+                barTouchData: BarTouchData(enabled: true),
+                titlesData: FlTitlesData(
+                  show: true,
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        switch (value.toInt()) {
+                          case 0:
+                            return Text('更換前', style: TextStyle(fontSize: 12));
+                          case 1:
+                            return Text('更換後', style: TextStyle(fontSize: 12));
+                          default:
+                            return Text('');
+                        }
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 40,
+                      getTitlesWidget: (value, meta) {
+                        return Text('${value.toInt()}',
+                          style: TextStyle(fontSize: 10));
+                      },
+                    ),
+                  ),
+                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                ),
+                gridData: FlGridData(show: true, drawVerticalLine: false),
+                borderData: FlBorderData(show: false),
+                barGroups: [
+                  BarChartGroupData(
+                    x: 0,
+                    barRods: [
+                      BarChartRodData(
+                        toY: before,
+                        // TODO(human): 設定長條圖顏色
+                        color: Colors.orange,
+                        width: 40,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ],
+                  ),
+                  BarChartGroupData(
+                    x: 1,
+                    barRods: [
+                      BarChartRodData(
+                        toY: after,
+                        // TODO(human): 設定長條圖顏色
+                        color: Colors.green,
+                        width: 40,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildStatusBar() {
     Color statusColor = needsRecalculation
         ? Colors.red
@@ -1385,6 +1491,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
                                     ),
                                   ],
                                 ),
+
+                                // 添加可節電比較長條圖
+                                _buildPowerSavingBarChart(),
                               ],
                             ),
                           ),
