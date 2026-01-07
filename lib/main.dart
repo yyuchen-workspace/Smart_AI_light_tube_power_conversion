@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'widgets/charts/power_saving_chart.dart';
 import 'widgets/charts/electricity_cost_pie_chart.dart';
 import 'widgets/charts/payback_trend_chart.dart';
+import 'widgets/common/input_field.dart';
 import 'constants/electricity_pricing.dart';
 import 'utils/electricity_calculator.dart';
 
@@ -930,59 +931,14 @@ class _CalculatorPageState extends State<CalculatorPage> {
       {bool hasInfo = false,
       void Function(String)? onChanged,
       bool integerOnly = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            _buildSectionTitle(title),
-            if (hasInfo) ...[
-              SizedBox(width: 8),
-              GestureDetector(
-                onTap: () => _showFieldInfo(title, ''),
-                child: Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: Colors.blue,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text('?',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-        SizedBox(
-          height: 56, // 固定高度
-          child: TextField(
-            controller: controller,
-            onChanged: onChanged,
-            keyboardType: TextInputType.number,
-            inputFormatters: [
-              integerOnly
-                  ? FilteringTextInputFormatter.digitsOnly
-                  : FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))
-            ],
-            style: TextStyle(fontSize: 16),
-            decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              fillColor: Colors.white,
-              filled: true,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              suffixText: unit,
-              suffixStyle: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
-          ),
-        ),
-      ],
+    return InputFieldWithUnit(
+      title: title,
+      controller: controller,
+      unit: unit,
+      hasInfo: hasInfo,
+      onInfoTap: hasInfo ? () => _showFieldInfo(title, '') : null,
+      onChanged: onChanged,
+      integerOnly: integerOnly,
     );
   }
 
@@ -992,63 +948,15 @@ class _CalculatorPageState extends State<CalculatorPage> {
       bool isRed = false,
       bool hasInfo = false,
       bool titleRed = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            _buildSectionTitle(title, isRed: titleRed),
-            if (hasInfo) ...[
-              SizedBox(width: 8),
-              GestureDetector(
-                onTap: () => _showFieldInfo(title, ''),
-                child: Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: Colors.blue,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text('?',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-        SizedBox(
-          height: 56, // 固定高度
-          child: MouseRegion(
-            cursor: SystemMouseCursors.forbidden,
-            child: TextField(
-              controller: controller,
-              readOnly: true,
-              enableInteractiveSelection: false,
-              mouseCursor: SystemMouseCursors.forbidden,
-              style: TextStyle(
-                fontSize: 16,
-                color: grayed ? Colors.grey[500] : (isRed ? Colors.red : null),
-              ),
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                fillColor: grayed ? Colors.grey[300] : Colors.white,
-                filled: grayed,
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                suffixText: unit,
-                suffixStyle: TextStyle(
-                    fontSize: 14,
-                    color: grayed ? Colors.grey[500] : Colors.grey[600]),
-              ),
-            ),
-          ),
-        ),
-      ],
+    return ReadOnlyFieldWithUnit(
+      title: title,
+      controller: controller,
+      unit: unit,
+      grayed: grayed,
+      isRed: isRed,
+      hasInfo: hasInfo,
+      onInfoTap: hasInfo ? () => _showFieldInfo(title, '') : null,
+      titleRed: titleRed,
     );
   }
 
