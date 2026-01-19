@@ -93,7 +93,7 @@ class LightingStrategyConfig extends StatelessWidget {
           // 標題
           Text(
             title,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 12),
 
@@ -112,7 +112,7 @@ class LightingStrategyConfig extends StatelessWidget {
 
           // 全天候選項
           CheckboxListTile(
-            title: Text('全天候 (24小時)'),
+            title: Text('全天候 (24小時)', style: TextStyle(fontSize: 16)),
             value: isAllDay,
             onChanged: onAllDayChanged,
             dense: true,
@@ -183,7 +183,7 @@ class LightingStrategyConfig extends StatelessWidget {
           // 時段標題
           Text(
             title,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 12),
 
@@ -199,12 +199,12 @@ class LightingStrategyConfig extends StatelessWidget {
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
-                    child: Text(_formatTimeOfDay(start)),
+                    child: Text(_formatTimeOfDay(start), style: TextStyle(fontSize: 16)),
                   ),
                 ),
               ),
               SizedBox(width: 8),
-              Text('至'),
+              Text('至', style: TextStyle(fontSize: 16)),
               SizedBox(width: 8),
               Expanded(
                 child: InkWell(
@@ -215,7 +215,7 @@ class LightingStrategyConfig extends StatelessWidget {
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
-                    child: Text(_formatTimeOfDay(end)),
+                    child: Text(_formatTimeOfDay(end), style: TextStyle(fontSize: 16)),
                   ),
                 ),
               ),
@@ -226,7 +226,7 @@ class LightingStrategyConfig extends StatelessWidget {
           // 亮度設定標題
           Text(
             '亮度設定',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
           SizedBox(height: 8),
 
@@ -274,7 +274,7 @@ class LightingStrategyConfig extends StatelessWidget {
       children: [
         Expanded(
           flex: 2,
-          child: Text(label, style: TextStyle(fontSize: 12)),
+          child: Text(label, style: TextStyle(fontSize: 14)),
         ),
         Expanded(
           flex: 3,

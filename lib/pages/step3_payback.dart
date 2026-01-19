@@ -5,13 +5,59 @@
  */
 
 import 'package:flutter/material.dart';
+import '../widgets/payback_form.dart';
 
 class Step3Payback extends StatelessWidget {
-  final Widget content; // 直接接收現有的 Step3 內容
+  // 計價方式
+  final String? pricingMethod; // '租賃' or '買斷'
+  final ValueChanged<String?> onPricingMethodChanged;
+
+  // 租賃價格
+  final TextEditingController rentalPriceController;
+  final ValueChanged<String>? onRentalPriceChanged;
+
+  // 買斷價格
+  final TextEditingController buyoutPriceController;
+  final ValueChanged<String>? onBuyoutPriceChanged;
+
+  // 燈管數量
+  final TextEditingController step3LightCountController;
+  final ValueChanged<String>? onLightCountChanged;
+
+  // 計算結果控制器
+  final TextEditingController monthlyRentalController;
+  final TextEditingController totalMonthlySavingController;
+  final TextEditingController buyoutTotalController;
+  final TextEditingController paybackPeriodController;
+
+  // 資訊按鈕回調
+  final void Function(String fieldName) onInfoTap;
+
+  // 計算狀態
+  final bool step2Calculated;
+  final bool step3Calculated;
+
+  // 折線圖組件（可選）
+  final Widget? trendChart;
 
   const Step3Payback({
     Key? key,
-    required this.content,
+    required this.pricingMethod,
+    required this.onPricingMethodChanged,
+    required this.rentalPriceController,
+    this.onRentalPriceChanged,
+    required this.buyoutPriceController,
+    this.onBuyoutPriceChanged,
+    required this.step3LightCountController,
+    this.onLightCountChanged,
+    required this.monthlyRentalController,
+    required this.totalMonthlySavingController,
+    required this.buyoutTotalController,
+    required this.paybackPeriodController,
+    required this.onInfoTap,
+    required this.step2Calculated,
+    required this.step3Calculated,
+    this.trendChart,
   }) : super(key: key);
 
   @override
@@ -40,8 +86,25 @@ class Step3Payback extends StatelessWidget {
           ),
           SizedBox(height: 32),
 
-          // 原有內容
-          content,
+          // 攤提計算表單
+          PaybackForm(
+            pricingMethod: pricingMethod,
+            onPricingMethodChanged: onPricingMethodChanged,
+            rentalPriceController: rentalPriceController,
+            onRentalPriceChanged: onRentalPriceChanged,
+            buyoutPriceController: buyoutPriceController,
+            onBuyoutPriceChanged: onBuyoutPriceChanged,
+            step3LightCountController: step3LightCountController,
+            onLightCountChanged: onLightCountChanged,
+            monthlyRentalController: monthlyRentalController,
+            totalMonthlySavingController: totalMonthlySavingController,
+            buyoutTotalController: buyoutTotalController,
+            paybackPeriodController: paybackPeriodController,
+            onInfoTap: onInfoTap,
+            step2Calculated: step2Calculated,
+            step3Calculated: step3Calculated,
+            trendChart: trendChart,
+          ),
         ],
       ),
     );

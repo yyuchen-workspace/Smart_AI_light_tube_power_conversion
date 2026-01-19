@@ -132,7 +132,7 @@ class _ExpandableLightCardState extends State<ExpandableLightCard> {
                         Text(
                           widget.title,
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: widget.color,
                           ),
@@ -142,7 +142,7 @@ class _ExpandableLightCardState extends State<ExpandableLightCard> {
                           Text(
                             widget.subtitle,
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 16,
                               color: Colors.grey[600],
                             ),
                           ),

@@ -56,7 +56,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
   // 傳統燈管
   final TextEditingController traditionalWattController =
-      TextEditingController(text: '18');
+      TextEditingController(text: '0');
   final TextEditingController traditionalLightCountController =
       TextEditingController(text: '0');
 
@@ -65,15 +65,15 @@ class _CalculatorPageState extends State<CalculatorPage> {
       TextEditingController(text: '0');
   bool drivewayAllDay = false;
   TimeOfDay drivewayDaytimeStart = TimeOfDay(hour: 6, minute: 0);
-  TimeOfDay drivewayDaytimeEnd = TimeOfDay(hour: 18, minute: 0);
-  int drivewayDayBrightnessBefore = 30;
-  int drivewayDayBrightnessAfter = 100;
-  int drivewayDaySensingTime = 30;
-  TimeOfDay drivewayNighttimeStart = TimeOfDay(hour: 18, minute: 0);
+  TimeOfDay drivewayDaytimeEnd = TimeOfDay(hour: 0, minute: 0);
+  int drivewayDayBrightnessBefore = 0;
+  int drivewayDayBrightnessAfter = 0;
+  int drivewayDaySensingTime = 10;
+  TimeOfDay drivewayNighttimeStart = TimeOfDay(hour: 0, minute: 0);
   TimeOfDay drivewayNighttimeEnd = TimeOfDay(hour: 6, minute: 0);
-  int drivewayNightBrightnessBefore = 10;
-  int drivewayNightBrightnessAfter = 100;
-  int drivewayNightSensingTime = 30;
+  int drivewayNightBrightnessBefore = 0;
+  int drivewayNightBrightnessAfter = 0;
+  int drivewayNightSensingTime = 10;
 
   // 車位燈策略
   final TextEditingController parkingCountController =
@@ -90,6 +90,35 @@ class _CalculatorPageState extends State<CalculatorPage> {
   int parkingNightBrightnessAfter = 100;
   int parkingNightSensingTime = 30;
 
+  // Step 2: 台電帳單資訊
+  bool timeTypeSummer = true; // 預設夏季
+  bool timeTypeNonSummer = false;
+  final TextEditingController contractCapacityController =
+      TextEditingController();
+  final TextEditingController maxDemandController = TextEditingController();
+  final TextEditingController billingUnitsController = TextEditingController();
+  final TextEditingController basicElectricityController =
+      TextEditingController();
+  final TextEditingController excessDemandController = TextEditingController();
+  final TextEditingController flowElectricityController =
+      TextEditingController();
+  final TextEditingController totalElectricityController =
+      TextEditingController();
+  bool step2Calculated = false;
+
+  // Step 3: 攤提時間試算
+  String? pricingMethod = '租賃'; // 預設租賃
+  final TextEditingController rentalPriceController = TextEditingController();
+  final TextEditingController buyoutPriceController = TextEditingController();
+  final TextEditingController step3LightCountController =
+      TextEditingController();
+  final TextEditingController monthlyRentalController = TextEditingController();
+  final TextEditingController totalMonthlySavingController =
+      TextEditingController();
+  final TextEditingController buyoutTotalController = TextEditingController();
+  final TextEditingController paybackPeriodController = TextEditingController();
+  bool step3Calculated = false;
+
   // 計算結果
   double? aiMonthlyConsumption;
   double? traditionalMonthlyConsumption;
@@ -102,6 +131,20 @@ class _CalculatorPageState extends State<CalculatorPage> {
     traditionalLightCountController.dispose();
     drivewayCountController.dispose();
     parkingCountController.dispose();
+    contractCapacityController.dispose();
+    maxDemandController.dispose();
+    billingUnitsController.dispose();
+    basicElectricityController.dispose();
+    excessDemandController.dispose();
+    flowElectricityController.dispose();
+    totalElectricityController.dispose();
+    rentalPriceController.dispose();
+    buyoutPriceController.dispose();
+    step3LightCountController.dispose();
+    monthlyRentalController.dispose();
+    totalMonthlySavingController.dispose();
+    buyoutTotalController.dispose();
+    paybackPeriodController.dispose();
     super.dispose();
   }
 
@@ -128,6 +171,24 @@ class _CalculatorPageState extends State<CalculatorPage> {
     }
   }
 
+  /// 資訊按鈕處理（暫時顯示簡單對話框）
+  void _showFieldInfo(String fieldName) {
+    // TODO: 整合完整的資訊顯示邏輯
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(fieldName),
+        content: Text('$fieldName 的說明資訊'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('確定'),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// 計算結果
   void _calculateResults() {
     setState(() {
@@ -138,8 +199,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
         daytime: TimeSlotConfig(
           startHour:
               drivewayDaytimeStart.hour + drivewayDaytimeStart.minute / 60.0,
-          endHour:
-              drivewayDaytimeEnd.hour + drivewayDaytimeEnd.minute / 60.0,
+          endHour: drivewayDaytimeEnd.hour + drivewayDaytimeEnd.minute / 60.0,
           isAllDay: drivewayAllDay,
           brightness: BrightnessConfig(
             brightnessBeforeSensing: drivewayDayBrightnessBefore,
@@ -200,11 +260,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
       double parkingDailyWattage =
           LightingCalculator.calculateParkingWattage(parkingStrategy);
 
-      aiMonthlyConsumption =
+      aiMonthlyConsumption = LightingCalculator.calculateMonthlyConsumption(
+              drivewayDailyWattage, drivewayCount) +
           LightingCalculator.calculateMonthlyConsumption(
-                  drivewayDailyWattage, drivewayCount) +
-              LightingCalculator.calculateMonthlyConsumption(
-                  parkingDailyWattage, parkingCount);
+              parkingDailyWattage, parkingCount);
 
       // 計算傳統燈管消耗
       double traditionalWatt =
@@ -218,10 +277,137 @@ class _CalculatorPageState extends State<CalculatorPage> {
       );
 
       // 計算節電量和節電率
-      monthlySavings =
+      double savingUnits =
           traditionalMonthlyConsumption! - aiMonthlyConsumption!;
-      savingsRate =
-          (monthlySavings! / traditionalMonthlyConsumption!) * 100;
+      monthlySavings = savingUnits;
+      savingsRate = (monthlySavings! / traditionalMonthlyConsumption!) * 100;
+
+      // Step 2: 台電帳單計算（條件性執行）
+      bool hasStep2Data = contractCapacityController.text.isNotEmpty &&
+          maxDemandController.text.isNotEmpty &&
+          billingUnitsController.text.isNotEmpty;
+
+      if (hasStep2Data) {
+        double contractCapacity = double.parse(contractCapacityController.text);
+        double maxDemand = double.parse(maxDemandController.text);
+        double billingUnits = double.parse(billingUnitsController.text);
+
+        // 計算基本電價
+        double basicElectricity =
+            ElectricityCalculator.calculateBasicElectricity(
+          contractCapacity: contractCapacity,
+          isSummer: timeTypeSummer,
+        );
+
+        // 計算超約費用
+        double excessDemand = ElectricityCalculator.calculateExcessDemand(
+          maxDemand: maxDemand,
+          contractCapacity: contractCapacity,
+          isSummer: timeTypeSummer,
+        );
+        String excessText = excessDemand > 0
+            ? ElectricityCalculator.roundUpFirstDecimal(excessDemand)
+                .toStringAsFixed(1)
+            : '無超約';
+
+        // 計算流動電價
+        double flowElectricity = ElectricityCalculator.calculateFlowElectricity(
+          billingUnits: billingUnits,
+          isSummer: timeTypeSummer,
+        );
+
+        // 計算總電價
+        double totalElectricity =
+            ElectricityCalculator.calculateTotalElectricity(
+          basicElectricity: basicElectricity,
+          flowElectricity: flowElectricity,
+          excessDemand: excessDemand,
+        );
+
+        // 更新 Step2 結果
+        basicElectricityController.text =
+            ElectricityCalculator.roundUpFirstDecimal(basicElectricity)
+                .toStringAsFixed(1);
+        excessDemandController.text = excessText;
+        flowElectricityController.text =
+            ElectricityCalculator.roundUpFirstDecimal(flowElectricity)
+                .toStringAsFixed(1);
+        totalElectricityController.text =
+            ElectricityCalculator.roundUpFirstDecimal(totalElectricity)
+                .toStringAsFixed(1);
+
+        step2Calculated = true;
+
+        // Step 3: 攤提時間計算（條件性執行，需要 Step2 數據）
+        bool hasStep3Data = step3LightCountController.text.isNotEmpty &&
+            ((pricingMethod == '租賃' && rentalPriceController.text.isNotEmpty) ||
+                (pricingMethod == '買斷' &&
+                    buyoutPriceController.text.isNotEmpty));
+
+        if (hasStep3Data) {
+          double step3LightCount = double.parse(step3LightCountController.text);
+
+          if (pricingMethod == '租賃' && rentalPriceController.text.isNotEmpty) {
+            double rentalPrice = double.parse(rentalPriceController.text);
+            double monthlyRental = rentalPrice * step3LightCount;
+
+            // 計算總共節省費用
+            double totalSaving = ElectricityCalculator.calculateSaving(
+              savingUnits: savingUnits,
+              isSummer: timeTypeSummer,
+            );
+            double totalMonthlySaving = totalSaving - monthlyRental;
+
+            monthlyRentalController.text =
+                ElectricityCalculator.roundUpFirstDecimal(monthlyRental)
+                    .toStringAsFixed(1);
+            totalMonthlySavingController.text =
+                ElectricityCalculator.roundUpFirstDecimal(totalMonthlySaving)
+                    .toStringAsFixed(1);
+          } else if (pricingMethod == '買斷' &&
+              buyoutPriceController.text.isNotEmpty) {
+            double buyoutPrice = double.parse(buyoutPriceController.text);
+            double buyoutTotal = buyoutPrice * step3LightCount;
+
+            // 計算總共節省費用
+            double totalSaving = ElectricityCalculator.calculateSaving(
+              savingUnits: savingUnits,
+              isSummer: timeTypeSummer,
+            );
+            double paybackPeriod = buyoutTotal / totalSaving;
+
+            buyoutTotalController.text =
+                ElectricityCalculator.roundUpFirstDecimal(buyoutTotal)
+                    .toStringAsFixed(1);
+            paybackPeriodController.text =
+                ElectricityCalculator.roundUpFirstDecimal(paybackPeriod)
+                    .toStringAsFixed(1);
+          }
+
+          step3Calculated = true;
+        } else {
+          // 清空 Step3 結果
+          monthlyRentalController.text = '';
+          totalMonthlySavingController.text = '';
+          buyoutTotalController.text = '';
+          paybackPeriodController.text = '';
+          step3Calculated = false;
+        }
+      } else {
+        // 清空 Step2 結果
+        basicElectricityController.text = '';
+        excessDemandController.text = '';
+        flowElectricityController.text = '';
+        totalElectricityController.text = '';
+        step2Calculated = false;
+
+        // 清空 Step3 結果
+        monthlyRentalController.text = '';
+        totalMonthlySavingController.text = '';
+        buyoutTotalController.text = '';
+        paybackPeriodController.text = '';
+        step3Calculated = false;
+      }
 
       _hasCalculated = true;
     });
@@ -249,9 +435,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
           ),
 
           Expanded(
-            child: isDesktop
-                ? _buildDesktopLayout()
-                : _buildMobileLayout(),
+            child: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(),
           ),
 
           // 底部導航按鈕
@@ -314,12 +498,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
               setState(() => drivewayAllDay = value ?? false),
           drivewayDaytimeStart: drivewayDaytimeStart,
           drivewayDaytimeEnd: drivewayDaytimeEnd,
-          onDrivewayDaytimeStartTap: () => _selectTime(
-              context, drivewayDaytimeStart,
-              (time) => drivewayDaytimeStart = time),
+          onDrivewayDaytimeStartTap: () => _selectTime(context,
+              drivewayDaytimeStart, (time) => drivewayDaytimeStart = time),
           onDrivewayDaytimeEndTap: () => _selectTime(
-              context, drivewayDaytimeEnd,
-              (time) => drivewayDaytimeEnd = time),
+              context, drivewayDaytimeEnd, (time) => drivewayDaytimeEnd = time),
           drivewayDayBrightnessBefore: drivewayDayBrightnessBefore,
           drivewayDayBrightnessAfter: drivewayDayBrightnessAfter,
           drivewayDaySensingTime: drivewayDaySensingTime,
@@ -331,12 +513,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
               setState(() => drivewayDaySensingTime = value ?? 30),
           drivewayNighttimeStart: drivewayNighttimeStart,
           drivewayNighttimeEnd: drivewayNighttimeEnd,
-          onDrivewayNighttimeStartTap: () => _selectTime(
-              context, drivewayNighttimeStart,
-              (time) => drivewayNighttimeStart = time),
-          onDrivewayNighttimeEndTap: () => _selectTime(
-              context, drivewayNighttimeEnd,
-              (time) => drivewayNighttimeEnd = time),
+          onDrivewayNighttimeStartTap: () => _selectTime(context,
+              drivewayNighttimeStart, (time) => drivewayNighttimeStart = time),
+          onDrivewayNighttimeEndTap: () => _selectTime(context,
+              drivewayNighttimeEnd, (time) => drivewayNighttimeEnd = time),
           drivewayNightBrightnessBefore: drivewayNightBrightnessBefore,
           drivewayNightBrightnessAfter: drivewayNightBrightnessAfter,
           drivewayNightSensingTime: drivewayNightSensingTime,
@@ -353,12 +533,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
               setState(() => parkingAllDay = value ?? false),
           parkingDaytimeStart: parkingDaytimeStart,
           parkingDaytimeEnd: parkingDaytimeEnd,
-          onParkingDaytimeStartTap: () => _selectTime(
-              context, parkingDaytimeStart,
-              (time) => parkingDaytimeStart = time),
+          onParkingDaytimeStartTap: () => _selectTime(context,
+              parkingDaytimeStart, (time) => parkingDaytimeStart = time),
           onParkingDaytimeEndTap: () => _selectTime(
-              context, parkingDaytimeEnd,
-              (time) => parkingDaytimeEnd = time),
+              context, parkingDaytimeEnd, (time) => parkingDaytimeEnd = time),
           parkingDayBrightnessBefore: parkingDayBrightnessBefore,
           parkingDayBrightnessAfter: parkingDayBrightnessAfter,
           parkingDaySensingTime: parkingDaySensingTime,
@@ -370,12 +548,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
               setState(() => parkingDaySensingTime = value ?? 30),
           parkingNighttimeStart: parkingNighttimeStart,
           parkingNighttimeEnd: parkingNighttimeEnd,
-          onParkingNighttimeStartTap: () => _selectTime(
-              context, parkingNighttimeStart,
-              (time) => parkingNighttimeStart = time),
-          onParkingNighttimeEndTap: () => _selectTime(
-              context, parkingNighttimeEnd,
-              (time) => parkingNighttimeEnd = time),
+          onParkingNighttimeStartTap: () => _selectTime(context,
+              parkingNighttimeStart, (time) => parkingNighttimeStart = time),
+          onParkingNighttimeEndTap: () => _selectTime(context,
+              parkingNighttimeEnd, (time) => parkingNighttimeEnd = time),
           parkingNightBrightnessBefore: parkingNightBrightnessBefore,
           parkingNightBrightnessAfter: parkingNightBrightnessAfter,
           parkingNightSensingTime: parkingNightSensingTime,
@@ -389,18 +565,59 @@ class _CalculatorPageState extends State<CalculatorPage> {
           onCalculate: _calculateResults,
         ),
 
-        // Step 2: 台電帳單 (暫時使用佔位符)
+        // Step 2: 台電帳單
         Step2BillInfo(
-          content: Center(
-            child: Text('台電帳單內容（待整合）'),
-          ),
+          timeTypeSummer: timeTypeSummer,
+          timeTypeNonSummer: timeTypeNonSummer,
+          onSummerChanged: (value) {
+            setState(() {
+              timeTypeSummer = value ?? false;
+              if (value == true) timeTypeNonSummer = false;
+            });
+          },
+          onNonSummerChanged: (value) {
+            setState(() {
+              timeTypeNonSummer = value ?? false;
+              if (value == true) timeTypeSummer = false;
+            });
+          },
+          contractCapacityController: contractCapacityController,
+          maxDemandController: maxDemandController,
+          billingUnitsController: billingUnitsController,
+          onContractCapacityChanged: (_) => setState(() {}),
+          onMaxDemandChanged: (_) => setState(() {}),
+          onBillingUnitsChanged: (_) => setState(() {}),
+          basicElectricityController: basicElectricityController,
+          excessDemandController: excessDemandController,
+          flowElectricityController: flowElectricityController,
+          totalElectricityController: totalElectricityController,
+          onInfoTap: _showFieldInfo,
+          step2Calculated: step2Calculated,
+          pieChart: null, // TODO: 整合圓餅圖組件
         ),
 
-        // Step 3: 攤提時間 (暫時使用佔位符)
+        // Step 3: 攤提時間
         Step3Payback(
-          content: Center(
-            child: Text('攤提時間內容（待整合）'),
-          ),
+          pricingMethod: pricingMethod,
+          onPricingMethodChanged: (value) {
+            setState(() {
+              pricingMethod = value;
+            });
+          },
+          rentalPriceController: rentalPriceController,
+          onRentalPriceChanged: (_) => setState(() {}),
+          buyoutPriceController: buyoutPriceController,
+          onBuyoutPriceChanged: (_) => setState(() {}),
+          step3LightCountController: step3LightCountController,
+          onLightCountChanged: (_) => setState(() {}),
+          monthlyRentalController: monthlyRentalController,
+          totalMonthlySavingController: totalMonthlySavingController,
+          buyoutTotalController: buyoutTotalController,
+          paybackPeriodController: paybackPeriodController,
+          onInfoTap: _showFieldInfo,
+          step2Calculated: step2Calculated,
+          step3Calculated: step3Calculated,
+          trendChart: null, // TODO: 整合折線圖組件
         ),
       ],
     );

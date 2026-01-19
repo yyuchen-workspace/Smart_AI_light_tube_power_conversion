@@ -141,12 +141,13 @@ class Step1AILights extends StatelessWidget {
           Text(
             '更換 AI 燈管後電力試算',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
               color: Colors.blue[900],
             ),
           ),
           SizedBox(height: 8),
+          /*
           Text(
             '請填寫傳統燈管數量及 AI 燈管亮燈策略',
             style: TextStyle(
@@ -154,10 +155,11 @@ class Step1AILights extends StatelessWidget {
               color: Colors.grey[600],
             ),
           ),
-          SizedBox(height: 32),
+          */
+          SizedBox(height: 16),
 
           // 傳統燈管設定
-          _buildSectionTitle('傳統燈管'),
+          _buildSectionTitle('原燈管'),
           SizedBox(height: 16),
           Row(
             children: [
@@ -212,14 +214,14 @@ class Step1AILights extends StatelessWidget {
                 Text(
                   '每月耗電',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 18,
                     color: Colors.grey[700],
                   ),
                 ),
                 Text(
                   traditionalMonthlyConsumption,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: Colors.blue[900],
                   ),
@@ -259,8 +261,10 @@ class Step1AILights extends StatelessWidget {
             nightBrightnessBefore: drivewayNightBrightnessBefore,
             nightBrightnessAfter: drivewayNightBrightnessAfter,
             nightSensingTime: drivewayNightSensingTime,
-            onNightBrightnessBeforeChanged: onDrivewayNightBrightnessBeforeChanged,
-            onNightBrightnessAfterChanged: onDrivewayNightBrightnessAfterChanged,
+            onNightBrightnessBeforeChanged:
+                onDrivewayNightBrightnessBeforeChanged,
+            onNightBrightnessAfterChanged:
+                onDrivewayNightBrightnessAfterChanged,
             onNightSensingTimeChanged: onDrivewayNightSensingTimeChanged,
             onCountChanged: onDrivewayCountChanged,
           ),
@@ -292,7 +296,8 @@ class Step1AILights extends StatelessWidget {
             nightBrightnessBefore: parkingNightBrightnessBefore,
             nightBrightnessAfter: parkingNightBrightnessAfter,
             nightSensingTime: parkingNightSensingTime,
-            onNightBrightnessBeforeChanged: onParkingNightBrightnessBeforeChanged,
+            onNightBrightnessBeforeChanged:
+                onParkingNightBrightnessBeforeChanged,
             onNightBrightnessAfterChanged: onParkingNightBrightnessAfterChanged,
             onNightSensingTimeChanged: onParkingNightSensingTimeChanged,
             onCountChanged: onParkingCountChanged,
@@ -313,7 +318,7 @@ class Step1AILights extends StatelessWidget {
               ),
               child: Text(
                 '計算結果',
-                style: TextStyle(fontSize: 16, color: Colors.white),
+                style: TextStyle(fontSize: 18, color: Colors.white),
               ),
             ),
           ),
@@ -326,7 +331,7 @@ class Step1AILights extends StatelessWidget {
     return Text(
       title,
       style: TextStyle(
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: FontWeight.bold,
         color: Colors.grey[800],
       ),

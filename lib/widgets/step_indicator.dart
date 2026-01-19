@@ -69,20 +69,22 @@ class StepIndicator extends StatelessWidget {
     if (isCompleted) {
       circleColor = Colors.green;
       textColor = Colors.green[700]!;
-      circleChild = Icon(Icons.check, color: Colors.white, size: 16);
+      circleChild = Icon(Icons.check, color: Colors.white, size: 20);
     } else if (isActive) {
       circleColor = Colors.blue;
       textColor = Colors.blue[700]!;
       circleChild = Text(
         '${index + 1}',
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        style: TextStyle(
+            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
       );
     } else {
       circleColor = Colors.grey[300]!;
       textColor = Colors.grey[600]!;
       circleChild = Text(
         '${index + 1}',
-        style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.bold),
+        style: TextStyle(
+            color: Colors.grey[600], fontWeight: FontWeight.bold, fontSize: 16),
       );
     }
 
@@ -104,7 +106,7 @@ class StepIndicator extends StatelessWidget {
         Text(
           title,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 16,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
             color: textColor,
           ),

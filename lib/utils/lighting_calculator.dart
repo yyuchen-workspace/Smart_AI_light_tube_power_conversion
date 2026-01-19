@@ -12,14 +12,14 @@ import '../constants/brightness_wattage_map.dart';
 
 class LightingCalculator {
   // 車道燈固定感應次數
-  static const int drivewayDaytimeSensing = 1440;  // 日間感應次數
-  static const int drivewayNighttimeSensing = 1285; // 夜間感應次數
-  static const int drivewayAllDaySensing = 2325;    // 全天候 = 1440 + 885
+  static const int drivewayDaytimeSensing = 1440; // 日間感應次數
+  static const int drivewayNighttimeSensing = 885; // 夜間感應次數
+  static const int drivewayAllDaySensing = 2325; // 全天候 = 1440 + 885
 
   // 車位燈固定感應次數
-  static const int parkingDaytimeSensing = 80;     // 日間感應次數
-  static const int parkingNighttimeSensing = 30;   // 夜間感應次數
-  static const int parkingAllDaySensing = 110;     // 全天候 = 80 + 30
+  static const int parkingDaytimeSensing = 80; // 日間感應次數
+  static const int parkingNighttimeSensing = 30; // 夜間感應次數
+  static const int parkingAllDaySensing = 110; // 全天候 = 80 + 30
 
   /// 計算車道燈平均每日消耗瓦數
   ///

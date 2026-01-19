@@ -5,13 +5,59 @@
  */
 
 import 'package:flutter/material.dart';
+import '../widgets/bill_info_form.dart';
 
 class Step2BillInfo extends StatelessWidget {
-  final Widget content; // 直接接收現有的 Step2 內容
+  // 季節選擇
+  final bool timeTypeSummer;
+  final bool timeTypeNonSummer;
+  final ValueChanged<bool?> onSummerChanged;
+  final ValueChanged<bool?> onNonSummerChanged;
+
+  // 輸入欄位控制器
+  final TextEditingController contractCapacityController;
+  final TextEditingController maxDemandController;
+  final TextEditingController billingUnitsController;
+
+  // 輸入變更回調
+  final ValueChanged<String>? onContractCapacityChanged;
+  final ValueChanged<String>? onMaxDemandChanged;
+  final ValueChanged<String>? onBillingUnitsChanged;
+
+  // 計算結果控制器
+  final TextEditingController basicElectricityController;
+  final TextEditingController excessDemandController;
+  final TextEditingController flowElectricityController;
+  final TextEditingController totalElectricityController;
+
+  // 資訊按鈕回調
+  final void Function(String fieldName) onInfoTap;
+
+  // 計算狀態
+  final bool step2Calculated;
+
+  // 圓餅圖組件（可選）
+  final Widget? pieChart;
 
   const Step2BillInfo({
     Key? key,
-    required this.content,
+    required this.timeTypeSummer,
+    required this.timeTypeNonSummer,
+    required this.onSummerChanged,
+    required this.onNonSummerChanged,
+    required this.contractCapacityController,
+    required this.maxDemandController,
+    required this.billingUnitsController,
+    this.onContractCapacityChanged,
+    this.onMaxDemandChanged,
+    this.onBillingUnitsChanged,
+    required this.basicElectricityController,
+    required this.excessDemandController,
+    required this.flowElectricityController,
+    required this.totalElectricityController,
+    required this.onInfoTap,
+    required this.step2Calculated,
+    this.pieChart,
   }) : super(key: key);
 
   @override
@@ -40,8 +86,26 @@ class Step2BillInfo extends StatelessWidget {
           ),
           SizedBox(height: 32),
 
-          // 原有內容
-          content,
+          // 台電帳單表單
+          BillInfoForm(
+            timeTypeSummer: timeTypeSummer,
+            timeTypeNonSummer: timeTypeNonSummer,
+            onSummerChanged: onSummerChanged,
+            onNonSummerChanged: onNonSummerChanged,
+            contractCapacityController: contractCapacityController,
+            maxDemandController: maxDemandController,
+            billingUnitsController: billingUnitsController,
+            onContractCapacityChanged: onContractCapacityChanged,
+            onMaxDemandChanged: onMaxDemandChanged,
+            onBillingUnitsChanged: onBillingUnitsChanged,
+            basicElectricityController: basicElectricityController,
+            excessDemandController: excessDemandController,
+            flowElectricityController: flowElectricityController,
+            totalElectricityController: totalElectricityController,
+            onInfoTap: onInfoTap,
+            step2Calculated: step2Calculated,
+            pieChart: pieChart,
+          ),
         ],
       ),
     );

@@ -31,7 +31,8 @@ class TimeSlotConfig {
   /// 計算時段長度(小時)
   double get duration {
     if (isAllDay) return 24.0;
-    return endHour - startHour;
+    double diff = endHour - startHour;
+    return diff < 0 ? diff + 24 : diff; // 處理跨午夜情況
   }
 }
 

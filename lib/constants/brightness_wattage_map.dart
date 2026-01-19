@@ -50,6 +50,7 @@ class BrightnessWattageMap {
     60,
     90,
     120,
+    180,
     300
   ];
 }
