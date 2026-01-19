@@ -5,10 +5,8 @@ import '../constants/electricity_pricing.dart';
 /// 提供台電電費相關的計算方法
 /// 所有方法均為靜態方法（純函數），不依賴實例狀態
 class ElectricityCalculator {
-  // ========== 基本電價計算 ==========
-
+  // 基本電價計算
   /// 計算基本電價（契約容量 × 時期電價）
-  ///
   /// [contractCapacity] 契約容量（瓩）
   /// [isSummer] 是否為夏季
   /// 返回基本電價（元）
@@ -22,13 +20,11 @@ class ElectricityCalculator {
     return contractCapacity * price;
   }
 
-  // ========== 超約費用計算 ==========
+  // 超約費用計算
 
   /// 計算超約費用
-  ///
   /// 公式：(最高需量 - 契約容量) × 1.5 × 時期電價
   /// 只有當最高需量超過契約容量時才會產生超約費用
-  ///
   /// [maxDemand] 最高需量（瓩）
   /// [contractCapacity] 契約容量（瓩）
   /// [isSummer] 是否為夏季

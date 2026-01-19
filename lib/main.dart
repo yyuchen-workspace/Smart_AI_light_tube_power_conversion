@@ -1,39 +1,151 @@
+/*
+ * ============================================================
+ * 智慧AI燈管電力換算應用程式
+ * ============================================================
+ *
+ * 【專案目的】
+ * 幫助用戶計算更換AI智慧燈管後的節電效益與投資回報
+ *
+ * 【功能概述】
+ * 1. 第一步：計算更換AI燈管後的節電量與節省電費
+ * 2. 第二步：根據台電帳單資訊計算詳細電費組成
+ * 3. 第三步：試算租賃或買斷方案的回本時間
+ *
+ * 【架構說明】
+ * - UI層：本檔案 (main.dart) - 處理使用者介面與互動
+ * - 邏輯層：utils/electricity_calculator.dart - 電費計算邏輯
+ * - 資料層：constants/electricity_pricing.dart - 電價常數
+ * - 元件層：widgets/ - 可重用的UI元件(圖表、輸入框等)
+ */
+
+// Flutter 核心套件：提供 UI 元件 (Widget)
 import 'package:flutter/material.dart';
+
+// Flutter 服務套件：提供輸入格式限制功能 (如只能輸入數字)
 import 'package:flutter/services.dart';
+
+// 自訂圖表元件：節電效益長條圖
 import 'widgets/charts/power_saving_chart.dart';
+
+// 自訂圖表元件：電費組成圓餅圖
 import 'widgets/charts/electricity_cost_pie_chart.dart';
+
+// 自訂圖表元件：回本時間趨勢折線圖
 import 'widgets/charts/payback_trend_chart.dart';
+
+// 自訂輸入元件：統一的輸入欄位樣式
 import 'widgets/common/input_field.dart';
+
+// 🆕 版本6.0: 亮燈策略設定元件
+import 'widgets/lighting_strategy_config.dart';
+
+// 電價常數：台電電價、燈管功率等固定數值
 import 'constants/electricity_pricing.dart';
+
+// 計算工具：所有電費計算邏輯
 import 'utils/electricity_calculator.dart';
 
+// 🆕 版本6.0: 亮燈策略計算工具
+import 'utils/lighting_calculator.dart';
+
+// 🆕 版本6.0: 亮燈策略資料模型
+import 'models/lighting_strategy.dart';
+
+/*
+ * ============================================================
+ * 程式進入點 (Entry Point)
+ * ============================================================
+ *
+ * 【重要概念】
+ * main() 是 Dart 程式的起點，系統執行時會先呼叫這個函式
+ * runApp() 會啟動 Flutter 應用程式並顯示指定的 Widget
+ */
 void main() {
-  runApp(MyApp());
+  runApp(MyApp()); // 啟動應用程式，根元件是 MyApp
 }
 
+/*
+ * ============================================================
+ * 應用程式根元件 (Root Widget)
+ * ============================================================
+ *
+ * 【重要概念：StatelessWidget vs StatefulWidget】
+ * - StatelessWidget：不可變元件，無狀態，適合靜態內容
+ * - StatefulWidget：可變元件，有狀態，適合需要互動或資料變化的內容
+ *
+ * MyApp 使用 StatelessWidget 因為它只負責設定應用程式的基本配置
+ * (標題、主題色等)，這些設定在執行期間不會改變
+ */
 class MyApp extends StatelessWidget {
+  // @override 表示這個方法是覆寫父類別的方法
+  // build() 是 Widget 的核心方法，用來描述這個元件要顯示什麼
   @override
   Widget build(BuildContext context) {
+    // MaterialApp 是 Flutter 提供的應用程式框架
+    // 它提供了導航、主題、多語系等基礎功能
     return MaterialApp(
-      title: '智慧AI燈管電力換算',
+      title: '智慧AI燈管電力換算', // 應用程式標題 (顯示在瀏覽器分頁或工作管理員)
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.blue, // 主題色：藍色系
       ),
-      home: CalculatorPage(),
+      home: CalculatorPage(), // 首頁：計算器頁面
     );
   }
 }
 
+/*
+ * ============================================================
+ * 計算器頁面 (StatefulWidget 部分)
+ * ============================================================
+ *
+ * 【重要概念：StatefulWidget 的兩段式設計】
+ * StatefulWidget 由兩個類別組成：
+ * 1. CalculatorPage (不可變)：定義元件的身份
+ * 2. _CalculatorPageState (可變)：保存元件的狀態資料
+ *
+ * 為什麼分成兩個類別？
+ * - 當狀態改變時，Flutter 只重建 State，不重建 Widget
+ * - 這樣可以保留元件的身份，同時更新顯示內容
+ * - 提升效能，避免不必要的資源重建
+ */
 class CalculatorPage extends StatefulWidget {
+  // createState() 方法用來創建對應的 State 物件
+  // => 是 Dart 的簡寫語法，等同於 { return _CalculatorPageState(); }
   @override
   _CalculatorPageState createState() => _CalculatorPageState();
 }
 
+/*
+ * ============================================================
+ * 計算器頁面的狀態類別
+ * ============================================================
+ *
+ * 【命名規則】
+ * 類別名稱前的 _ 表示這是私有類別 (private)
+ * 只能在本檔案內使用，外部無法存取
+ *
+ * 【設計模式：Controller Pattern】
+ * 使用 TextEditingController 來管理輸入欄位
+ * - 可以讀取輸入框的值 (controller.text)
+ * - 可以設定輸入框的值 (controller.text = '123')
+ * - 可以監聽輸入變化 (controller.addListener())
+ */
 class _CalculatorPageState extends State<CalculatorPage> {
-  // 第一步：台電帳單資訊 - 輸入控制器
+  // ====================================
+  // 第一步：台電帳單資訊 - 輸入欄位控制器
+  // ====================================
+
+  // final 表示變數一旦賦值後就不能再改變 (但物件內部的屬性可以改變)
+  // 這些控制器物件本身不會變，但控制的文字內容會變
+
+  // 契約容量：用戶與台電約定的最大用電容量 (單位：瓩)
   final TextEditingController contractCapacityController =
       TextEditingController();
+
+  // 最高需量：實際用電的最高紀錄 (單位：瓩)
   final TextEditingController maxDemandController = TextEditingController();
+
+  // 計費度數：本期實際用電量 (單位：度)
   final TextEditingController billingUnitsController = TextEditingController();
 
   // 第一步：台電帳單資訊 - 唯讀結果控制器
@@ -54,10 +166,44 @@ class _CalculatorPageState extends State<CalculatorPage> {
   final TextEditingController drivewayLightController = TextEditingController();
   final TextEditingController parkingLightController = TextEditingController();
 
+  // ====================================
+  // 🆕 版本6.0: 亮燈策略狀態變數
+  // ====================================
+
+  // 車道燈策略
+  bool drivewayAllDay = false;  // 是否全天候
+  TimeOfDay drivewayDaytimeStart = TimeOfDay(hour: 6, minute: 0);   // 日間開始
+  TimeOfDay drivewayDaytimeEnd = TimeOfDay(hour: 18, minute: 0);    // 日間結束
+  TimeOfDay? drivewayNighttimeStart = TimeOfDay(hour: 18, minute: 0); // 夜間開始
+  TimeOfDay? drivewayNighttimeEnd = TimeOfDay(hour: 6, minute: 0);    // 夜間結束
+
+  int drivewayDayBrightnessBefore = 30;   // 日間感應前亮度
+  int drivewayDayBrightnessAfter = 100;   // 日間感應後亮度
+  int drivewayDaySensingTime = 30;        // 日間感應時間(秒)
+
+  int? drivewayNightBrightnessBefore = 10; // 夜間感應前亮度
+  int? drivewayNightBrightnessAfter = 100; // 夜間感應後亮度
+  int? drivewayNightSensingTime = 30;      // 夜間感應時間(秒)
+
+  // 車位燈策略
+  bool parkingAllDay = false;  // 是否全天候
+  TimeOfDay parkingDaytimeStart = TimeOfDay(hour: 6, minute: 0);
+  TimeOfDay parkingDaytimeEnd = TimeOfDay(hour: 18, minute: 0);
+  TimeOfDay? parkingNighttimeStart = TimeOfDay(hour: 18, minute: 0);
+  TimeOfDay? parkingNighttimeEnd = TimeOfDay(hour: 6, minute: 0);
+
+  int parkingDayBrightnessBefore = 30;
+  int parkingDayBrightnessAfter = 100;
+  int parkingDaySensingTime = 30;
+
+  int? parkingNightBrightnessBefore = 10;
+  int? parkingNightBrightnessAfter = 100;
+  int? parkingNightSensingTime = 30;
+
   // 第二步：燈管電力試算 - 唯讀結果控制器
   final TextEditingController monthlyConsumptionBeforeController =
       TextEditingController();
-  final TextEditingController aiLightWattController = TextEditingController();
+  // ❌ 已刪除: aiLightWattController (版本6.0改為自訂亮度策略)
   final TextEditingController monthlyConsumptionAfterController =
       TextEditingController();
   final TextEditingController savingUnitsController = TextEditingController();
@@ -109,18 +255,61 @@ class _CalculatorPageState extends State<CalculatorPage> {
   double backgroundSavingUnits = 0.0;
   double backgroundTotalSaving = 0.0;
 
+  /*
+   * ============================================================
+   * 生命週期方法：initState()
+   * ============================================================
+   *
+   * 【重要概念：Widget 生命週期】
+   * initState() 是 StatefulWidget 的初始化方法
+   * 在元件第一次被創建時呼叫，只會執行一次
+   *
+   * 【執行順序】
+   * 1. 建構子 (Constructor)
+   * 2. initState() ← 我們在這裡
+   * 3. build()
+   * 4. ... 元件運作中 ...
+   * 5. dispose()
+   *
+   * 【常見用途】
+   * - 初始化控制器
+   * - 設定預設值
+   * - 訂閱串流或監聽器
+   * - 載入初始資料
+   */
   @override
   void initState() {
-    super.initState();
+    super.initState(); // 必須先呼叫父類別的 initState()
+
+    // 設定狀態欄的初始提示訊息
     statusController.text = '完成所有選項設定後點擊計算結果';
-    aiLightWattController.text = ElectricityPricing.aiLightWatt.toString();
+
+    // ❌ 已刪除: aiLightWattController 初始化 (版本6.0不再使用固定瓦數)
 
     // 不再使用 addListener，改為在 TextField 中使用 onChanged
+    // 原因：onChanged 更直觀，可以在每個輸入框獨立處理變化事件
   }
 
+  /*
+   * ============================================================
+   * 生命週期方法：dispose()
+   * ============================================================
+   *
+   * 【重要概念：資源清理】
+   * dispose() 在元件被銷毀前呼叫
+   * 必須釋放所有佔用的資源，否則會造成記憶體洩漏 (Memory Leak)
+   *
+   * 【為什麼要 dispose TextEditingController？】
+   * Controller 內部會建立監聽器和緩衝區
+   * 如果不手動釋放，即使 Widget 銷毀了，這些資源仍會佔用記憶體
+   *
+   * 【記憶口訣】
+   * 有 new/create 的地方，就要有 dispose
+   */
   @override
   void dispose() {
-    // 清理所有控制器
+    // 釋放所有 TextEditingController 佔用的資源
+    // 必須逐一呼叫每個 controller 的 dispose()
     contractCapacityController.dispose();
     maxDemandController.dispose();
     billingUnitsController.dispose();
@@ -133,7 +322,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
     drivewayLightController.dispose();
     parkingLightController.dispose();
     monthlyConsumptionBeforeController.dispose();
-    aiLightWattController.dispose();
+    // ❌ 已刪除: aiLightWattController.dispose()
     monthlyConsumptionAfterController.dispose();
     savingUnitsController.dispose();
     savingPercentController.dispose();
@@ -147,22 +336,116 @@ class _CalculatorPageState extends State<CalculatorPage> {
     totalMonthlySavingController.dispose();
     paybackPeriodController.dispose();
     statusController.dispose();
+
+    // 最後呼叫父類別的 dispose()，完成清理流程
     super.dispose();
   }
 
+  /*
+   * ============================================================
+   * 輔助方法：_updateNotification()
+   * ============================================================
+   *
+   * 【方法命名規則】
+   * 方法名稱前的 _ 表示這是私有方法 (private)
+   * 只能在本類別內部使用，外部無法呼叫
+   *
+   * 【功能說明】
+   * 當使用者修改輸入欄位時，提醒他們需要重新計算
+   * 避免使用者誤以為看到的是最新結果
+   *
+   * 【setState() 的重要性】
+   * 必須在 setState() 內修改狀態變數
+   * 這樣 Flutter 才知道需要重新繪製畫面
+   */
   void _updateNotification() {
+    // 只有在「已經計算過」且「還沒標記需要重算」的情況下才提示
     if (isCalculated && !needsRecalculation) {
       setState(() {
+        // 標記為需要重新計算
         needsRecalculation = true;
+
+        // 更新狀態欄文字，用紅色警告使用者
         statusController.text = '務必點擊「計算結果」，重新計算！！';
       });
     }
   }
 
+  /*
+   * ============================================================
+   * 輔助方法：_roundUpFirstDecimal()
+   * ============================================================
+   *
+   * 【功能說明】
+   * 數字無條件進位到小數點第一位
+   * 例如：12.34 → 12.4，12.31 → 12.4
+   *
+   * 【為什麼需要這個方法？】
+   * 實際上只是呼叫 ElectricityCalculator 的方法
+   * 這裡包裝一層是為了程式碼更簡潔，避免每次都寫長長的類別名稱
+   *
+   * 【設計模式：Facade Pattern (外觀模式)】
+   * 提供一個簡化的介面來存取複雜的系統
+   */
   double _roundUpFirstDecimal(double value) {
     return ElectricityCalculator.roundUpFirstDecimal(value);
   }
 
+  /*
+   * ============================================================
+   * 輔助方法：_selectTime()
+   * ============================================================
+   *
+   * 【功能說明】
+   * 🆕 版本6.0: 顯示時間選擇器對話框
+   * 讓使用者選擇時間 (小時:分鐘)
+   *
+   * 【參數】
+   * - context: BuildContext,用於顯示對話框
+   * - initialTime: 初始時間
+   * - onTimeSelected: 時間選擇後的回調函式
+   */
+  Future<void> _selectTime(
+    BuildContext context,
+    TimeOfDay initialTime,
+    Function(TimeOfDay) onTimeSelected,
+  ) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null && picked != initialTime) {
+      onTimeSelected(picked);
+    }
+  }
+
+  /*
+   * ============================================================
+   * 核心方法：_calculateResults()
+   * ============================================================
+   *
+   * 【功能說明】
+   * 這是整個應用程式最重要的方法！
+   * 負責驗證輸入、執行計算、更新結果
+   *
+   * 【執行流程】
+   * 1. 驗證所有必填欄位
+   * 2. 執行第一步計算 (AI燈管節電量)
+   * 3. (選填)執行第二步計算 (台電帳單)
+   * 4. (選填)執行第三步計算 (攤提時間)
+   * 5. 更新 UI 顯示結果
+   *
+   * 【錯誤處理策略】
+   * 收集所有錯誤後一次性顯示，而不是遇到第一個錯誤就停止
+   * 這樣使用者可以一次看到所有需要修正的地方
+   */
   void _calculateResults() {
     List<String> errors = [];
 
@@ -261,13 +544,84 @@ class _CalculatorPageState extends State<CalculatorPage> {
     double monthlyConsumptionBefore =
         currentLightWatt * lightCount * 24 * 30 / 1000;
 
-    // AI燈管月耗電：車道燈和車位燈分別計算
-    double drivewayCount = double.parse(drivewayLightController.text);
-    double parkingCount = double.parse(parkingLightController.text);
-    double monthlyConsumptionAfter = ElectricityCalculator.calculateAIConsumption(
-      drivewayCount: drivewayCount,
-      parkingCount: parkingCount,
+    // 🆕 版本6.0: 使用新的亮燈策略計算 AI 燈管耗電
+    // 解析車道燈數量
+    int drivewayCount = int.tryParse(drivewayLightController.text) ?? 0;
+    int parkingCount = int.tryParse(parkingLightController.text) ?? 0;
+
+    // 建立車道燈策略物件
+    var drivewayStrategy = LightingStrategy(
+      count: drivewayCount,
+      daytime: TimeSlotConfig(
+        startHour: drivewayDaytimeStart.hour + drivewayDaytimeStart.minute / 60.0,
+        endHour: drivewayDaytimeEnd.hour + drivewayDaytimeEnd.minute / 60.0,
+        isAllDay: drivewayAllDay,
+        brightness: BrightnessConfig(
+          brightnessBeforeSensing: drivewayDayBrightnessBefore,
+          brightnessAfterSensing: drivewayDayBrightnessAfter,
+          sensingDuration: drivewayDaySensingTime,
+        ),
+      ),
+      nighttime: drivewayAllDay
+          ? null
+          : TimeSlotConfig(
+              startHour: (drivewayNighttimeStart?.hour ?? 18) +
+                  (drivewayNighttimeStart?.minute ?? 0) / 60.0,
+              endHour: (drivewayNighttimeEnd?.hour ?? 6) +
+                  (drivewayNighttimeEnd?.minute ?? 0) / 60.0,
+              isAllDay: false,
+              brightness: BrightnessConfig(
+                brightnessBeforeSensing: drivewayNightBrightnessBefore ?? 10,
+                brightnessAfterSensing: drivewayNightBrightnessAfter ?? 100,
+                sensingDuration: drivewayNightSensingTime ?? 30,
+              ),
+            ),
     );
+
+    // 建立車位燈策略物件
+    var parkingStrategy = LightingStrategy(
+      count: parkingCount,
+      daytime: TimeSlotConfig(
+        startHour: parkingDaytimeStart.hour + parkingDaytimeStart.minute / 60.0,
+        endHour: parkingDaytimeEnd.hour + parkingDaytimeEnd.minute / 60.0,
+        isAllDay: parkingAllDay,
+        brightness: BrightnessConfig(
+          brightnessBeforeSensing: parkingDayBrightnessBefore,
+          brightnessAfterSensing: parkingDayBrightnessAfter,
+          sensingDuration: parkingDaySensingTime,
+        ),
+      ),
+      nighttime: parkingAllDay
+          ? null
+          : TimeSlotConfig(
+              startHour: (parkingNighttimeStart?.hour ?? 18) +
+                  (parkingNighttimeStart?.minute ?? 0) / 60.0,
+              endHour: (parkingNighttimeEnd?.hour ?? 6) +
+                  (parkingNighttimeEnd?.minute ?? 0) / 60.0,
+              isAllDay: false,
+              brightness: BrightnessConfig(
+                brightnessBeforeSensing: parkingNightBrightnessBefore ?? 10,
+                brightnessAfterSensing: parkingNightBrightnessAfter ?? 100,
+                sensingDuration: parkingNightSensingTime ?? 30,
+              ),
+            ),
+    );
+
+    // 計算車道燈每日瓦數
+    double drivewayDailyWattage =
+        LightingCalculator.calculateDrivewayWattage(drivewayStrategy);
+
+    // 計算車位燈每日瓦數
+    double parkingDailyWattage =
+        LightingCalculator.calculateParkingWattage(parkingStrategy);
+
+    // 計算每月總耗電 (度)
+    double drivewayMonthly = LightingCalculator.calculateMonthlyConsumption(
+        drivewayDailyWattage, drivewayCount);
+    double parkingMonthly = LightingCalculator.calculateMonthlyConsumption(
+        parkingDailyWattage, parkingCount);
+
+    double monthlyConsumptionAfter = drivewayMonthly + parkingMonthly;
     double savingUnits = monthlyConsumptionBefore - monthlyConsumptionAfter;
     backgroundSavingUnits = savingUnits;
     double savingPercent = (savingUnits / monthlyConsumptionBefore) * 100;
@@ -299,7 +653,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
         isSummer: timeTypeSummer,
       );
       if (excessDemand > 0) {
-        excessText = ElectricityCalculator.roundUpFirstDecimal(excessDemand).toStringAsFixed(1);
+        excessText = ElectricityCalculator.roundUpFirstDecimal(excessDemand)
+            .toStringAsFixed(1);
       }
 
       flowElectricity = ElectricityCalculator.calculateFlowElectricity(
@@ -626,7 +981,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
       // 為AI燈管每月耗電特殊處理，部分文字顯示紅色
       double drivewayCount = double.tryParse(drivewayLightController.text) ?? 0;
       double parkingCount = double.tryParse(parkingLightController.text) ?? 0;
-      double drivewayTotal = ElectricityPricing.drivewayLightWatt * drivewayCount;
+      double drivewayTotal =
+          ElectricityPricing.drivewayLightWatt * drivewayCount;
       double parkingTotal = ElectricityPricing.parkingLightWatt * parkingCount;
       double result = (drivewayTotal + parkingTotal) * 30 / 1000;
 
@@ -721,7 +1077,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
     double lightCount = double.tryParse(lightCountController.text) ?? 0;
 
     // 根據時間種類決定電價
-    double capacityPrice = ElectricityCalculator.getCapacityPrice(timeTypeSummer);
+    double capacityPrice =
+        ElectricityCalculator.getCapacityPrice(timeTypeSummer);
     double unitPrice = ElectricityCalculator.getUnitPrice(timeTypeSummer);
     String capacityPriceText = timeTypeSummer ? '236.2' : '173.2';
     String unitPriceText = timeTypeSummer ? '4.08' : '3.87';
@@ -773,8 +1130,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
         double drivewayCount =
             double.tryParse(drivewayLightController.text) ?? 0;
         double parkingCount = double.tryParse(parkingLightController.text) ?? 0;
-        double drivewayTotal = ElectricityPricing.drivewayLightWatt * drivewayCount;
-        double parkingTotal = ElectricityPricing.parkingLightWatt * parkingCount;
+        double drivewayTotal =
+            ElectricityPricing.drivewayLightWatt * drivewayCount;
+        double parkingTotal =
+            ElectricityPricing.parkingLightWatt * parkingCount;
         double result = (drivewayTotal + parkingTotal) * 30 / 1000;
         return '''車道燈：
 尖峰7小時:感應前亮30%，感應後亮70%
@@ -1041,7 +1400,6 @@ class _CalculatorPageState extends State<CalculatorPage> {
     );
   }
 
-
   Widget _buildStatusBar() {
     Color statusColor = needsRecalculation
         ? Colors.red
@@ -1097,419 +1455,558 @@ class _CalculatorPageState extends State<CalculatorPage> {
               children: [
                 // 第一步和第二步並排布局
                 if (isDesktop) ...[
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  // 🆕 改用 Column 讓第一步和第二步垂直排列，避免版面太擠
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                        // 第一步：更換AI燈管後電力試算
-                        Expanded(
-                          flex: 1,
-                          child: _buildSectionCard(
-                            color: Colors.green[50],
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Center(
-                                  child: Text('第一步：更換AI燈管後電力試算',
-                                      style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold)),
-                                ),
-                                SizedBox(height: 16),
+                      // 第一步：更換AI燈管後電力試算
+                      _buildSectionCard(
+                          color: Colors.green[50],
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Center(
+                                child: Text('第一步：更換AI燈管後電力試算',
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                              SizedBox(height: 16),
 
-                                // 三欄分佈佈局
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // 左邊：更換前區塊
-                                    Expanded(
-                                      flex: 2,
+                              // 三欄分佈佈局
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // 左邊：更換前區塊
+                                  Expanded(
+                                    flex: 2,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Center(
+                                          child: Text('原燈管',
+                                              style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold)),
+                                        ),
+                                        SizedBox(height: 12),
+                                        Container(
+                                          padding: EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color: Colors.green[25],
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            border: Border.all(
+                                                color: Colors.green[200]!,
+                                                width: 1),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              _buildInputFieldWithUnit(
+                                                  '目前使用燈管瓦數',
+                                                  currentLightWattController,
+                                                  'W',
+                                                  onChanged: (_) =>
+                                                      _updateNotification()),
+                                              SizedBox(height: 12),
+                                              _buildInputFieldWithUnit('燈管數量',
+                                                  lightCountController, '支',
+                                                  integerOnly: true,
+                                                  onChanged: (value) {
+                                                _updateNotification();
+                                              }),
+                                              SizedBox(height: 12),
+                                              _buildReadOnlyFieldWithUnit(
+                                                  '每月耗電(度)',
+                                                  monthlyConsumptionBeforeController,
+                                                  '度',
+                                                  hasInfo: true),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  SizedBox(width: 12),
+
+                                  // 右邊：更換後資訊與計算結果
+                                  Expanded(
+                                    flex: 4,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Center(
+                                          child: Text(
+                                              '更換AI燈管後 (僅供參考，亮燈策略將影響實際成果)',
+                                              style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold)),
+                                        ),
+                                        SizedBox(height: 12),
+                                        Container(
+                                          padding: EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color: Colors.green[25],
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            border: Border.all(
+                                                color: Colors.green[200]!,
+                                                width: 1),
+                                          ),
+                                          child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              // 左半部：AI燈管基本資訊
+                                              Expanded(
+                                                flex: 1,
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    // 🆕 版本6.0: 車道燈亮燈策略
+                                                    LightingStrategyConfig(
+                                                      title: '車道燈',
+                                                      countController: drivewayLightController,
+                                                      isAllDay: drivewayAllDay,
+                                                      onAllDayChanged: (val) {
+                                                        setState(() {
+                                                          drivewayAllDay = val ?? false;
+                                                          _updateNotification();
+                                                        });
+                                                      },
+                                                      daytimeStart: drivewayDaytimeStart,
+                                                      daytimeEnd: drivewayDaytimeEnd,
+                                                      onDaytimeStartTap: () => _selectTime(
+                                                        context,
+                                                        drivewayDaytimeStart,
+                                                        (time) => setState(() {
+                                                          drivewayDaytimeStart = time;
+                                                          _updateNotification();
+                                                        }),
+                                                      ),
+                                                      onDaytimeEndTap: () => _selectTime(
+                                                        context,
+                                                        drivewayDaytimeEnd,
+                                                        (time) => setState(() {
+                                                          drivewayDaytimeEnd = time;
+                                                          _updateNotification();
+                                                        }),
+                                                      ),
+                                                      dayBrightnessBefore: drivewayDayBrightnessBefore,
+                                                      dayBrightnessAfter: drivewayDayBrightnessAfter,
+                                                      daySensingTime: drivewayDaySensingTime,
+                                                      onDayBrightnessBeforeChanged: (val) => setState(() {
+                                                        drivewayDayBrightnessBefore = val ?? 30;
+                                                        _updateNotification();
+                                                      }),
+                                                      onDayBrightnessAfterChanged: (val) => setState(() {
+                                                        drivewayDayBrightnessAfter = val ?? 100;
+                                                        _updateNotification();
+                                                      }),
+                                                      onDaySensingTimeChanged: (val) => setState(() {
+                                                        drivewayDaySensingTime = val ?? 30;
+                                                        _updateNotification();
+                                                      }),
+                                                      nighttimeStart: drivewayNighttimeStart,
+                                                      nighttimeEnd: drivewayNighttimeEnd,
+                                                      onNighttimeStartTap: () => _selectTime(
+                                                        context,
+                                                        drivewayNighttimeStart ?? TimeOfDay(hour: 18, minute: 0),
+                                                        (time) => setState(() {
+                                                          drivewayNighttimeStart = time;
+                                                          _updateNotification();
+                                                        }),
+                                                      ),
+                                                      onNighttimeEndTap: () => _selectTime(
+                                                        context,
+                                                        drivewayNighttimeEnd ?? TimeOfDay(hour: 6, minute: 0),
+                                                        (time) => setState(() {
+                                                          drivewayNighttimeEnd = time;
+                                                          _updateNotification();
+                                                        }),
+                                                      ),
+                                                      nightBrightnessBefore: drivewayNightBrightnessBefore,
+                                                      nightBrightnessAfter: drivewayNightBrightnessAfter,
+                                                      nightSensingTime: drivewayNightSensingTime,
+                                                      onNightBrightnessBeforeChanged: (val) => setState(() {
+                                                        drivewayNightBrightnessBefore = val;
+                                                        _updateNotification();
+                                                      }),
+                                                      onNightBrightnessAfterChanged: (val) => setState(() {
+                                                        drivewayNightBrightnessAfter = val;
+                                                        _updateNotification();
+                                                      }),
+                                                      onNightSensingTimeChanged: (val) => setState(() {
+                                                        drivewayNightSensingTime = val;
+                                                        _updateNotification();
+                                                      }),
+                                                      onCountChanged: (_) => _updateNotification(),
+                                                    ),
+                                                    SizedBox(height: 16),
+
+                                                    // 🆕 版本6.0: 車位燈亮燈策略
+                                                    LightingStrategyConfig(
+                                                      title: '車位燈',
+                                                      countController: parkingLightController,
+                                                      isAllDay: parkingAllDay,
+                                                      onAllDayChanged: (val) {
+                                                        setState(() {
+                                                          parkingAllDay = val ?? false;
+                                                          _updateNotification();
+                                                        });
+                                                      },
+                                                      daytimeStart: parkingDaytimeStart,
+                                                      daytimeEnd: parkingDaytimeEnd,
+                                                      onDaytimeStartTap: () => _selectTime(
+                                                        context,
+                                                        parkingDaytimeStart,
+                                                        (time) => setState(() {
+                                                          parkingDaytimeStart = time;
+                                                          _updateNotification();
+                                                        }),
+                                                      ),
+                                                      onDaytimeEndTap: () => _selectTime(
+                                                        context,
+                                                        parkingDaytimeEnd,
+                                                        (time) => setState(() {
+                                                          parkingDaytimeEnd = time;
+                                                          _updateNotification();
+                                                        }),
+                                                      ),
+                                                      dayBrightnessBefore: parkingDayBrightnessBefore,
+                                                      dayBrightnessAfter: parkingDayBrightnessAfter,
+                                                      daySensingTime: parkingDaySensingTime,
+                                                      onDayBrightnessBeforeChanged: (val) => setState(() {
+                                                        parkingDayBrightnessBefore = val ?? 30;
+                                                        _updateNotification();
+                                                      }),
+                                                      onDayBrightnessAfterChanged: (val) => setState(() {
+                                                        parkingDayBrightnessAfter = val ?? 100;
+                                                        _updateNotification();
+                                                      }),
+                                                      onDaySensingTimeChanged: (val) => setState(() {
+                                                        parkingDaySensingTime = val ?? 30;
+                                                        _updateNotification();
+                                                      }),
+                                                      nighttimeStart: parkingNighttimeStart,
+                                                      nighttimeEnd: parkingNighttimeEnd,
+                                                      onNighttimeStartTap: () => _selectTime(
+                                                        context,
+                                                        parkingNighttimeStart ?? TimeOfDay(hour: 18, minute: 0),
+                                                        (time) => setState(() {
+                                                          parkingNighttimeStart = time;
+                                                          _updateNotification();
+                                                        }),
+                                                      ),
+                                                      onNighttimeEndTap: () => _selectTime(
+                                                        context,
+                                                        parkingNighttimeEnd ?? TimeOfDay(hour: 6, minute: 0),
+                                                        (time) => setState(() {
+                                                          parkingNighttimeEnd = time;
+                                                          _updateNotification();
+                                                        }),
+                                                      ),
+                                                      nightBrightnessBefore: parkingNightBrightnessBefore,
+                                                      nightBrightnessAfter: parkingNightBrightnessAfter,
+                                                      nightSensingTime: parkingNightSensingTime,
+                                                      onNightBrightnessBeforeChanged: (val) => setState(() {
+                                                        parkingNightBrightnessBefore = val;
+                                                        _updateNotification();
+                                                      }),
+                                                      onNightBrightnessAfterChanged: (val) => setState(() {
+                                                        parkingNightBrightnessAfter = val;
+                                                        _updateNotification();
+                                                      }),
+                                                      onNightSensingTimeChanged: (val) => setState(() {
+                                                        parkingNightSensingTime = val;
+                                                        _updateNotification();
+                                                      }),
+                                                      onCountChanged: (_) => _updateNotification(),
+                                                    ),
+                                                    SizedBox(height: 12),
+                                                    _buildReadOnlyFieldWithUnit(
+                                                        'AI燈管每月耗電(度)',
+                                                        monthlyConsumptionAfterController,
+                                                        '度',
+                                                        hasInfo: true),
+                                                  ],
+                                                ),
+                                              ),
+
+                                              SizedBox(width: 12),
+
+                                              // 右半部：計算結果
+                                              Expanded(
+                                                flex: 1,
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    _buildReadOnlyFieldWithUnit(
+                                                        '可節電（度）',
+                                                        savingUnitsController,
+                                                        '度',
+                                                        isRed: true,
+                                                        titleRed: true,
+                                                        hasInfo: true),
+                                                    SizedBox(height: 12),
+                                                    _buildReadOnlyFieldWithUnit(
+                                                        '可節電（%）',
+                                                        savingPercentController,
+                                                        '%',
+                                                        isRed: true,
+                                                        titleRed: true,
+                                                        hasInfo: true),
+                                                    SizedBox(height: 12),
+                                                    _buildReadOnlyFieldWithUnit(
+                                                        '預估下期帳單費用',
+                                                        nextBillController,
+                                                        '元',
+                                                        hasInfo: true),
+                                                    SizedBox(height: 12),
+                                                    _buildReadOnlyFieldWithUnit(
+                                                        '共節省電費',
+                                                        totalSavingController,
+                                                        '元',
+                                                        isRed:
+                                                            _shouldShowRedText(
+                                                                    '共節省電費') ||
+                                                                true,
+                                                        titleRed:
+                                                            _shouldShowRedText(
+                                                                    '共節省電費') ||
+                                                                true,
+                                                        hasInfo: true),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              // 添加可節電比較長條圖
+                              if (step1Calculated)
+                                PowerSavingChart(
+                                  savingUnits: double.tryParse(
+                                          savingUnitsController.text) ??
+                                      0,
+                                  savingPercent: double.tryParse(
+                                          savingPercentController.text) ??
+                                      0,
+                                  totalSaving: double.tryParse(
+                                          totalSavingController.text) ??
+                                      0,
+                                ),
+
+                              // 🆕 第一步的計算按鈕
+                              SizedBox(height: 16), // 上方留一些空間
+                              Center(
+                                child: Container(
+                                  width: isDesktop ? 300 : double.infinity,
+                                  child: ElevatedButton(
+                                      onPressed: _calculateResults,
+                                      child: Text('計算結果',
+                                          style: TextStyle(fontSize: 18)),
+                                      style: ElevatedButton.styleFrom(
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 32, vertical: 16),
+                                      )),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      SizedBox(height: 16), // 改為垂直間距
+
+                      // 第二步：提供台電帳單資訊
+                      _buildSectionCard(
+                          color: Colors.blue[50],
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Center(
+                                child: Text('第二步：提供台電帳單資訊(選填)',
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                              SizedBox(height: 16),
+
+                              // 左右分佈佈局
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // 左邊：輸入區塊
+                                  Expanded(
+                                    flex: 1,
+                                    child: Container(
+                                      padding: EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue[25],
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                            color: Colors.blue[200]!, width: 1),
+                                      ),
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Center(
-                                            child: Text('原燈管',
-                                                style: TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight:
-                                                        FontWeight.bold)),
+                                          // 固定勾選項目（不可取消）
+                                          CheckboxListTile(
+                                            title: Text('電力需量非營業用',
+                                                style: TextStyle(fontSize: 16)),
+                                            value: electricityTypeNonBusiness,
+                                            onChanged: null, // 設為null表示不可變更
+                                            controlAffinity:
+                                                ListTileControlAffinity.leading,
+                                            contentPadding: EdgeInsets.zero,
                                           ),
+
+                                          CheckboxListTile(
+                                            title: Text('非時間電價',
+                                                style: TextStyle(fontSize: 16)),
+                                            value: timeTypeNonTime,
+                                            onChanged: null, // 設為null表示不可變更
+                                            controlAffinity:
+                                                ListTileControlAffinity.leading,
+                                            contentPadding: EdgeInsets.zero,
+                                          ),
+
+                                          CheckboxListTile(
+                                            title: Text('夏季(6/1–9/30)',
+                                                style: TextStyle(fontSize: 16)),
+                                            value: timeTypeSummer,
+                                            onChanged: (value) {
+                                              setState(() {
+                                                timeTypeSummer = value ?? false;
+                                                if (value == true)
+                                                  timeTypeNonSummer = false;
+                                              });
+                                              _updateNotification();
+                                            },
+                                            controlAffinity:
+                                                ListTileControlAffinity.leading,
+                                            contentPadding: EdgeInsets.zero,
+                                          ),
+
+                                          CheckboxListTile(
+                                            title: Text('非夏季',
+                                                style: TextStyle(fontSize: 16)),
+                                            value: timeTypeNonSummer,
+                                            onChanged: (value) {
+                                              setState(() {
+                                                timeTypeNonSummer =
+                                                    value ?? false;
+                                                if (value == true)
+                                                  timeTypeSummer = false;
+                                              });
+                                              _updateNotification();
+                                            },
+                                            controlAffinity:
+                                                ListTileControlAffinity.leading,
+                                            contentPadding: EdgeInsets.zero,
+                                          ),
+
                                           SizedBox(height: 12),
-                                          Container(
-                                            padding: EdgeInsets.all(16),
-                                            decoration: BoxDecoration(
-                                              color: Colors.green[25],
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              border: Border.all(
-                                                  color: Colors.green[200]!,
-                                                  width: 1),
-                                            ),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                _buildInputFieldWithUnit(
-                                                    '目前使用燈管瓦數',
-                                                    currentLightWattController,
-                                                    'W',
-                                                    onChanged: (_) =>
-                                                        _updateNotification()),
-                                                SizedBox(height: 12),
-                                                _buildInputFieldWithUnit('燈管數量',
-                                                    lightCountController, '支',
-                                                    integerOnly: true,
-                                                    onChanged: (value) {
-                                                  _updateNotification();
-                                                }),
-                                                SizedBox(height: 12),
-                                                _buildReadOnlyFieldWithUnit(
-                                                    '每月耗電(度)',
-                                                    monthlyConsumptionBeforeController,
-                                                    '度',
-                                                    hasInfo: true),
-                                              ],
-                                            ),
-                                          ),
+                                          _buildInputFieldWithUnit('契約容量',
+                                              contractCapacityController, '瓩',
+                                              onChanged: (_) =>
+                                                  _updateNotification()),
+                                          SizedBox(height: 12),
+                                          _buildInputFieldWithUnit(
+                                              '最高需量', maxDemandController, '瓩',
+                                              onChanged: (_) =>
+                                                  _updateNotification()),
+                                          SizedBox(height: 12),
+                                          _buildInputFieldWithUnit('計費度數',
+                                              billingUnitsController, '度',
+                                              onChanged: (_) =>
+                                                  _updateNotification()),
                                         ],
                                       ),
                                     ),
+                                  ),
 
-                                    SizedBox(width: 12),
+                                  SizedBox(width: 16),
 
-                                    // 右邊：更換後資訊與計算結果
-                                    Expanded(
-                                      flex: 4,
+                                  // 右邊：結果區塊
+                                  Expanded(
+                                    flex: 1,
+                                    child: Container(
+                                      padding: EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue[25],
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                            color: Colors.blue[200]!, width: 1),
+                                      ),
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Center(
-                                            child: Text(
-                                                '更換AI燈管後 (僅供參考，亮燈策略將影響實際成果)',
-                                                style: TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight:
-                                                        FontWeight.bold)),
-                                          ),
+                                          _buildReadOnlyFieldWithUnit(
+                                              '基本電價(約定)',
+                                              basicElectricityController,
+                                              '元',
+                                              hasInfo: true),
                                           SizedBox(height: 12),
-                                          Container(
-                                            padding: EdgeInsets.all(16),
-                                            decoration: BoxDecoration(
-                                              color: Colors.green[25],
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              border: Border.all(
-                                                  color: Colors.green[200]!,
-                                                  width: 1),
-                                            ),
-                                            child: Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                // 左半部：AI燈管基本資訊
-                                                Expanded(
-                                                  flex: 1,
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      _buildReadOnlyFieldWithUnit(
-                                                          '目前使用AI燈管瓦數',
-                                                          aiLightWattController,
-                                                          'W'),
-                                                      SizedBox(height: 12),
-                                                      _buildInputFieldWithUnit(
-                                                          '車道燈數量',
-                                                          drivewayLightController,
-                                                          '支',
-                                                          integerOnly: true,
-                                                          hasInfo: true,
-                                                          onChanged: (_) =>
-                                                              _updateNotification()),
-                                                      SizedBox(height: 12),
-                                                      _buildInputFieldWithUnit(
-                                                          '車位燈數量',
-                                                          parkingLightController,
-                                                          '支',
-                                                          integerOnly: true,
-                                                          hasInfo: true,
-                                                          onChanged: (_) =>
-                                                              _updateNotification()),
-                                                      SizedBox(height: 12),
-                                                      _buildReadOnlyFieldWithUnit(
-                                                          'AI燈管每月耗電(度)',
-                                                          monthlyConsumptionAfterController,
-                                                          '度',
-                                                          hasInfo: true),
-                                                    ],
-                                                  ),
-                                                ),
-
-                                                SizedBox(width: 12),
-
-                                                // 右半部：計算結果
-                                                Expanded(
-                                                  flex: 1,
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      _buildReadOnlyFieldWithUnit(
-                                                          '可節電（度）',
-                                                          savingUnitsController,
-                                                          '度',
-                                                          isRed: true,
-                                                          titleRed: true,
-                                                          hasInfo: true),
-                                                      SizedBox(height: 12),
-                                                      _buildReadOnlyFieldWithUnit(
-                                                          '可節電（%）',
-                                                          savingPercentController,
-                                                          '%',
-                                                          isRed: true,
-                                                          titleRed: true,
-                                                          hasInfo: true),
-                                                      SizedBox(height: 12),
-                                                      _buildReadOnlyFieldWithUnit(
-                                                          '預估下期帳單費用',
-                                                          nextBillController,
-                                                          '元',
-                                                          hasInfo: true),
-                                                      SizedBox(height: 12),
-                                                      _buildReadOnlyFieldWithUnit(
-                                                          '共節省電費',
-                                                          totalSavingController,
-                                                          '元',
-                                                          isRed:
-                                                              _shouldShowRedText(
-                                                                      '共節省電費') ||
-                                                                  true,
-                                                          titleRed:
-                                                              _shouldShowRedText(
-                                                                      '共節省電費') ||
-                                                                  true,
-                                                          hasInfo: true),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
+                                          _buildReadOnlyFieldWithUnit(
+                                              '最高需量有超用契約容量',
+                                              excessDemandController,
+                                              '元',
+                                              hasInfo: true),
+                                          SizedBox(height: 12),
+                                          _buildReadOnlyFieldWithUnit('流動電價',
+                                              flowElectricityController, '元',
+                                              hasInfo: true),
+                                          SizedBox(height: 12),
+                                          _buildReadOnlyFieldWithUnit('總電價',
+                                              totalElectricityController, '元',
+                                              hasInfo: true),
                                         ],
                                       ),
                                     ),
-                                  ],
-                                ),
-
-                                // 添加可節電比較長條圖
-                                if (step1Calculated)
-                                  PowerSavingChart(
-                                    savingUnits: double.tryParse(savingUnitsController.text) ?? 0,
-                                    savingPercent: double.tryParse(savingPercentController.text) ?? 0,
-                                    totalSaving: double.tryParse(totalSavingController.text) ?? 0,
                                   ),
-                              ],
-                            ),
+                                ],
+                              ),
+
+                              // 添加電費組成圓餅圖（可展開）
+                              if (step2Calculated)
+                                ElectricityCostPieChart(
+                                  basicElectricity: double.tryParse(
+                                          basicElectricityController.text) ??
+                                      0,
+                                  flowElectricity: double.tryParse(
+                                          flowElectricityController.text) ??
+                                      0,
+                                  excessDemand: () {
+                                    String excessText =
+                                        excessDemandController.text;
+                                    if (excessText.isEmpty ||
+                                        excessText == '無超約') return 0.0;
+                                    return double.tryParse(excessText) ?? 0;
+                                  }(),
+                                ),
+                            ],
                           ),
                         ),
 
-                        SizedBox(width: 12),
+                      SizedBox(height: 16),
 
-                        // 第二步：提供台電帳單資訊
-                        Expanded(
-                          flex: 1,
-                          child: _buildSectionCard(
-                            color: Colors.blue[50],
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Center(
-                                  child: Text('第二步：提供台電帳單資訊(選填)',
-                                      style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold)),
-                                ),
-                                SizedBox(height: 16),
-
-                                // 左右分佈佈局
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // 左邊：輸入區塊
-                                    Expanded(
-                                      flex: 1,
-                                      child: Container(
-                                        padding: EdgeInsets.all(16),
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue[25],
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          border: Border.all(
-                                              color: Colors.blue[200]!,
-                                              width: 1),
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            // 固定勾選項目（不可取消）
-                                            CheckboxListTile(
-                                              title: Text('電力需量非營業用',
-                                                  style:
-                                                      TextStyle(fontSize: 16)),
-                                              value: electricityTypeNonBusiness,
-                                              onChanged: null, // 設為null表示不可變更
-                                              controlAffinity:
-                                                  ListTileControlAffinity
-                                                      .leading,
-                                              contentPadding: EdgeInsets.zero,
-                                            ),
-
-                                            CheckboxListTile(
-                                              title: Text('非時間電價',
-                                                  style:
-                                                      TextStyle(fontSize: 16)),
-                                              value: timeTypeNonTime,
-                                              onChanged: null, // 設為null表示不可變更
-                                              controlAffinity:
-                                                  ListTileControlAffinity
-                                                      .leading,
-                                              contentPadding: EdgeInsets.zero,
-                                            ),
-
-                                            CheckboxListTile(
-                                              title: Text('夏季(6/1–9/30)',
-                                                  style:
-                                                      TextStyle(fontSize: 16)),
-                                              value: timeTypeSummer,
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  timeTypeSummer =
-                                                      value ?? false;
-                                                  if (value == true)
-                                                    timeTypeNonSummer = false;
-                                                });
-                                                _updateNotification();
-                                              },
-                                              controlAffinity:
-                                                  ListTileControlAffinity
-                                                      .leading,
-                                              contentPadding: EdgeInsets.zero,
-                                            ),
-
-                                            CheckboxListTile(
-                                              title: Text('非夏季',
-                                                  style:
-                                                      TextStyle(fontSize: 16)),
-                                              value: timeTypeNonSummer,
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  timeTypeNonSummer =
-                                                      value ?? false;
-                                                  if (value == true)
-                                                    timeTypeSummer = false;
-                                                });
-                                                _updateNotification();
-                                              },
-                                              controlAffinity:
-                                                  ListTileControlAffinity
-                                                      .leading,
-                                              contentPadding: EdgeInsets.zero,
-                                            ),
-
-                                            SizedBox(height: 12),
-                                            _buildInputFieldWithUnit('契約容量',
-                                                contractCapacityController, '瓩',
-                                                onChanged: (_) =>
-                                                    _updateNotification()),
-                                            SizedBox(height: 12),
-                                            _buildInputFieldWithUnit('最高需量',
-                                                maxDemandController, '瓩',
-                                                onChanged: (_) =>
-                                                    _updateNotification()),
-                                            SizedBox(height: 12),
-                                            _buildInputFieldWithUnit('計費度數',
-                                                billingUnitsController, '度',
-                                                onChanged: (_) =>
-                                                    _updateNotification()),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-
-                                    SizedBox(width: 16),
-
-                                    // 右邊：結果區塊
-                                    Expanded(
-                                      flex: 1,
-                                      child: Container(
-                                        padding: EdgeInsets.all(16),
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue[25],
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          border: Border.all(
-                                              color: Colors.blue[200]!,
-                                              width: 1),
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            _buildReadOnlyFieldWithUnit(
-                                                '基本電價(約定)',
-                                                basicElectricityController,
-                                                '元',
-                                                hasInfo: true),
-                                            SizedBox(height: 12),
-                                            _buildReadOnlyFieldWithUnit(
-                                                '最高需量有超用契約容量',
-                                                excessDemandController,
-                                                '元',
-                                                hasInfo: true),
-                                            SizedBox(height: 12),
-                                            _buildReadOnlyFieldWithUnit('流動電價',
-                                                flowElectricityController, '元',
-                                                hasInfo: true),
-                                            SizedBox(height: 12),
-                                            _buildReadOnlyFieldWithUnit('總電價',
-                                                totalElectricityController, '元',
-                                                hasInfo: true),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-
-                                // 添加電費組成圓餅圖（可展開）
-                                if (step2Calculated)
-                                  ElectricityCostPieChart(
-                                    basicElectricity: double.tryParse(basicElectricityController.text) ?? 0,
-                                    flowElectricity: double.tryParse(flowElectricityController.text) ?? 0,
-                                    excessDemand: () {
-                                      String excessText = excessDemandController.text;
-                                      if (excessText.isEmpty || excessText == '無超約') return 0.0;
-                                      return double.tryParse(excessText) ?? 0;
-                                    }(),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                  // 第三步：試算攤提時間 - 位於第一步之下，與第二步對齊
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 2, // 改為與上方第一步和第二步相同的寬度
-                        child: _buildSectionCard(
+                      // 第三步：試算攤提時間
+                      _buildSectionCard(
                           color: Colors.orange[50],
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1615,8 +2112,11 @@ class _CalculatorPageState extends State<CalculatorPage> {
                                     if (step3Calculated && step2Calculated)
                                       PaybackTrendChart(
                                         monthlySaving: backgroundTotalSaving,
-                                        buyoutTotal: (pricingMethod == '買斷' && buyoutTotalController.text.isNotEmpty)
-                                            ? double.tryParse(buyoutTotalController.text)
+                                        buyoutTotal: (pricingMethod == '買斷' &&
+                                                buyoutTotalController
+                                                    .text.isNotEmpty)
+                                            ? double.tryParse(
+                                                buyoutTotalController.text)
                                             : null,
                                       ),
                                   ],
@@ -1627,10 +2127,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
                             ],
                           ),
                         ),
-                      ),
                     ],
                   ),
-                ] else ...[
+                ],
+                if (!isDesktop) ...[
                   // 手機版保持原來的垂直布局
                   _buildSectionCard(
                     color: Colors.blue[50],
@@ -1699,9 +2199,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildReadOnlyFieldWithUnit(
-                                  '目前使用AI燈管瓦數', aiLightWattController, 'W'),
-                              SizedBox(height: 12),
+                              // ❌ 已刪除: 目前使用AI燈管瓦數欄位
                               _buildInputFieldWithUnit(
                                   '車道燈數量', drivewayLightController, '支',
                                   integerOnly: true,
