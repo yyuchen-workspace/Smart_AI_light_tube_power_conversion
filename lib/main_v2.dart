@@ -55,6 +55,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
   // ==================== State Variables ====================
 
   // 傳統燈管
+  final TextEditingController traditionalWattController =
+      TextEditingController(text: '18');
   final TextEditingController traditionalLightCountController =
       TextEditingController(text: '0');
 
@@ -96,6 +98,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
   @override
   void dispose() {
+    traditionalWattController.dispose();
     traditionalLightCountController.dispose();
     drivewayCountController.dispose();
     parkingCountController.dispose();
@@ -203,12 +206,14 @@ class _CalculatorPageState extends State<CalculatorPage> {
               LightingCalculator.calculateMonthlyConsumption(
                   parkingDailyWattage, parkingCount);
 
-      // 計算傳統燈管消耗 (使用 18W 作為傳統 T8 燈管標準瓦數)
+      // 計算傳統燈管消耗
+      double traditionalWatt =
+          double.tryParse(traditionalWattController.text) ?? 18.0;
       int traditionalCount =
           int.tryParse(traditionalLightCountController.text) ?? 0;
       traditionalMonthlyConsumption =
           ElectricityCalculator.calculateTraditionalConsumption(
-        watt: 18.0, // 傳統 T8 燈管標準瓦數
+        watt: traditionalWatt,
         count: traditionalCount.toDouble(),
       );
 
@@ -297,8 +302,12 @@ class _CalculatorPageState extends State<CalculatorPage> {
       children: [
         // Step 1: AI 燈管設定
         Step1AILights(
+          traditionalWattController: traditionalWattController,
           traditionalLightCountController: traditionalLightCountController,
+          onTraditionalWattChanged: (_) => setState(() {}),
           onTraditionalCountChanged: (_) => setState(() {}),
+          traditionalMonthlyConsumption:
+              '${traditionalMonthlyConsumption?.toStringAsFixed(2) ?? '0.00'} 度',
           drivewayCountController: drivewayCountController,
           drivewayAllDay: drivewayAllDay,
           onDrivewayAllDayChanged: (value) =>

@@ -11,8 +11,11 @@ import '../widgets/expandable_light_card.dart';
 
 class Step1AILights extends StatelessWidget {
   // 傳統燈管數量控制器
+  final TextEditingController traditionalWattController;
   final TextEditingController traditionalLightCountController;
+  final ValueChanged<String>? onTraditionalWattChanged;
   final ValueChanged<String>? onTraditionalCountChanged;
+  final String traditionalMonthlyConsumption;
 
   // 車道燈相關參數
   final TextEditingController drivewayCountController;
@@ -71,8 +74,11 @@ class Step1AILights extends StatelessWidget {
 
   const Step1AILights({
     Key? key,
+    required this.traditionalWattController,
     required this.traditionalLightCountController,
+    this.onTraditionalWattChanged,
     this.onTraditionalCountChanged,
+    required this.traditionalMonthlyConsumption,
     required this.drivewayCountController,
     required this.drivewayAllDay,
     required this.onDrivewayAllDayChanged,
@@ -150,24 +156,75 @@ class Step1AILights extends StatelessWidget {
           ),
           SizedBox(height: 32),
 
-          // 傳統燈管數量
+          // 傳統燈管設定
           _buildSectionTitle('傳統燈管'),
           SizedBox(height: 16),
-          Container(
-            constraints: BoxConstraints(maxWidth: 300),
-            child: TextField(
-              controller: traditionalLightCountController,
-              decoration: InputDecoration(
-                labelText: '數量',
-                suffixText: '支',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+          Row(
+            children: [
+              // 瓦數
+              Expanded(
+                child: TextField(
+                  controller: traditionalWattController,
+                  decoration: InputDecoration(
+                    labelText: '目前使用燈管瓦數',
+                    suffixText: 'W',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: onTraditionalWattChanged,
                 ),
-                filled: true,
-                fillColor: Colors.grey[50],
               ),
-              keyboardType: TextInputType.number,
-              onChanged: onTraditionalCountChanged,
+              SizedBox(width: 16),
+              // 數量
+              Expanded(
+                child: TextField(
+                  controller: traditionalLightCountController,
+                  decoration: InputDecoration(
+                    labelText: '數量',
+                    suffixText: '支',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: onTraditionalCountChanged,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          // 每月耗電顯示
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '每月耗電',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                Text(
+                  traditionalMonthlyConsumption,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[900],
+                  ),
+                ),
+              ],
             ),
           ),
           SizedBox(height: 32),

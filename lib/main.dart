@@ -68,8 +68,8 @@ import 'models/lighting_strategy.dart';
  * - 測試新版 UI：將下方兩行互相對調註解（// 的位置）
  */
 void main() {
-  runApp(MyApp()); // 原版 UI
-  // v2.main();    // 🆕 新版 UI（移除開頭的 // 來啟用，並註解上一行）
+  //runApp(MyApp()); // 原版 UI
+  v2.main(); // 🆕 新版 UI（移除開頭的 // 來啟用，並註解上一行）
 }
 
 /*
@@ -179,22 +179,22 @@ class _CalculatorPageState extends State<CalculatorPage> {
   // ====================================
 
   // 車道燈策略
-  bool drivewayAllDay = false;  // 是否全天候
-  TimeOfDay drivewayDaytimeStart = TimeOfDay(hour: 6, minute: 0);   // 日間開始
-  TimeOfDay drivewayDaytimeEnd = TimeOfDay(hour: 18, minute: 0);    // 日間結束
+  bool drivewayAllDay = false; // 是否全天候
+  TimeOfDay drivewayDaytimeStart = TimeOfDay(hour: 6, minute: 0); // 日間開始
+  TimeOfDay drivewayDaytimeEnd = TimeOfDay(hour: 18, minute: 0); // 日間結束
   TimeOfDay? drivewayNighttimeStart = TimeOfDay(hour: 18, minute: 0); // 夜間開始
-  TimeOfDay? drivewayNighttimeEnd = TimeOfDay(hour: 6, minute: 0);    // 夜間結束
+  TimeOfDay? drivewayNighttimeEnd = TimeOfDay(hour: 6, minute: 0); // 夜間結束
 
-  int drivewayDayBrightnessBefore = 30;   // 日間感應前亮度
-  int drivewayDayBrightnessAfter = 100;   // 日間感應後亮度
-  int drivewayDaySensingTime = 30;        // 日間感應時間(秒)
+  int drivewayDayBrightnessBefore = 30; // 日間感應前亮度
+  int drivewayDayBrightnessAfter = 100; // 日間感應後亮度
+  int drivewayDaySensingTime = 30; // 日間感應時間(秒)
 
   int? drivewayNightBrightnessBefore = 10; // 夜間感應前亮度
   int? drivewayNightBrightnessAfter = 100; // 夜間感應後亮度
-  int? drivewayNightSensingTime = 30;      // 夜間感應時間(秒)
+  int? drivewayNightSensingTime = 30; // 夜間感應時間(秒)
 
   // 車位燈策略
-  bool parkingAllDay = false;  // 是否全天候
+  bool parkingAllDay = false; // 是否全天候
   TimeOfDay parkingDaytimeStart = TimeOfDay(hour: 6, minute: 0);
   TimeOfDay parkingDaytimeEnd = TimeOfDay(hour: 18, minute: 0);
   TimeOfDay? parkingNighttimeStart = TimeOfDay(hour: 18, minute: 0);
@@ -561,7 +561,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
     var drivewayStrategy = LightingStrategy(
       count: drivewayCount,
       daytime: TimeSlotConfig(
-        startHour: drivewayDaytimeStart.hour + drivewayDaytimeStart.minute / 60.0,
+        startHour:
+            drivewayDaytimeStart.hour + drivewayDaytimeStart.minute / 60.0,
         endHour: drivewayDaytimeEnd.hour + drivewayDaytimeEnd.minute / 60.0,
         isAllDay: drivewayAllDay,
         brightness: BrightnessConfig(
@@ -1469,672 +1470,742 @@ class _CalculatorPageState extends State<CalculatorPage> {
                     children: [
                       // 第一步：更換AI燈管後電力試算
                       _buildSectionCard(
-                          color: Colors.green[50],
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Center(
-                                child: Text('第一步：更換AI燈管後電力試算',
-                                    style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold)),
-                              ),
-                              SizedBox(height: 16),
+                        color: Colors.green[50],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Center(
+                              child: Text('第一步：更換AI燈管後電力試算',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+                            SizedBox(height: 16),
 
-                              // 三欄分佈佈局
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // 左邊：更換前區塊
-                                  Expanded(
-                                    flex: 2,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Center(
-                                          child: Text('原燈管',
-                                              style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold)),
+                            // 三欄分佈佈局
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // 左邊：更換前區塊
+                                Expanded(
+                                  flex: 2,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Center(
+                                        child: Text('原燈管',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold)),
+                                      ),
+                                      SizedBox(height: 12),
+                                      Container(
+                                        padding: EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green[25],
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          border: Border.all(
+                                              color: Colors.green[200]!,
+                                              width: 1),
                                         ),
-                                        SizedBox(height: 12),
-                                        Container(
-                                          padding: EdgeInsets.all(16),
-                                          decoration: BoxDecoration(
-                                            color: Colors.green[25],
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            border: Border.all(
-                                                color: Colors.green[200]!,
-                                                width: 1),
-                                          ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              _buildInputFieldWithUnit(
-                                                  '目前使用燈管瓦數',
-                                                  currentLightWattController,
-                                                  'W',
-                                                  onChanged: (_) =>
-                                                      _updateNotification()),
-                                              SizedBox(height: 12),
-                                              _buildInputFieldWithUnit('燈管數量',
-                                                  lightCountController, '支',
-                                                  integerOnly: true,
-                                                  onChanged: (value) {
-                                                _updateNotification();
-                                              }),
-                                              SizedBox(height: 12),
-                                              _buildReadOnlyFieldWithUnit(
-                                                  '每月耗電(度)',
-                                                  monthlyConsumptionBeforeController,
-                                                  '度',
-                                                  hasInfo: true),
-                                            ],
-                                          ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            _buildInputFieldWithUnit('目前使用燈管瓦數',
+                                                currentLightWattController, 'W',
+                                                onChanged: (_) =>
+                                                    _updateNotification()),
+                                            SizedBox(height: 12),
+                                            _buildInputFieldWithUnit('燈管數量',
+                                                lightCountController, '支',
+                                                integerOnly: true,
+                                                onChanged: (value) {
+                                              _updateNotification();
+                                            }),
+                                            SizedBox(height: 12),
+                                            _buildReadOnlyFieldWithUnit(
+                                                '每月耗電(度)',
+                                                monthlyConsumptionBeforeController,
+                                                '度',
+                                                hasInfo: true),
+                                          ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
+                                ),
 
-                                  SizedBox(width: 12),
+                                SizedBox(width: 12),
 
-                                  // 右邊：更換後資訊與計算結果
-                                  Expanded(
-                                    flex: 4,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Center(
-                                          child: Text(
-                                              '更換AI燈管後 (僅供參考，亮燈策略將影響實際成果)',
-                                              style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold)),
+                                // 右邊：更換後資訊與計算結果
+                                Expanded(
+                                  flex: 4,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Center(
+                                        child: Text(
+                                            '更換AI燈管後 (僅供參考，亮燈策略將影響實際成果)',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold)),
+                                      ),
+                                      SizedBox(height: 12),
+                                      Container(
+                                        padding: EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green[25],
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          border: Border.all(
+                                              color: Colors.green[200]!,
+                                              width: 1),
                                         ),
-                                        SizedBox(height: 12),
-                                        Container(
-                                          padding: EdgeInsets.all(16),
-                                          decoration: BoxDecoration(
-                                            color: Colors.green[25],
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            border: Border.all(
-                                                color: Colors.green[200]!,
-                                                width: 1),
-                                          ),
-                                          child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              // 左半部：AI燈管基本資訊
-                                              Expanded(
-                                                flex: 1,
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    // 🆕 版本6.0: 車道燈亮燈策略
-                                                    LightingStrategyConfig(
-                                                      title: '車道燈',
-                                                      countController: drivewayLightController,
-                                                      isAllDay: drivewayAllDay,
-                                                      onAllDayChanged: (val) {
-                                                        setState(() {
-                                                          drivewayAllDay = val ?? false;
-                                                          _updateNotification();
-                                                        });
-                                                      },
-                                                      daytimeStart: drivewayDaytimeStart,
-                                                      daytimeEnd: drivewayDaytimeEnd,
-                                                      onDaytimeStartTap: () => _selectTime(
-                                                        context,
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // 左半部：AI燈管基本資訊
+                                            Expanded(
+                                              flex: 1,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  // 🆕 版本6.0: 車道燈亮燈策略
+                                                  LightingStrategyConfig(
+                                                    title: '車道燈',
+                                                    countController:
+                                                        drivewayLightController,
+                                                    isAllDay: drivewayAllDay,
+                                                    onAllDayChanged: (val) {
+                                                      setState(() {
+                                                        drivewayAllDay =
+                                                            val ?? false;
+                                                        _updateNotification();
+                                                      });
+                                                    },
+                                                    daytimeStart:
                                                         drivewayDaytimeStart,
-                                                        (time) => setState(() {
-                                                          drivewayDaytimeStart = time;
-                                                          _updateNotification();
-                                                        }),
-                                                      ),
-                                                      onDaytimeEndTap: () => _selectTime(
-                                                        context,
+                                                    daytimeEnd:
                                                         drivewayDaytimeEnd,
-                                                        (time) => setState(() {
-                                                          drivewayDaytimeEnd = time;
-                                                          _updateNotification();
-                                                        }),
-                                                      ),
-                                                      dayBrightnessBefore: drivewayDayBrightnessBefore,
-                                                      dayBrightnessAfter: drivewayDayBrightnessAfter,
-                                                      daySensingTime: drivewayDaySensingTime,
-                                                      onDayBrightnessBeforeChanged: (val) => setState(() {
-                                                        drivewayDayBrightnessBefore = val ?? 30;
+                                                    onDaytimeStartTap: () =>
+                                                        _selectTime(
+                                                      context,
+                                                      drivewayDaytimeStart,
+                                                      (time) => setState(() {
+                                                        drivewayDaytimeStart =
+                                                            time;
                                                         _updateNotification();
                                                       }),
-                                                      onDayBrightnessAfterChanged: (val) => setState(() {
-                                                        drivewayDayBrightnessAfter = val ?? 100;
-                                                        _updateNotification();
-                                                      }),
-                                                      onDaySensingTimeChanged: (val) => setState(() {
-                                                        drivewayDaySensingTime = val ?? 30;
-                                                        _updateNotification();
-                                                      }),
-                                                      nighttimeStart: drivewayNighttimeStart,
-                                                      nighttimeEnd: drivewayNighttimeEnd,
-                                                      onNighttimeStartTap: () => _selectTime(
-                                                        context,
-                                                        drivewayNighttimeStart ?? TimeOfDay(hour: 18, minute: 0),
-                                                        (time) => setState(() {
-                                                          drivewayNighttimeStart = time;
-                                                          _updateNotification();
-                                                        }),
-                                                      ),
-                                                      onNighttimeEndTap: () => _selectTime(
-                                                        context,
-                                                        drivewayNighttimeEnd ?? TimeOfDay(hour: 6, minute: 0),
-                                                        (time) => setState(() {
-                                                          drivewayNighttimeEnd = time;
-                                                          _updateNotification();
-                                                        }),
-                                                      ),
-                                                      nightBrightnessBefore: drivewayNightBrightnessBefore,
-                                                      nightBrightnessAfter: drivewayNightBrightnessAfter,
-                                                      nightSensingTime: drivewayNightSensingTime,
-                                                      onNightBrightnessBeforeChanged: (val) => setState(() {
-                                                        drivewayNightBrightnessBefore = val;
-                                                        _updateNotification();
-                                                      }),
-                                                      onNightBrightnessAfterChanged: (val) => setState(() {
-                                                        drivewayNightBrightnessAfter = val;
-                                                        _updateNotification();
-                                                      }),
-                                                      onNightSensingTimeChanged: (val) => setState(() {
-                                                        drivewayNightSensingTime = val;
-                                                        _updateNotification();
-                                                      }),
-                                                      onCountChanged: (_) => _updateNotification(),
                                                     ),
-                                                    SizedBox(height: 16),
+                                                    onDaytimeEndTap: () =>
+                                                        _selectTime(
+                                                      context,
+                                                      drivewayDaytimeEnd,
+                                                      (time) => setState(() {
+                                                        drivewayDaytimeEnd =
+                                                            time;
+                                                        _updateNotification();
+                                                      }),
+                                                    ),
+                                                    dayBrightnessBefore:
+                                                        drivewayDayBrightnessBefore,
+                                                    dayBrightnessAfter:
+                                                        drivewayDayBrightnessAfter,
+                                                    daySensingTime:
+                                                        drivewayDaySensingTime,
+                                                    onDayBrightnessBeforeChanged:
+                                                        (val) => setState(() {
+                                                      drivewayDayBrightnessBefore =
+                                                          val ?? 30;
+                                                      _updateNotification();
+                                                    }),
+                                                    onDayBrightnessAfterChanged:
+                                                        (val) => setState(() {
+                                                      drivewayDayBrightnessAfter =
+                                                          val ?? 100;
+                                                      _updateNotification();
+                                                    }),
+                                                    onDaySensingTimeChanged:
+                                                        (val) => setState(() {
+                                                      drivewayDaySensingTime =
+                                                          val ?? 30;
+                                                      _updateNotification();
+                                                    }),
+                                                    nighttimeStart:
+                                                        drivewayNighttimeStart,
+                                                    nighttimeEnd:
+                                                        drivewayNighttimeEnd,
+                                                    onNighttimeStartTap: () =>
+                                                        _selectTime(
+                                                      context,
+                                                      drivewayNighttimeStart ??
+                                                          TimeOfDay(
+                                                              hour: 18,
+                                                              minute: 0),
+                                                      (time) => setState(() {
+                                                        drivewayNighttimeStart =
+                                                            time;
+                                                        _updateNotification();
+                                                      }),
+                                                    ),
+                                                    onNighttimeEndTap: () =>
+                                                        _selectTime(
+                                                      context,
+                                                      drivewayNighttimeEnd ??
+                                                          TimeOfDay(
+                                                              hour: 6,
+                                                              minute: 0),
+                                                      (time) => setState(() {
+                                                        drivewayNighttimeEnd =
+                                                            time;
+                                                        _updateNotification();
+                                                      }),
+                                                    ),
+                                                    nightBrightnessBefore:
+                                                        drivewayNightBrightnessBefore,
+                                                    nightBrightnessAfter:
+                                                        drivewayNightBrightnessAfter,
+                                                    nightSensingTime:
+                                                        drivewayNightSensingTime,
+                                                    onNightBrightnessBeforeChanged:
+                                                        (val) => setState(() {
+                                                      drivewayNightBrightnessBefore =
+                                                          val;
+                                                      _updateNotification();
+                                                    }),
+                                                    onNightBrightnessAfterChanged:
+                                                        (val) => setState(() {
+                                                      drivewayNightBrightnessAfter =
+                                                          val;
+                                                      _updateNotification();
+                                                    }),
+                                                    onNightSensingTimeChanged:
+                                                        (val) => setState(() {
+                                                      drivewayNightSensingTime =
+                                                          val;
+                                                      _updateNotification();
+                                                    }),
+                                                    onCountChanged: (_) =>
+                                                        _updateNotification(),
+                                                  ),
+                                                  SizedBox(height: 16),
 
-                                                    // 🆕 版本6.0: 車位燈亮燈策略
-                                                    LightingStrategyConfig(
-                                                      title: '車位燈',
-                                                      countController: parkingLightController,
-                                                      isAllDay: parkingAllDay,
-                                                      onAllDayChanged: (val) {
-                                                        setState(() {
-                                                          parkingAllDay = val ?? false;
-                                                          _updateNotification();
-                                                        });
-                                                      },
-                                                      daytimeStart: parkingDaytimeStart,
-                                                      daytimeEnd: parkingDaytimeEnd,
-                                                      onDaytimeStartTap: () => _selectTime(
-                                                        context,
+                                                  // 🆕 版本6.0: 車位燈亮燈策略
+                                                  LightingStrategyConfig(
+                                                    title: '車位燈',
+                                                    countController:
+                                                        parkingLightController,
+                                                    isAllDay: parkingAllDay,
+                                                    onAllDayChanged: (val) {
+                                                      setState(() {
+                                                        parkingAllDay =
+                                                            val ?? false;
+                                                        _updateNotification();
+                                                      });
+                                                    },
+                                                    daytimeStart:
                                                         parkingDaytimeStart,
-                                                        (time) => setState(() {
-                                                          parkingDaytimeStart = time;
-                                                          _updateNotification();
-                                                        }),
-                                                      ),
-                                                      onDaytimeEndTap: () => _selectTime(
-                                                        context,
+                                                    daytimeEnd:
                                                         parkingDaytimeEnd,
-                                                        (time) => setState(() {
-                                                          parkingDaytimeEnd = time;
-                                                          _updateNotification();
-                                                        }),
-                                                      ),
-                                                      dayBrightnessBefore: parkingDayBrightnessBefore,
-                                                      dayBrightnessAfter: parkingDayBrightnessAfter,
-                                                      daySensingTime: parkingDaySensingTime,
-                                                      onDayBrightnessBeforeChanged: (val) => setState(() {
-                                                        parkingDayBrightnessBefore = val ?? 30;
+                                                    onDaytimeStartTap: () =>
+                                                        _selectTime(
+                                                      context,
+                                                      parkingDaytimeStart,
+                                                      (time) => setState(() {
+                                                        parkingDaytimeStart =
+                                                            time;
                                                         _updateNotification();
                                                       }),
-                                                      onDayBrightnessAfterChanged: (val) => setState(() {
-                                                        parkingDayBrightnessAfter = val ?? 100;
-                                                        _updateNotification();
-                                                      }),
-                                                      onDaySensingTimeChanged: (val) => setState(() {
-                                                        parkingDaySensingTime = val ?? 30;
-                                                        _updateNotification();
-                                                      }),
-                                                      nighttimeStart: parkingNighttimeStart,
-                                                      nighttimeEnd: parkingNighttimeEnd,
-                                                      onNighttimeStartTap: () => _selectTime(
-                                                        context,
-                                                        parkingNighttimeStart ?? TimeOfDay(hour: 18, minute: 0),
-                                                        (time) => setState(() {
-                                                          parkingNighttimeStart = time;
-                                                          _updateNotification();
-                                                        }),
-                                                      ),
-                                                      onNighttimeEndTap: () => _selectTime(
-                                                        context,
-                                                        parkingNighttimeEnd ?? TimeOfDay(hour: 6, minute: 0),
-                                                        (time) => setState(() {
-                                                          parkingNighttimeEnd = time;
-                                                          _updateNotification();
-                                                        }),
-                                                      ),
-                                                      nightBrightnessBefore: parkingNightBrightnessBefore,
-                                                      nightBrightnessAfter: parkingNightBrightnessAfter,
-                                                      nightSensingTime: parkingNightSensingTime,
-                                                      onNightBrightnessBeforeChanged: (val) => setState(() {
-                                                        parkingNightBrightnessBefore = val;
-                                                        _updateNotification();
-                                                      }),
-                                                      onNightBrightnessAfterChanged: (val) => setState(() {
-                                                        parkingNightBrightnessAfter = val;
-                                                        _updateNotification();
-                                                      }),
-                                                      onNightSensingTimeChanged: (val) => setState(() {
-                                                        parkingNightSensingTime = val;
-                                                        _updateNotification();
-                                                      }),
-                                                      onCountChanged: (_) => _updateNotification(),
                                                     ),
-                                                    SizedBox(height: 12),
-                                                    _buildReadOnlyFieldWithUnit(
-                                                        'AI燈管每月耗電(度)',
-                                                        monthlyConsumptionAfterController,
-                                                        '度',
-                                                        hasInfo: true),
-                                                  ],
-                                                ),
+                                                    onDaytimeEndTap: () =>
+                                                        _selectTime(
+                                                      context,
+                                                      parkingDaytimeEnd,
+                                                      (time) => setState(() {
+                                                        parkingDaytimeEnd =
+                                                            time;
+                                                        _updateNotification();
+                                                      }),
+                                                    ),
+                                                    dayBrightnessBefore:
+                                                        parkingDayBrightnessBefore,
+                                                    dayBrightnessAfter:
+                                                        parkingDayBrightnessAfter,
+                                                    daySensingTime:
+                                                        parkingDaySensingTime,
+                                                    onDayBrightnessBeforeChanged:
+                                                        (val) => setState(() {
+                                                      parkingDayBrightnessBefore =
+                                                          val ?? 30;
+                                                      _updateNotification();
+                                                    }),
+                                                    onDayBrightnessAfterChanged:
+                                                        (val) => setState(() {
+                                                      parkingDayBrightnessAfter =
+                                                          val ?? 100;
+                                                      _updateNotification();
+                                                    }),
+                                                    onDaySensingTimeChanged:
+                                                        (val) => setState(() {
+                                                      parkingDaySensingTime =
+                                                          val ?? 30;
+                                                      _updateNotification();
+                                                    }),
+                                                    nighttimeStart:
+                                                        parkingNighttimeStart,
+                                                    nighttimeEnd:
+                                                        parkingNighttimeEnd,
+                                                    onNighttimeStartTap: () =>
+                                                        _selectTime(
+                                                      context,
+                                                      parkingNighttimeStart ??
+                                                          TimeOfDay(
+                                                              hour: 18,
+                                                              minute: 0),
+                                                      (time) => setState(() {
+                                                        parkingNighttimeStart =
+                                                            time;
+                                                        _updateNotification();
+                                                      }),
+                                                    ),
+                                                    onNighttimeEndTap: () =>
+                                                        _selectTime(
+                                                      context,
+                                                      parkingNighttimeEnd ??
+                                                          TimeOfDay(
+                                                              hour: 6,
+                                                              minute: 0),
+                                                      (time) => setState(() {
+                                                        parkingNighttimeEnd =
+                                                            time;
+                                                        _updateNotification();
+                                                      }),
+                                                    ),
+                                                    nightBrightnessBefore:
+                                                        parkingNightBrightnessBefore,
+                                                    nightBrightnessAfter:
+                                                        parkingNightBrightnessAfter,
+                                                    nightSensingTime:
+                                                        parkingNightSensingTime,
+                                                    onNightBrightnessBeforeChanged:
+                                                        (val) => setState(() {
+                                                      parkingNightBrightnessBefore =
+                                                          val;
+                                                      _updateNotification();
+                                                    }),
+                                                    onNightBrightnessAfterChanged:
+                                                        (val) => setState(() {
+                                                      parkingNightBrightnessAfter =
+                                                          val;
+                                                      _updateNotification();
+                                                    }),
+                                                    onNightSensingTimeChanged:
+                                                        (val) => setState(() {
+                                                      parkingNightSensingTime =
+                                                          val;
+                                                      _updateNotification();
+                                                    }),
+                                                    onCountChanged: (_) =>
+                                                        _updateNotification(),
+                                                  ),
+                                                  SizedBox(height: 12),
+                                                  _buildReadOnlyFieldWithUnit(
+                                                      'AI燈管每月耗電(度)',
+                                                      monthlyConsumptionAfterController,
+                                                      '度',
+                                                      hasInfo: true),
+                                                ],
                                               ),
+                                            ),
 
-                                              SizedBox(width: 12),
+                                            SizedBox(width: 12),
 
-                                              // 右半部：計算結果
-                                              Expanded(
-                                                flex: 1,
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    _buildReadOnlyFieldWithUnit(
-                                                        '可節電（度）',
-                                                        savingUnitsController,
-                                                        '度',
-                                                        isRed: true,
-                                                        titleRed: true,
-                                                        hasInfo: true),
-                                                    SizedBox(height: 12),
-                                                    _buildReadOnlyFieldWithUnit(
-                                                        '可節電（%）',
-                                                        savingPercentController,
-                                                        '%',
-                                                        isRed: true,
-                                                        titleRed: true,
-                                                        hasInfo: true),
-                                                    SizedBox(height: 12),
-                                                    _buildReadOnlyFieldWithUnit(
-                                                        '預估下期帳單費用',
-                                                        nextBillController,
-                                                        '元',
-                                                        hasInfo: true),
-                                                    SizedBox(height: 12),
-                                                    _buildReadOnlyFieldWithUnit(
-                                                        '共節省電費',
-                                                        totalSavingController,
-                                                        '元',
-                                                        isRed:
-                                                            _shouldShowRedText(
-                                                                    '共節省電費') ||
-                                                                true,
-                                                        titleRed:
-                                                            _shouldShowRedText(
-                                                                    '共節省電費') ||
-                                                                true,
-                                                        hasInfo: true),
-                                                  ],
-                                                ),
+                                            // 右半部：計算結果
+                                            Expanded(
+                                              flex: 1,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  _buildReadOnlyFieldWithUnit(
+                                                      '可節電（度）',
+                                                      savingUnitsController,
+                                                      '度',
+                                                      isRed: true,
+                                                      titleRed: true,
+                                                      hasInfo: true),
+                                                  SizedBox(height: 12),
+                                                  _buildReadOnlyFieldWithUnit(
+                                                      '可節電（%）',
+                                                      savingPercentController,
+                                                      '%',
+                                                      isRed: true,
+                                                      titleRed: true,
+                                                      hasInfo: true),
+                                                  SizedBox(height: 12),
+                                                  _buildReadOnlyFieldWithUnit(
+                                                      '預估下期帳單費用',
+                                                      nextBillController,
+                                                      '元',
+                                                      hasInfo: true),
+                                                  SizedBox(height: 12),
+                                                  _buildReadOnlyFieldWithUnit(
+                                                      '共節省電費',
+                                                      totalSavingController,
+                                                      '元',
+                                                      isRed: _shouldShowRedText(
+                                                              '共節省電費') ||
+                                                          true,
+                                                      titleRed:
+                                                          _shouldShowRedText(
+                                                                  '共節省電費') ||
+                                                              true,
+                                                      hasInfo: true),
+                                                ],
                                               ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
+                              ],
+                            ),
+
+                            // 添加可節電比較長條圖
+                            if (step1Calculated)
+                              PowerSavingChart(
+                                savingUnits: double.tryParse(
+                                        savingUnitsController.text) ??
+                                    0,
+                                savingPercent: double.tryParse(
+                                        savingPercentController.text) ??
+                                    0,
+                                totalSaving: double.tryParse(
+                                        totalSavingController.text) ??
+                                    0,
                               ),
 
-                              // 添加可節電比較長條圖
-                              if (step1Calculated)
-                                PowerSavingChart(
-                                  savingUnits: double.tryParse(
-                                          savingUnitsController.text) ??
-                                      0,
-                                  savingPercent: double.tryParse(
-                                          savingPercentController.text) ??
-                                      0,
-                                  totalSaving: double.tryParse(
-                                          totalSavingController.text) ??
-                                      0,
-                                ),
-
-                              // 🆕 第一步的計算按鈕
-                              SizedBox(height: 16), // 上方留一些空間
-                              Center(
-                                child: Container(
-                                  width: isDesktop ? 300 : double.infinity,
-                                  child: ElevatedButton(
-                                      onPressed: _calculateResults,
-                                      child: Text('計算結果',
-                                          style: TextStyle(fontSize: 18)),
-                                      style: ElevatedButton.styleFrom(
-                                        padding: EdgeInsets.symmetric(
-                                            horizontal: 32, vertical: 16),
-                                      )),
-                                ),
+                            // 🆕 第一步的計算按鈕
+                            SizedBox(height: 16), // 上方留一些空間
+                            Center(
+                              child: Container(
+                                width: isDesktop ? 300 : double.infinity,
+                                child: ElevatedButton(
+                                    onPressed: _calculateResults,
+                                    child: Text('計算結果',
+                                        style: TextStyle(fontSize: 18)),
+                                    style: ElevatedButton.styleFrom(
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 32, vertical: 16),
+                                    )),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
+                      ),
 
                       SizedBox(height: 16), // 改為垂直間距
 
                       // 第二步：提供台電帳單資訊
                       _buildSectionCard(
-                          color: Colors.blue[50],
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Center(
-                                child: Text('第二步：提供台電帳單資訊(選填)',
-                                    style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold)),
-                              ),
-                              SizedBox(height: 16),
+                        color: Colors.blue[50],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Center(
+                              child: Text('第二步：提供台電帳單資訊(選填)',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+                            SizedBox(height: 16),
 
-                              // 左右分佈佈局
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // 左邊：輸入區塊
-                                  Expanded(
-                                    flex: 1,
-                                    child: Container(
-                                      padding: EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        color: Colors.blue[25],
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                            color: Colors.blue[200]!, width: 1),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          // 固定勾選項目（不可取消）
-                                          CheckboxListTile(
-                                            title: Text('電力需量非營業用',
-                                                style: TextStyle(fontSize: 16)),
-                                            value: electricityTypeNonBusiness,
-                                            onChanged: null, // 設為null表示不可變更
-                                            controlAffinity:
-                                                ListTileControlAffinity.leading,
-                                            contentPadding: EdgeInsets.zero,
-                                          ),
+                            // 左右分佈佈局
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // 左邊：輸入區塊
+                                Expanded(
+                                  flex: 1,
+                                  child: Container(
+                                    padding: EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue[25],
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                          color: Colors.blue[200]!, width: 1),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        // 固定勾選項目（不可取消）
+                                        CheckboxListTile(
+                                          title: Text('電力需量非營業用',
+                                              style: TextStyle(fontSize: 16)),
+                                          value: electricityTypeNonBusiness,
+                                          onChanged: null, // 設為null表示不可變更
+                                          controlAffinity:
+                                              ListTileControlAffinity.leading,
+                                          contentPadding: EdgeInsets.zero,
+                                        ),
 
-                                          CheckboxListTile(
-                                            title: Text('非時間電價',
-                                                style: TextStyle(fontSize: 16)),
-                                            value: timeTypeNonTime,
-                                            onChanged: null, // 設為null表示不可變更
-                                            controlAffinity:
-                                                ListTileControlAffinity.leading,
-                                            contentPadding: EdgeInsets.zero,
-                                          ),
+                                        CheckboxListTile(
+                                          title: Text('非時間電價',
+                                              style: TextStyle(fontSize: 16)),
+                                          value: timeTypeNonTime,
+                                          onChanged: null, // 設為null表示不可變更
+                                          controlAffinity:
+                                              ListTileControlAffinity.leading,
+                                          contentPadding: EdgeInsets.zero,
+                                        ),
 
-                                          CheckboxListTile(
-                                            title: Text('夏季(6/1–9/30)',
-                                                style: TextStyle(fontSize: 16)),
-                                            value: timeTypeSummer,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                timeTypeSummer = value ?? false;
-                                                if (value == true)
-                                                  timeTypeNonSummer = false;
-                                              });
-                                              _updateNotification();
-                                            },
-                                            controlAffinity:
-                                                ListTileControlAffinity.leading,
-                                            contentPadding: EdgeInsets.zero,
-                                          ),
+                                        CheckboxListTile(
+                                          title: Text('夏季(6/1–9/30)',
+                                              style: TextStyle(fontSize: 16)),
+                                          value: timeTypeSummer,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              timeTypeSummer = value ?? false;
+                                              if (value == true)
+                                                timeTypeNonSummer = false;
+                                            });
+                                            _updateNotification();
+                                          },
+                                          controlAffinity:
+                                              ListTileControlAffinity.leading,
+                                          contentPadding: EdgeInsets.zero,
+                                        ),
 
-                                          CheckboxListTile(
-                                            title: Text('非夏季',
-                                                style: TextStyle(fontSize: 16)),
-                                            value: timeTypeNonSummer,
-                                            onChanged: (value) {
-                                              setState(() {
-                                                timeTypeNonSummer =
-                                                    value ?? false;
-                                                if (value == true)
-                                                  timeTypeSummer = false;
-                                              });
-                                              _updateNotification();
-                                            },
-                                            controlAffinity:
-                                                ListTileControlAffinity.leading,
-                                            contentPadding: EdgeInsets.zero,
-                                          ),
+                                        CheckboxListTile(
+                                          title: Text('非夏季',
+                                              style: TextStyle(fontSize: 16)),
+                                          value: timeTypeNonSummer,
+                                          onChanged: (value) {
+                                            setState(() {
+                                              timeTypeNonSummer =
+                                                  value ?? false;
+                                              if (value == true)
+                                                timeTypeSummer = false;
+                                            });
+                                            _updateNotification();
+                                          },
+                                          controlAffinity:
+                                              ListTileControlAffinity.leading,
+                                          contentPadding: EdgeInsets.zero,
+                                        ),
 
-                                          SizedBox(height: 12),
-                                          _buildInputFieldWithUnit('契約容量',
-                                              contractCapacityController, '瓩',
-                                              onChanged: (_) =>
-                                                  _updateNotification()),
-                                          SizedBox(height: 12),
-                                          _buildInputFieldWithUnit(
-                                              '最高需量', maxDemandController, '瓩',
-                                              onChanged: (_) =>
-                                                  _updateNotification()),
-                                          SizedBox(height: 12),
-                                          _buildInputFieldWithUnit('計費度數',
-                                              billingUnitsController, '度',
-                                              onChanged: (_) =>
-                                                  _updateNotification()),
-                                        ],
-                                      ),
+                                        SizedBox(height: 12),
+                                        _buildInputFieldWithUnit('契約容量',
+                                            contractCapacityController, '瓩',
+                                            onChanged: (_) =>
+                                                _updateNotification()),
+                                        SizedBox(height: 12),
+                                        _buildInputFieldWithUnit(
+                                            '最高需量', maxDemandController, '瓩',
+                                            onChanged: (_) =>
+                                                _updateNotification()),
+                                        SizedBox(height: 12),
+                                        _buildInputFieldWithUnit(
+                                            '計費度數', billingUnitsController, '度',
+                                            onChanged: (_) =>
+                                                _updateNotification()),
+                                      ],
                                     ),
                                   ),
-
-                                  SizedBox(width: 16),
-
-                                  // 右邊：結果區塊
-                                  Expanded(
-                                    flex: 1,
-                                    child: Container(
-                                      padding: EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        color: Colors.blue[25],
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                            color: Colors.blue[200]!, width: 1),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          _buildReadOnlyFieldWithUnit(
-                                              '基本電價(約定)',
-                                              basicElectricityController,
-                                              '元',
-                                              hasInfo: true),
-                                          SizedBox(height: 12),
-                                          _buildReadOnlyFieldWithUnit(
-                                              '最高需量有超用契約容量',
-                                              excessDemandController,
-                                              '元',
-                                              hasInfo: true),
-                                          SizedBox(height: 12),
-                                          _buildReadOnlyFieldWithUnit('流動電價',
-                                              flowElectricityController, '元',
-                                              hasInfo: true),
-                                          SizedBox(height: 12),
-                                          _buildReadOnlyFieldWithUnit('總電價',
-                                              totalElectricityController, '元',
-                                              hasInfo: true),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              // 添加電費組成圓餅圖（可展開）
-                              if (step2Calculated)
-                                ElectricityCostPieChart(
-                                  basicElectricity: double.tryParse(
-                                          basicElectricityController.text) ??
-                                      0,
-                                  flowElectricity: double.tryParse(
-                                          flowElectricityController.text) ??
-                                      0,
-                                  excessDemand: () {
-                                    String excessText =
-                                        excessDemandController.text;
-                                    if (excessText.isEmpty ||
-                                        excessText == '無超約') return 0.0;
-                                    return double.tryParse(excessText) ?? 0;
-                                  }(),
                                 ),
-                            ],
-                          ),
+
+                                SizedBox(width: 16),
+
+                                // 右邊：結果區塊
+                                Expanded(
+                                  flex: 1,
+                                  child: Container(
+                                    padding: EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue[25],
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                          color: Colors.blue[200]!, width: 1),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildReadOnlyFieldWithUnit('基本電價(約定)',
+                                            basicElectricityController, '元',
+                                            hasInfo: true),
+                                        SizedBox(height: 12),
+                                        _buildReadOnlyFieldWithUnit(
+                                            '最高需量有超用契約容量',
+                                            excessDemandController,
+                                            '元',
+                                            hasInfo: true),
+                                        SizedBox(height: 12),
+                                        _buildReadOnlyFieldWithUnit('流動電價',
+                                            flowElectricityController, '元',
+                                            hasInfo: true),
+                                        SizedBox(height: 12),
+                                        _buildReadOnlyFieldWithUnit('總電價',
+                                            totalElectricityController, '元',
+                                            hasInfo: true),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            // 添加電費組成圓餅圖（可展開）
+                            if (step2Calculated)
+                              ElectricityCostPieChart(
+                                basicElectricity: double.tryParse(
+                                        basicElectricityController.text) ??
+                                    0,
+                                flowElectricity: double.tryParse(
+                                        flowElectricityController.text) ??
+                                    0,
+                                excessDemand: () {
+                                  String excessText =
+                                      excessDemandController.text;
+                                  if (excessText.isEmpty || excessText == '無超約')
+                                    return 0.0;
+                                  return double.tryParse(excessText) ?? 0;
+                                }(),
+                              ),
+                          ],
                         ),
+                      ),
 
                       SizedBox(height: 16),
 
                       // 第三步：試算攤提時間
                       _buildSectionCard(
-                          color: Colors.orange[50],
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // 內容區塊：保持原來的寬度
-                              Container(
-                                width: 500, // 固定寬度，防止內容跟隨卡片拉長
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Center(
-                                      child: Text('第三步：試算攤提時間(選填)',
-                                          style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold)),
+                        color: Colors.orange[50],
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 內容區塊：保持原來的寬度
+                            Container(
+                              width: 500, // 固定寬度，防止內容跟隨卡片拉長
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Center(
+                                    child: Text('第三步：試算攤提時間(選填)',
+                                        style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold)),
+                                  ),
+                                  SizedBox(height: 16),
+
+                                  // 輸入區塊
+                                  Container(
+                                    padding: EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange[25],
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                          color: Colors.orange[200]!, width: 1),
                                     ),
-                                    SizedBox(height: 16),
-
-                                    // 輸入區塊
-                                    Container(
-                                      padding: EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        color: Colors.orange[25],
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                            color: Colors.orange[200]!,
-                                            width: 1),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          _buildPricingMethodSection(),
-                                        ],
-                                      ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildPricingMethodSection(),
+                                      ],
                                     ),
+                                  ),
 
-                                    SizedBox(height: 16),
+                                  SizedBox(height: 16),
 
-                                    // 結果區塊
-                                    Container(
-                                      padding: EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        color: Colors.orange[25],
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                            color: Colors.orange[200]!,
-                                            width: 1),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          // 固定顯示燈管數量（無論租賃或買斷）
-                                          _buildInputFieldWithUnit('燈管數量',
-                                              step3LightCountController, '支',
-                                              integerOnly: true,
-                                              onChanged: (_) =>
-                                                  _updateNotification()),
+                                  // 結果區塊
+                                  Container(
+                                    padding: EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange[25],
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                          color: Colors.orange[200]!, width: 1),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        // 固定顯示燈管數量（無論租賃或買斷）
+                                        _buildInputFieldWithUnit('燈管數量',
+                                            step3LightCountController, '支',
+                                            integerOnly: true,
+                                            onChanged: (_) =>
+                                                _updateNotification()),
+                                        SizedBox(height: 12),
+                                        // 根據選擇顯示對應欄位
+                                        if (pricingMethod == '租賃') ...[
+                                          _buildReadOnlyFieldWithUnit(
+                                              '每月燈管租賃費用',
+                                              monthlyRentalController,
+                                              '元',
+                                              hasInfo: true),
                                           SizedBox(height: 12),
-                                          // 根據選擇顯示對應欄位
-                                          if (pricingMethod == '租賃') ...[
-                                            _buildReadOnlyFieldWithUnit(
-                                                '每月燈管租賃費用',
-                                                monthlyRentalController,
-                                                '元',
-                                                hasInfo: true),
-                                            SizedBox(height: 12),
-                                            _buildReadOnlyFieldWithUnit(
-                                                '每月總共可節省費用',
-                                                totalMonthlySavingController,
-                                                '元',
-                                                isRed: _shouldShowRedText(
-                                                        '每月總共可節省費用') ||
-                                                    true,
-                                                titleRed: _shouldShowRedText(
-                                                        '每月總共可節省費用') ||
-                                                    true,
-                                                hasInfo: true),
-                                          ],
-                                          if (pricingMethod == '買斷') ...[
-                                            _buildReadOnlyFieldWithUnit('買斷總費用',
-                                                buyoutTotalController, '元',
-                                                hasInfo: true),
-                                            SizedBox(height: 12),
-                                            _buildReadOnlyFieldWithUnit(
-                                                '多久時間攤提(月)',
-                                                paybackPeriodController,
-                                                '個月',
-                                                isRed: _shouldShowRedText(
-                                                        '多久時間攤提(月)') ||
-                                                    true,
-                                                titleRed: _shouldShowRedText(
-                                                        '多久時間攤提(月)') ||
-                                                    true,
-                                                hasInfo: true),
-                                          ],
+                                          _buildReadOnlyFieldWithUnit(
+                                              '每月總共可節省費用',
+                                              totalMonthlySavingController,
+                                              '元',
+                                              isRed:
+                                                  _shouldShowRedText(
+                                                          '每月總共可節省費用') ||
+                                                      true,
+                                              titleRed: _shouldShowRedText(
+                                                      '每月總共可節省費用') ||
+                                                  true,
+                                              hasInfo: true),
                                         ],
-                                      ),
+                                        if (pricingMethod == '買斷') ...[
+                                          _buildReadOnlyFieldWithUnit('買斷總費用',
+                                              buyoutTotalController, '元',
+                                              hasInfo: true),
+                                          SizedBox(height: 12),
+                                          _buildReadOnlyFieldWithUnit('多久時間攤提(月)',
+                                              paybackPeriodController, '個月',
+                                              isRed: _shouldShowRedText(
+                                                      '多久時間攤提(月)') ||
+                                                  true,
+                                              titleRed: _shouldShowRedText(
+                                                      '多久時間攤提(月)') ||
+                                                  true,
+                                              hasInfo: true),
+                                        ],
+                                      ],
                                     ),
+                                  ),
 
-                                    // 添加攤提時間折線圖（可展開）
-                                    if (step3Calculated && step2Calculated)
-                                      PaybackTrendChart(
-                                        monthlySaving: backgroundTotalSaving,
-                                        buyoutTotal: (pricingMethod == '買斷' &&
-                                                buyoutTotalController
-                                                    .text.isNotEmpty)
-                                            ? double.tryParse(
-                                                buyoutTotalController.text)
-                                            : null,
-                                      ),
-                                  ],
-                                ),
+                                  // 添加攤提時間折線圖（可展開）
+                                  if (step3Calculated && step2Calculated)
+                                    PaybackTrendChart(
+                                      monthlySaving: backgroundTotalSaving,
+                                      buyoutTotal: (pricingMethod == '買斷' &&
+                                              buyoutTotalController
+                                                  .text.isNotEmpty)
+                                          ? double.tryParse(
+                                              buyoutTotalController.text)
+                                          : null,
+                                    ),
+                                ],
                               ),
-                              // 右邊保留空白區域，讓卡片延伸對齊
-                              Expanded(child: Container()),
-                            ],
-                          ),
+                            ),
+                            // 右邊保留空白區域，讓卡片延伸對齊
+                            Expanded(child: Container()),
+                          ],
                         ),
+                      ),
                     ],
                   ),
                 ],

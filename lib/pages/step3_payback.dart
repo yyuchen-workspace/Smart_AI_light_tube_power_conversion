@@ -23,7 +23,7 @@ class Step3Payback extends StatelessWidget {
         children: [
           // 頁面標題
           Text(
-            '試算攤提時間',
+            '攤提計算',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
