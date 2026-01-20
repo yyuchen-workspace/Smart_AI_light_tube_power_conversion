@@ -1,36 +1,53 @@
-# Documentation files (keep local only)
-GitHub上傳流程.md
-test_process.md
-project_build.md
-claude.md
-CLAUDE.md
+# ==================== 文檔檔案（完全不追蹤）====================
+# 忽略所有 .md 檔案
+*.md
+# 忽略整個 prd 目錄
+prd/
+# 忽略 docs 目錄
+docs/
 
-# Version documentation files (keep local only)
-prd/版本*.md
-prd/VERSION_*.md
-
-# Flutter build files
+# ==================== Flutter 建置檔案 ====================
 .dart_tool/
-build/
-
-# IDE files
-.vscode/
-.idea/
-*.iml
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Dependencies
+.flutter-plugins
+.flutter-plugins-dependencies
 .packages
 .pub-cache/
 .pub/
 
-# Test coverage
-coverage/
+# 建置輸出（本地開發用，不上傳）
+build/
 
-# Temporary files
+# ==================== IDE 配置 ====================
+.vscode/
+.idea/
+*.iml
+*.iws
+*.swp
+*.swo
+
+# ==================== OS 檔案 ====================
+.DS_Store
+Thumbs.db
+*.bak
+
+# ==================== 測試與覆蓋率 ====================
+coverage/
+test/*.md
+
+# ==================== 環境變數與敏感資訊 ====================
+.env
+.env.local
+.env.*.local
+secrets.yaml
+firebase_options.dart
+
+# ==================== 臨時檔案 ====================
 *.log
 *.tmp
 *.temp
+*.cache
+
+# ==================== 生產建置（部署用）====================
+# 注意：GitHub Pages 部署時需要 build/web
+# 如果使用 GitHub Actions，build/web 會在 CI 中生成
+# 本地 build 不需要上傳

@@ -40,8 +40,14 @@ jobs:
     - name: Enable web
       run: flutter config --enable-web
       
-    - name: Build web
-      run: flutter build web --release --base-href="/Smart_AI_light_tube_power_conversion/"
+    - name: Build web (with optimization)
+      run: |
+        flutter build web \
+          --release \
+          --base-href="/Smart_AI_light_tube_power_conversion/" \
+          --dart-define=dart.vm.product=true \
+          --no-source-maps \
+          --tree-shake-icons
       
     - name: Setup Pages
       uses: actions/configure-pages@v4
