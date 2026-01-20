@@ -15,7 +15,9 @@ import 'pages/step3_payback.dart';
 
 // UI 元件
 import 'widgets/step_indicator.dart';
-import 'widgets/result_sidebar.dart';
+import 'widgets/charts/electricity_cost_pie_chart.dart';
+import 'widgets/charts/payback_trend_chart.dart';
+import 'widgets/charts/power_saving_chart.dart';
 
 // 計算工具
 import 'utils/lighting_calculator.dart';
@@ -124,6 +126,11 @@ class _CalculatorPageState extends State<CalculatorPage> {
   double? traditionalMonthlyConsumption;
   double? monthlySavings;
   double? savingsRate;
+
+  // 圖表組件
+  Widget? pieChart;
+  Widget? trendChart;
+  Widget? powerSavingChart;
 
   @override
   void dispose() {
@@ -282,6 +289,13 @@ class _CalculatorPageState extends State<CalculatorPage> {
       monthlySavings = savingUnits;
       savingsRate = (monthlySavings! / traditionalMonthlyConsumption!) * 100;
 
+      // 建立 Step 1 節電成果圖表
+      powerSavingChart = PowerSavingChart(
+        aiMonthlyConsumption: aiMonthlyConsumption!,
+        monthlySavings: monthlySavings!,
+        savingsRate: savingsRate!,
+      );
+
       // Step 2: 台電帳單計算（條件性執行）
       bool hasStep2Data = contractCapacityController.text.isNotEmpty &&
           maxDemandController.text.isNotEmpty &&
@@ -338,6 +352,13 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
         step2Calculated = true;
 
+        // 建立圓餅圖
+        pieChart = ElectricityCostPieChart(
+          basicElectricity: basicElectricity,
+          flowElectricity: flowElectricity,
+          excessDemand: excessDemand > 0 ? excessDemand : 0,
+        );
+
         // Step 3: 攤提時間計算（條件性執行，需要 Step2 數據）
         bool hasStep3Data = step3LightCountController.text.isNotEmpty &&
             ((pricingMethod == '租賃' && rentalPriceController.text.isNotEmpty) ||
@@ -347,15 +368,15 @@ class _CalculatorPageState extends State<CalculatorPage> {
         if (hasStep3Data) {
           double step3LightCount = double.parse(step3LightCountController.text);
 
+          // 計算總共節省費用（兩種模式都需要）
+          double totalSaving = ElectricityCalculator.calculateSaving(
+            savingUnits: savingUnits,
+            isSummer: timeTypeSummer,
+          );
+
           if (pricingMethod == '租賃' && rentalPriceController.text.isNotEmpty) {
             double rentalPrice = double.parse(rentalPriceController.text);
             double monthlyRental = rentalPrice * step3LightCount;
-
-            // 計算總共節省費用
-            double totalSaving = ElectricityCalculator.calculateSaving(
-              savingUnits: savingUnits,
-              isSummer: timeTypeSummer,
-            );
             double totalMonthlySaving = totalSaving - monthlyRental;
 
             monthlyRentalController.text =
@@ -364,16 +385,16 @@ class _CalculatorPageState extends State<CalculatorPage> {
             totalMonthlySavingController.text =
                 ElectricityCalculator.roundUpFirstDecimal(totalMonthlySaving)
                     .toStringAsFixed(1);
+
+            // 建立趨勢圖（租賃模式）
+            trendChart = PaybackTrendChart(
+              monthlySaving: totalSaving,
+              buyoutTotal: null,
+            );
           } else if (pricingMethod == '買斷' &&
               buyoutPriceController.text.isNotEmpty) {
             double buyoutPrice = double.parse(buyoutPriceController.text);
             double buyoutTotal = buyoutPrice * step3LightCount;
-
-            // 計算總共節省費用
-            double totalSaving = ElectricityCalculator.calculateSaving(
-              savingUnits: savingUnits,
-              isSummer: timeTypeSummer,
-            );
             double paybackPeriod = buyoutTotal / totalSaving;
 
             buyoutTotalController.text =
@@ -382,6 +403,12 @@ class _CalculatorPageState extends State<CalculatorPage> {
             paybackPeriodController.text =
                 ElectricityCalculator.roundUpFirstDecimal(paybackPeriod)
                     .toStringAsFixed(1);
+
+            // 建立趨勢圖（買斷模式）
+            trendChart = PaybackTrendChart(
+              monthlySaving: totalSaving,
+              buyoutTotal: buyoutTotal,
+            );
           }
 
           step3Calculated = true;
@@ -392,6 +419,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
           buyoutTotalController.text = '';
           paybackPeriodController.text = '';
           step3Calculated = false;
+          trendChart = null;
         }
       } else {
         // 清空 Step2 結果
@@ -400,6 +428,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
         flowElectricityController.text = '';
         totalElectricityController.text = '';
         step2Calculated = false;
+        pieChart = null;
 
         // 清空 Step3 結果
         monthlyRentalController.text = '';
@@ -407,6 +436,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
         buyoutTotalController.text = '';
         paybackPeriodController.text = '';
         step3Calculated = false;
+        trendChart = null;
       }
 
       _hasCalculated = true;
@@ -461,13 +491,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
           flex: 3,
           child: Container(
             margin: EdgeInsets.all(24),
-            child: ResultSidebar(
-              aiMonthlyConsumption: aiMonthlyConsumption,
-              traditionalMonthlyConsumption: traditionalMonthlyConsumption,
-              monthlySavings: monthlySavings,
-              savingsRate: savingsRate,
-              hasCalculated: _hasCalculated,
-            ),
+            child: _buildSidebar(),
           ),
         ),
       ],
@@ -477,6 +501,127 @@ class _CalculatorPageState extends State<CalculatorPage> {
   /// 手機版佈局 (垂直堆疊)
   Widget _buildMobileLayout() {
     return _buildStepContent();
+  }
+
+  /// 側邊欄內容（根據當前步驟顯示）
+  Widget _buildSidebar() {
+    if (!_hasCalculated) {
+      // 未計算時顯示提示
+      return Container(
+        padding: EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.info_outline, size: 48, color: Colors.grey[400]),
+            SizedBox(height: 16),
+            Text(
+              '請先完成 Step 1 計算',
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 根據當前步驟顯示對應圖表或結果
+    switch (_currentStep) {
+      case 0: // Step 1 - 顯示節電成果圖表
+        if (powerSavingChart != null) {
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '節電成果分析',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green[900],
+                  ),
+                ),
+                SizedBox(height: 16),
+                powerSavingChart!,
+              ],
+            ),
+          );
+        } else {
+          return _buildEmptySidebar('請完成 Step 1 計算以查看圖表');
+        }
+      case 1: // Step 2 - 顯示圓餅圖
+        if (step2Calculated && pieChart != null) {
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '電費組成分析',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[900],
+                  ),
+                ),
+                SizedBox(height: 16),
+                pieChart!,
+              ],
+            ),
+          );
+        } else {
+          return _buildEmptySidebar('請完成 Step 2 計算以查看圖表');
+        }
+      case 2: // Step 3 - 顯示趨勢圖
+        if (step3Calculated && step2Calculated && trendChart != null) {
+          return SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '節電回本趨勢',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[900],
+                  ),
+                ),
+                SizedBox(height: 16),
+                trendChart!,
+              ],
+            ),
+          );
+        } else {
+          return _buildEmptySidebar('請完成 Step 2 和 Step 3 計算以查看圖表');
+        }
+      default:
+        return _buildEmptySidebar('未知步驟');
+    }
+  }
+
+  /// 空側邊欄提示
+  Widget _buildEmptySidebar(String message) {
+    return Container(
+      padding: EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.bar_chart, size: 48, color: Colors.grey[400]),
+          SizedBox(height: 16),
+          Text(
+            message,
+            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
   }
 
   /// 步驟內容 (使用 IndexedStack 瞬間切換)
@@ -563,6 +708,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
               setState(() => parkingNightSensingTime = value ?? 30),
           onParkingCountChanged: (_) => setState(() {}),
           onCalculate: _calculateResults,
+          aiMonthlyConsumption: aiMonthlyConsumption,
+          monthlySavings: monthlySavings,
+          savingsRate: savingsRate,
+          hasCalculated: _hasCalculated,
         ),
 
         // Step 2: 台電帳單
@@ -574,26 +723,30 @@ class _CalculatorPageState extends State<CalculatorPage> {
               timeTypeSummer = value ?? false;
               if (value == true) timeTypeNonSummer = false;
             });
+            _calculateResults();
           },
           onNonSummerChanged: (value) {
             setState(() {
               timeTypeNonSummer = value ?? false;
               if (value == true) timeTypeSummer = false;
             });
+            _calculateResults();
           },
           contractCapacityController: contractCapacityController,
           maxDemandController: maxDemandController,
           billingUnitsController: billingUnitsController,
-          onContractCapacityChanged: (_) => setState(() {}),
-          onMaxDemandChanged: (_) => setState(() {}),
-          onBillingUnitsChanged: (_) => setState(() {}),
+          onContractCapacityChanged: (_) => _calculateResults(),
+          onMaxDemandChanged: (_) => _calculateResults(),
+          onBillingUnitsChanged: (_) => _calculateResults(),
           basicElectricityController: basicElectricityController,
           excessDemandController: excessDemandController,
           flowElectricityController: flowElectricityController,
           totalElectricityController: totalElectricityController,
           onInfoTap: _showFieldInfo,
           step2Calculated: step2Calculated,
-          pieChart: null, // TODO: 整合圓餅圖組件
+          step3Calculated: step3Calculated,
+          totalMonthlySavingController: totalMonthlySavingController,
+          pieChart: pieChart,
         ),
 
         // Step 3: 攤提時間
@@ -603,13 +756,14 @@ class _CalculatorPageState extends State<CalculatorPage> {
             setState(() {
               pricingMethod = value;
             });
+            _calculateResults();
           },
           rentalPriceController: rentalPriceController,
-          onRentalPriceChanged: (_) => setState(() {}),
+          onRentalPriceChanged: (_) => _calculateResults(),
           buyoutPriceController: buyoutPriceController,
-          onBuyoutPriceChanged: (_) => setState(() {}),
+          onBuyoutPriceChanged: (_) => _calculateResults(),
           step3LightCountController: step3LightCountController,
-          onLightCountChanged: (_) => setState(() {}),
+          onLightCountChanged: (_) => _calculateResults(),
           monthlyRentalController: monthlyRentalController,
           totalMonthlySavingController: totalMonthlySavingController,
           buyoutTotalController: buyoutTotalController,
@@ -617,7 +771,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
           onInfoTap: _showFieldInfo,
           step2Calculated: step2Calculated,
           step3Calculated: step3Calculated,
-          trendChart: null, // TODO: 整合折線圖組件
+          trendChart: trendChart,
         ),
       ],
     );

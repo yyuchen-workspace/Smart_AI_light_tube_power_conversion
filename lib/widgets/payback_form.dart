@@ -148,9 +148,241 @@ class PaybackForm extends StatelessWidget {
           ),
         ),
 
+        // 計算結果摘要卡片
+        if (step3Calculated && step2Calculated) ...[
+          SizedBox(height: 24),
+          Text(
+            '計算結果',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 16),
+
+          // 租賃模式結果卡片
+          if (pricingMethod == '租賃') ...[
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.attach_money,
+                                color: Colors.orange[700], size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              '每月租金',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              monthlyRentalController.text.isNotEmpty
+                                  ? double.parse(monthlyRentalController.text)
+                                      .toStringAsFixed(0)
+                                  : '0',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange[900],
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              '元',
+                              style: TextStyle(
+                                  fontSize: 14, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.savings,
+                                color: Colors.green[700], size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              '每月淨節省',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              totalMonthlySavingController.text.isNotEmpty
+                                  ? double.parse(
+                                          totalMonthlySavingController.text)
+                                      .toStringAsFixed(0)
+                                  : '0',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green[900],
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              '元',
+                              style: TextStyle(
+                                  fontSize: 14, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          // 買斷模式結果卡片
+          if (pricingMethod == '買斷') ...[
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.purple[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.shopping_cart,
+                                color: Colors.purple[700], size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              '買斷總價',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              buyoutTotalController.text.isNotEmpty
+                                  ? double.parse(buyoutTotalController.text)
+                                      .toStringAsFixed(0)
+                                  : '0',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.purple[900],
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              '元',
+                              style: TextStyle(
+                                  fontSize: 14, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.event_available,
+                                color: Colors.blue[700], size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              '回本期間',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              paybackPeriodController.text.isNotEmpty
+                                  ? double.parse(paybackPeriodController.text)
+                                      .toStringAsFixed(1)
+                                  : '0',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[900],
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              '個月',
+                              style: TextStyle(
+                                  fontSize: 14, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+
         // 折線圖（如果提供且已計算）
-        if (step3Calculated && step2Calculated && trendChart != null)
+        if (step3Calculated && step2Calculated && trendChart != null) ...[
+          SizedBox(height: 24),
+          Text(
+            '節電回本趨勢',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 16),
           trendChart!,
+        ],
       ],
     );
   }

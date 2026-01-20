@@ -35,6 +35,10 @@ class Step2BillInfo extends StatelessWidget {
 
   // 計算狀態
   final bool step2Calculated;
+  final bool step3Calculated;
+
+  // Step 3 節電數據（可選，用於顯示與上期比較）
+  final TextEditingController? totalMonthlySavingController;
 
   // 圓餅圖組件（可選）
   final Widget? pieChart;
@@ -57,6 +61,8 @@ class Step2BillInfo extends StatelessWidget {
     required this.totalElectricityController,
     required this.onInfoTap,
     required this.step2Calculated,
+    required this.step3Calculated,
+    this.totalMonthlySavingController,
     this.pieChart,
   }) : super(key: key);
 
@@ -104,6 +110,8 @@ class Step2BillInfo extends StatelessWidget {
             totalElectricityController: totalElectricityController,
             onInfoTap: onInfoTap,
             step2Calculated: step2Calculated,
+            step3Calculated: step3Calculated,
+            totalMonthlySavingController: totalMonthlySavingController,
             pieChart: pieChart,
           ),
         ],

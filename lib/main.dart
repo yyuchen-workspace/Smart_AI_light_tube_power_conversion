@@ -1882,14 +1882,12 @@ class _CalculatorPageState extends State<CalculatorPage> {
                             // 添加可節電比較長條圖
                             if (step1Calculated)
                               PowerSavingChart(
-                                savingUnits: double.tryParse(
+                                aiMonthlyConsumption: 0, // main.dart 未計算此值
+                                monthlySavings: double.tryParse(
                                         savingUnitsController.text) ??
                                     0,
-                                savingPercent: double.tryParse(
+                                savingsRate: double.tryParse(
                                         savingPercentController.text) ??
-                                    0,
-                                totalSaving: double.tryParse(
-                                        totalSavingController.text) ??
                                     0,
                               ),
 

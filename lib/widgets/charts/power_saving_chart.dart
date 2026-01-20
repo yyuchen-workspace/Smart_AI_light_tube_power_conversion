@@ -5,17 +5,17 @@ import 'package:fl_chart/fl_chart.dart';
 ///
 /// 顯示節電百分比（環形進度）和關鍵節省數據
 /// - 左側：環形圖 + 中央百分比
-/// - 右側：節電度數和節省金額
+/// - 右側：AI燈耗電和每月節電
 class PowerSavingChart extends StatelessWidget {
-  final double savingUnits; // 可節電（度）
-  final double savingPercent; // 可節電（%）
-  final double totalSaving; // 共節省電費（元）
+  final double aiMonthlyConsumption; // AI燈管每月耗電（度）
+  final double monthlySavings; // 每月節電量（度）
+  final double savingsRate; // 節電率（%）
 
   const PowerSavingChart({
     Key? key,
-    required this.savingUnits,
-    required this.savingPercent,
-    required this.totalSaving,
+    required this.aiMonthlyConsumption,
+    required this.monthlySavings,
+    required this.savingsRate,
   }) : super(key: key);
 
   @override
@@ -60,14 +60,14 @@ class PowerSavingChart extends StatelessWidget {
                       sections: [
                         // 節省部分（綠色）
                         PieChartSectionData(
-                          value: savingPercent,
+                          value: savingsRate,
                           color: Colors.green[600],
                           radius: 25,
                           showTitle: false,
                         ),
                         // 未節省部分（灰色）
                         PieChartSectionData(
-                          value: 100 - savingPercent,
+                          value: 100 - savingsRate,
                           color: Colors.grey[300],
                           radius: 25,
                           showTitle: false,
@@ -81,7 +81,7 @@ class PowerSavingChart extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '${savingPercent.toStringAsFixed(1)}%',
+                      '${savingsRate.toStringAsFixed(1)}%',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -127,23 +127,23 @@ class PowerSavingChart extends StatelessWidget {
                 ),
                 SizedBox(height: 16),
 
-                // 每月節電度數
+                // AI燈管每月耗電
                 _buildSavingDataRow(
-                  icon: Icons.electric_bolt,
-                  iconColor: Colors.amber[700]!,
-                  label: '每月節電',
-                  value: '${savingUnits.toStringAsFixed(1)}',
-                  unit: '度',
+                  icon: Icons.lightbulb_outline,
+                  iconColor: Colors.green[700]!,
+                  label: 'AI燈管耗電',
+                  value: '${aiMonthlyConsumption.toStringAsFixed(1)}',
+                  unit: '度/月',
                 ),
                 SizedBox(height: 12),
 
-                // 每月節省金額（高亮顯示）
+                // 每月節電量（高亮顯示）
                 _buildSavingDataRow(
-                  icon: Icons.savings,
-                  iconColor: Colors.green[700]!,
-                  label: '每月節省',
-                  value: '${_roundUpFirstDecimal(totalSaving).toStringAsFixed(0)}',
-                  unit: '元',
+                  icon: Icons.electric_bolt,
+                  iconColor: Colors.blue[700]!,
+                  label: '每月節電',
+                  value: '${monthlySavings.toStringAsFixed(1)}',
+                  unit: '度',
                   isHighlight: true,
                 ),
               ],
@@ -209,10 +209,5 @@ class PowerSavingChart extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  /// 向上舍入到第一位小數
-  static double _roundUpFirstDecimal(double value) {
-    return (value * 10).ceilToDouble() / 10;
   }
 }

@@ -72,6 +72,12 @@ class Step1AILights extends StatelessWidget {
   // 計算按鈕回調
   final VoidCallback onCalculate;
 
+  // 計算結果顯示
+  final double? aiMonthlyConsumption;
+  final double? monthlySavings;
+  final double? savingsRate;
+  final bool hasCalculated;
+
   const Step1AILights({
     Key? key,
     required this.traditionalWattController,
@@ -128,6 +134,10 @@ class Step1AILights extends StatelessWidget {
     this.onParkingNightSensingTimeChanged,
     this.onParkingCountChanged,
     required this.onCalculate,
+    this.aiMonthlyConsumption,
+    this.monthlySavings,
+    this.savingsRate,
+    required this.hasCalculated,
   }) : super(key: key);
 
   @override
@@ -322,6 +332,159 @@ class Step1AILights extends StatelessWidget {
               ),
             ),
           ),
+
+          // 計算結果顯示
+          if (hasCalculated) ...[
+            SizedBox(height: 32),
+            Text(
+              '計算結果',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
+            ),
+            SizedBox(height: 16),
+
+            // 結果卡片行
+            Row(
+              children: [
+                // AI燈管每月耗電
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.lightbulb, color: Colors.green[700], size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'AI燈管每月耗電',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              aiMonthlyConsumption?.toStringAsFixed(2) ?? '0',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green[900],
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              '度',
+                              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                // 每月節電量
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.bolt, color: Colors.blue[700], size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              '每月節電量',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              monthlySavings?.toStringAsFixed(2) ?? '0',
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[900],
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              '度',
+                              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12),
+            // 節電率
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.trending_down, color: Colors.orange[700], size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        '節電率',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        savingsRate?.toStringAsFixed(1) ?? '0',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange[900],
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        '%',
+                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
