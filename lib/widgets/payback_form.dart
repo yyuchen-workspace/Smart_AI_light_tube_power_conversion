@@ -39,9 +39,16 @@ class PaybackForm extends StatelessWidget {
   // 資訊按鈕回調
   final void Function(String fieldName) onInfoTap;
 
+  // 計算按鈕回調
+  final VoidCallback? onCalculateStep3;
+
   // 計算狀態
+  final bool step1Calculated;
   final bool step2Calculated;
   final bool step3Calculated;
+
+  // 計算模式
+  final bool useSimplifiedMode;
 
   // 折線圖組件（可選）
   final Widget? trendChart;
@@ -61,8 +68,11 @@ class PaybackForm extends StatelessWidget {
     required this.buyoutTotalController,
     required this.paybackPeriodController,
     required this.onInfoTap,
+    this.onCalculateStep3,
+    required this.step1Calculated,
     required this.step2Calculated,
     required this.step3Calculated,
+    required this.useSimplifiedMode,
     this.trendChart,
   }) : super(key: key);
 
@@ -108,9 +118,9 @@ class PaybackForm extends StatelessWidget {
                 integerOnly: true,
                 onChanged: onLightCountChanged,
               ),
-              SizedBox(height: 12),
+              SizedBox(height: 20),
 
-              // 根據選擇顯示對應欄位
+              // 根據選擇顯示對應欄位（始終顯示，不論是否已計算）
               if (pricingMethod == '租賃') ...[
                 _buildReadOnlyFieldWithUnit(
                   '每月燈管租賃費用',
@@ -148,241 +158,36 @@ class PaybackForm extends StatelessWidget {
           ),
         ),
 
-        // 計算結果摘要卡片
-        if (step3Calculated && step2Calculated) ...[
-          SizedBox(height: 24),
-          Text(
-            '計算結果',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 16),
+        SizedBox(height: 20),
 
-          // 租賃模式結果卡片
-          if (pricingMethod == '租賃') ...[
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.orange[50],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.attach_money,
-                                color: Colors.orange[700], size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              '每月租金',
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              monthlyRentalController.text.isNotEmpty
-                                  ? double.parse(monthlyRentalController.text)
-                                      .toStringAsFixed(0)
-                                  : '0',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.orange[900],
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              '元',
-                              style: TextStyle(
-                                  fontSize: 14, color: Colors.grey[600]),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.savings,
-                                color: Colors.green[700], size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              '每月淨節省',
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              totalMonthlySavingController.text.isNotEmpty
-                                  ? double.parse(
-                                          totalMonthlySavingController.text)
-                                      .toStringAsFixed(0)
-                                  : '0',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green[900],
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              '元',
-                              style: TextStyle(
-                                  fontSize: 14, color: Colors.grey[600]),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+        // 計算按鈕
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: (useSimplifiedMode ? step1Calculated : step2Calculated)
+                ? onCalculateStep3
+                : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  (useSimplifiedMode ? step1Calculated : step2Calculated)
+                      ? Colors.orange[600]
+                      : Colors.grey[400],
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-          ],
-
-          // 買斷模式結果卡片
-          if (pricingMethod == '買斷') ...[
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.purple[50],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.shopping_cart,
-                                color: Colors.purple[700], size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              '買斷總價',
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              buyoutTotalController.text.isNotEmpty
-                                  ? double.parse(buyoutTotalController.text)
-                                      .toStringAsFixed(0)
-                                  : '0',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.purple[900],
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              '元',
-                              style: TextStyle(
-                                  fontSize: 14, color: Colors.grey[600]),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.event_available,
-                                color: Colors.blue[700], size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              '回本期間',
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              paybackPeriodController.text.isNotEmpty
-                                  ? double.parse(paybackPeriodController.text)
-                                      .toStringAsFixed(1)
-                                  : '0',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue[900],
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              '個月',
-                              style: TextStyle(
-                                  fontSize: 14, color: Colors.grey[600]),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            child: Text(
+              (useSimplifiedMode ? step1Calculated : step2Calculated)
+                  ? '計算結果'
+                  : useSimplifiedMode
+                      ? '請先完成 Step 1 計算'
+                      : '請先完成 Step 2 計算',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-          ],
-        ],
-
-        // 折線圖（如果提供且已計算）
-        if (step3Calculated && step2Calculated && trendChart != null) ...[
-          SizedBox(height: 24),
-          Text(
-            '節電回本趨勢',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 16),
-          trendChart!,
-        ],
+        ),
       ],
     );
   }
@@ -415,7 +220,7 @@ class PaybackForm extends StatelessWidget {
                     onChanged: onRentalPriceChanged,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    style: TextStyle(fontSize: 14),
+                    style: TextStyle(fontSize: 16),
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -423,9 +228,10 @@ class PaybackForm extends StatelessWidget {
                       fillColor: Colors.white,
                       filled: true,
                       contentPadding:
-                          EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      isDense: true,
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                      isDense: false,
                       suffixText: '元/支/月',
+                      suffixStyle: TextStyle(fontSize: 14),
                     ),
                   ),
                 ),
@@ -451,7 +257,7 @@ class PaybackForm extends StatelessWidget {
                     onChanged: onBuyoutPriceChanged,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    style: TextStyle(fontSize: 14),
+                    style: TextStyle(fontSize: 16),
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -459,9 +265,10 @@ class PaybackForm extends StatelessWidget {
                       fillColor: Colors.white,
                       filled: true,
                       contentPadding:
-                          EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      isDense: true,
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                      isDense: false,
                       suffixText: '元/支',
+                      suffixStyle: TextStyle(fontSize: 14),
                     ),
                   ),
                 ),
@@ -508,9 +315,8 @@ class PaybackForm extends StatelessWidget {
             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
           ),
           keyboardType: TextInputType.number,
-          inputFormatters: integerOnly
-              ? [FilteringTextInputFormatter.digitsOnly]
-              : null,
+          inputFormatters:
+              integerOnly ? [FilteringTextInputFormatter.digitsOnly] : null,
           onChanged: onChanged,
           style: TextStyle(fontSize: 16),
         ),

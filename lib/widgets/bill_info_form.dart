@@ -11,6 +11,7 @@
  */
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class BillInfoForm extends StatelessWidget {
   // 季節選擇
@@ -37,6 +38,9 @@ class BillInfoForm extends StatelessWidget {
 
   // 資訊按鈕回調
   final void Function(String fieldName) onInfoTap;
+
+  // 計算按鈕回調
+  final VoidCallback? onCalculateStep2;
 
   // 計算狀態
   final bool step2Calculated;
@@ -65,6 +69,7 @@ class BillInfoForm extends StatelessWidget {
     required this.flowElectricityController,
     required this.totalElectricityController,
     required this.onInfoTap,
+    this.onCalculateStep2,
     required this.step2Calculated,
     required this.step3Calculated,
     this.totalMonthlySavingController,
@@ -170,33 +175,46 @@ class BillInfoForm extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildReadOnlyFieldWithUnit(
-                      '基本電價(約定)',
-                      basicElectricityController,
-                      '元',
-                      hasInfo: true,
-                    ),
-                    SizedBox(height: 12),
-                    _buildReadOnlyFieldWithUnit(
-                      '最高需量有超用契約容量',
-                      excessDemandController,
-                      '元',
-                      hasInfo: true,
-                    ),
-                    SizedBox(height: 12),
-                    _buildReadOnlyFieldWithUnit(
-                      '流動電價',
-                      flowElectricityController,
-                      '元',
-                      hasInfo: true,
-                    ),
-                    SizedBox(height: 12),
-                    _buildReadOnlyFieldWithUnit(
-                      '總電價',
-                      totalElectricityController,
-                      '元',
-                      hasInfo: true,
-                    ),
+                    if (!step2Calculated)
+                      Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32),
+                          child: Text(
+                            '請填寫左側欄位並點擊「計算結果」',
+                            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    if (step2Calculated) ...[
+                      _buildReadOnlyFieldWithUnit(
+                        '基本電價(約定)',
+                        basicElectricityController,
+                        '元',
+                        hasInfo: true,
+                      ),
+                      SizedBox(height: 12),
+                      _buildReadOnlyFieldWithUnit(
+                        '最高需量有超用契約容量',
+                        excessDemandController,
+                        '元',
+                        hasInfo: true,
+                      ),
+                      SizedBox(height: 12),
+                      _buildReadOnlyFieldWithUnit(
+                        '流動電價',
+                        flowElectricityController,
+                        '元',
+                        hasInfo: true,
+                      ),
+                      SizedBox(height: 12),
+                      _buildReadOnlyFieldWithUnit(
+                        '總電價',
+                        totalElectricityController,
+                        '元',
+                        hasInfo: true,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -204,125 +222,27 @@ class BillInfoForm extends StatelessWidget {
           ],
         ),
 
-        // 計算結果摘要卡片
-        if (step2Calculated) ...[
-          SizedBox(height: 24),
-          Text(
-            '計算結果',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 16),
+        SizedBox(height: 20),
 
-          // 結果卡片 1: 本期電費總計
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.blue[50],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.receipt_long, color: Colors.blue[700], size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      '本期電費總計',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      totalElectricityController.text.isNotEmpty
-                          ? double.parse(totalElectricityController.text)
-                              .toStringAsFixed(0)
-                          : '0',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue[900],
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      '元',
-                      style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // 結果卡片 2: 與上期比較（如果 Step 3 已計算且有節電）
-          if (step3Calculated &&
-              totalMonthlySavingController != null &&
-              totalMonthlySavingController!.text.isNotEmpty &&
-              double.parse(totalMonthlySavingController!.text) > 0) ...[
-            SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.green[50],
+        // 計算按鈕
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: onCalculateStep2,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue[600],
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.trending_down,
-                          color: Colors.green[700], size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        '與上期比較',
-                        style:
-                            TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '節省 ${double.parse(totalMonthlySavingController!.text).toStringAsFixed(0)}',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green[900],
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        '元/月',
-                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
             ),
-          ],
-        ],
-
-        // 圓餅圖（如果提供且已計算）
-        if (step2Calculated && pieChart != null) ...[
-          SizedBox(height: 24),
-          Text(
-            '電費組成分析',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            child: Text(
+              '計算結果',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
           ),
-          SizedBox(height: 16),
-          pieChart!,
-        ],
+        ),
       ],
     );
   }
@@ -346,7 +266,10 @@ class BillInfoForm extends StatelessWidget {
         fillColor: Colors.white,
         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       ),
-      keyboardType: TextInputType.number,
+      keyboardType: TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')),
+      ],
       onChanged: onChanged,
       style: TextStyle(fontSize: 16),
     );

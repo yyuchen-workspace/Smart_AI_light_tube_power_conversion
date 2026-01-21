@@ -33,12 +33,16 @@ class Step3Payback extends StatelessWidget {
   // 資訊按鈕回調
   final void Function(String fieldName) onInfoTap;
 
+  // 計算按鈕回調
+  final VoidCallback? onCalculateStep3;
+
   // 計算狀態
+  final bool step1Calculated;
   final bool step2Calculated;
   final bool step3Calculated;
 
-  // 折線圖組件（可選）
-  final Widget? trendChart;
+  // 計算模式
+  final bool useSimplifiedMode;
 
   const Step3Payback({
     Key? key,
@@ -55,9 +59,11 @@ class Step3Payback extends StatelessWidget {
     required this.buyoutTotalController,
     required this.paybackPeriodController,
     required this.onInfoTap,
+    this.onCalculateStep3,
+    required this.step1Calculated,
     required this.step2Calculated,
     required this.step3Calculated,
-    this.trendChart,
+    required this.useSimplifiedMode,
   }) : super(key: key);
 
   @override
@@ -101,9 +107,11 @@ class Step3Payback extends StatelessWidget {
             buyoutTotalController: buyoutTotalController,
             paybackPeriodController: paybackPeriodController,
             onInfoTap: onInfoTap,
+            onCalculateStep3: onCalculateStep3,
+            step1Calculated: step1Calculated,
             step2Calculated: step2Calculated,
             step3Calculated: step3Calculated,
-            trendChart: trendChart,
+            useSimplifiedMode: useSimplifiedMode,
           ),
         ],
       ),

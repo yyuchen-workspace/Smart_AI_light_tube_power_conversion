@@ -33,6 +33,9 @@ class Step2BillInfo extends StatelessWidget {
   // 資訊按鈕回調
   final void Function(String fieldName) onInfoTap;
 
+  // 計算按鈕回調
+  final VoidCallback? onCalculateStep2;
+
   // 計算狀態
   final bool step2Calculated;
   final bool step3Calculated;
@@ -60,6 +63,7 @@ class Step2BillInfo extends StatelessWidget {
     required this.flowElectricityController,
     required this.totalElectricityController,
     required this.onInfoTap,
+    this.onCalculateStep2,
     required this.step2Calculated,
     required this.step3Calculated,
     this.totalMonthlySavingController,
@@ -109,6 +113,7 @@ class Step2BillInfo extends StatelessWidget {
             flowElectricityController: flowElectricityController,
             totalElectricityController: totalElectricityController,
             onInfoTap: onInfoTap,
+            onCalculateStep2: onCalculateStep2,
             step2Calculated: step2Calculated,
             step3Calculated: step3Calculated,
             totalMonthlySavingController: totalMonthlySavingController,

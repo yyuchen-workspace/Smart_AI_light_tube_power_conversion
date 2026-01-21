@@ -8,7 +8,9 @@
  */
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../constants/brightness_wattage_map.dart';
+import 'common/time_input_field.dart';
 
 class LightingStrategyConfig extends StatelessWidget {
   final String title; // 標題 (車道燈/車位燈)
@@ -21,8 +23,8 @@ class LightingStrategyConfig extends StatelessWidget {
   // 日間時段
   final TimeOfDay daytimeStart;
   final TimeOfDay daytimeEnd;
-  final VoidCallback onDaytimeStartTap;
-  final VoidCallback onDaytimeEndTap;
+  final ValueChanged<TimeOfDay> onDaytimeStartChanged;
+  final ValueChanged<TimeOfDay> onDaytimeEndChanged;
 
   // 日間亮度
   final int dayBrightnessBefore;
@@ -35,8 +37,8 @@ class LightingStrategyConfig extends StatelessWidget {
   // 夜間時段 (可選)
   final TimeOfDay? nighttimeStart;
   final TimeOfDay? nighttimeEnd;
-  final VoidCallback? onNighttimeStartTap;
-  final VoidCallback? onNighttimeEndTap;
+  final ValueChanged<TimeOfDay>? onNighttimeStartChanged;
+  final ValueChanged<TimeOfDay>? onNighttimeEndChanged;
 
   // 夜間亮度 (可選)
   final int? nightBrightnessBefore;
@@ -57,8 +59,8 @@ class LightingStrategyConfig extends StatelessWidget {
     required this.onAllDayChanged,
     required this.daytimeStart,
     required this.daytimeEnd,
-    required this.onDaytimeStartTap,
-    required this.onDaytimeEndTap,
+    required this.onDaytimeStartChanged,
+    required this.onDaytimeEndChanged,
     required this.dayBrightnessBefore,
     required this.dayBrightnessAfter,
     required this.daySensingTime,
@@ -67,8 +69,8 @@ class LightingStrategyConfig extends StatelessWidget {
     required this.onDaySensingTimeChanged,
     this.nighttimeStart,
     this.nighttimeEnd,
-    this.onNighttimeStartTap,
-    this.onNighttimeEndTap,
+    this.onNighttimeStartChanged,
+    this.onNighttimeEndChanged,
     this.nightBrightnessBefore,
     this.nightBrightnessAfter,
     this.nightSensingTime,
@@ -102,21 +104,39 @@ class LightingStrategyConfig extends StatelessWidget {
             controller: countController,
             decoration: InputDecoration(
               labelText: '數量',
+              labelStyle: TextStyle(fontSize: 16),
               suffixText: '支',
+              suffixStyle: TextStyle(fontSize: 14),
               border: OutlineInputBorder(),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 12, vertical: 16),
             ),
+            style: TextStyle(fontSize: 16),
             keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+            ],
             onChanged: onCountChanged,
           ),
           SizedBox(height: 16),
 
           // 全天候選項
-          CheckboxListTile(
-            title: Text('全天候 (24小時)', style: TextStyle(fontSize: 16)),
-            value: isAllDay,
-            onChanged: onAllDayChanged,
-            dense: true,
-            contentPadding: EdgeInsets.zero,
+          Row(
+            children: [
+              Checkbox(
+                value: isAllDay,
+                onChanged: onAllDayChanged,
+              ),
+              SizedBox(width: 8),
+              Text(
+                '全天候 (24小時)',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 8),
 
@@ -125,14 +145,15 @@ class LightingStrategyConfig extends StatelessWidget {
             title: '日間時段',
             start: daytimeStart,
             end: daytimeEnd,
-            onStartTap: onDaytimeStartTap,
-            onEndTap: onDaytimeEndTap,
+            onStartChanged: onDaytimeStartChanged,
+            onEndChanged: onDaytimeEndChanged,
             brightnessBefore: dayBrightnessBefore,
             brightnessAfter: dayBrightnessAfter,
             sensingTime: daySensingTime,
             onBrightnessBeforeChanged: onDayBrightnessBeforeChanged,
             onBrightnessAfterChanged: onDayBrightnessAfterChanged,
             onSensingTimeChanged: onDaySensingTimeChanged,
+            isDisabled: isAllDay,
           ),
 
           // 夜間設定 (只在非全天候模式顯示)
@@ -142,12 +163,13 @@ class LightingStrategyConfig extends StatelessWidget {
               title: '夜間時段',
               start: nighttimeStart ?? TimeOfDay(hour: 18, minute: 0),
               end: nighttimeEnd ?? TimeOfDay(hour: 6, minute: 0),
-              onStartTap: onNighttimeStartTap ?? () {},
-              onEndTap: onNighttimeEndTap ?? () {},
+              onStartChanged: onNighttimeStartChanged ?? (_) {},
+              onEndChanged: onNighttimeEndChanged ?? (_) {},
               brightnessBefore: nightBrightnessBefore ?? 10,
               brightnessAfter: nightBrightnessAfter ?? 100,
               sensingTime: nightSensingTime ?? 30,
-              onBrightnessBeforeChanged: onNightBrightnessBeforeChanged ?? (_) {},
+              onBrightnessBeforeChanged:
+                  onNightBrightnessBeforeChanged ?? (_) {},
               onBrightnessAfterChanged: onNightBrightnessAfterChanged ?? (_) {},
               onSensingTimeChanged: onNightSensingTimeChanged ?? (_) {},
             ),
@@ -161,105 +183,128 @@ class LightingStrategyConfig extends StatelessWidget {
     required String title,
     required TimeOfDay start,
     required TimeOfDay end,
-    required VoidCallback onStartTap,
-    required VoidCallback onEndTap,
+    required ValueChanged<TimeOfDay> onStartChanged,
+    required ValueChanged<TimeOfDay> onEndChanged,
     required int brightnessBefore,
     required int brightnessAfter,
     required int sensingTime,
     required ValueChanged<int?> onBrightnessBeforeChanged,
     required ValueChanged<int?> onBrightnessAfterChanged,
     required ValueChanged<int?> onSensingTimeChanged,
+    bool isDisabled = false,
   }) {
-    return Container(
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 時段標題
-          Text(
-            title,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 時間選擇區域（灰色背景當禁用時）
+        Container(
+          padding: EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isDisabled ? Colors.grey[200] : Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey[300]!),
           ),
-          SizedBox(height: 12),
-
-          // 時間選擇
-          Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: InkWell(
-                  onTap: onStartTap,
-                  child: InputDecorator(
-                    decoration: InputDecoration(
-                      labelText: '開始',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
-                    child: Text(_formatTimeOfDay(start), style: TextStyle(fontSize: 16)),
-                  ),
+              // 時段標題
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isDisabled ? Colors.grey[500] : Colors.black,
                 ),
               ),
-              SizedBox(width: 8),
-              Text('至', style: TextStyle(fontSize: 16)),
-              SizedBox(width: 8),
-              Expanded(
-                child: InkWell(
-                  onTap: onEndTap,
-                  child: InputDecorator(
-                    decoration: InputDecoration(
-                      labelText: '結束',
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              SizedBox(height: 12),
+
+              // 時間選擇（新版：小時分鐘分離輸入）
+              Row(
+                children: [
+                  SizedBox(
+                    width: 150,
+                    child: TimeInputField(
+                      label: '開始時間',
+                      initialTime: start,
+                      onChanged: onStartChanged,
+                      enabled: !isDisabled,
                     ),
-                    child: Text(_formatTimeOfDay(end), style: TextStyle(fontSize: 16)),
                   ),
-                ),
+                  SizedBox(width: 50),
+                  SizedBox(
+                    width: 150,
+                    child: TimeInputField(
+                      label: '結束時間',
+                      initialTime: end,
+                      onChanged: onEndChanged,
+                      enabled: !isDisabled,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          SizedBox(height: 12),
+        ),
 
-          // 亮度設定標題
-          Text(
-            '亮度設定',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-          ),
-          SizedBox(height: 8),
+        SizedBox(height: 12),
 
-          // 感應前亮度
-          _buildDropdown(
-            label: '感應前亮度',
-            value: brightnessBefore,
-            items: BrightnessWattageMap.brightnessOptions,
-            onChanged: onBrightnessBeforeChanged,
-            suffix: '%',
+        // 亮度設定區域（始終保持白色背景）
+        Container(
+          padding: EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey[300]!),
           ),
-          SizedBox(height: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 亮度設定標題
+              Text(
+                '亮度設定',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: 8),
 
-          // 感應後亮度
-          _buildDropdown(
-            label: '感應後亮度',
-            value: brightnessAfter,
-            items: BrightnessWattageMap.brightnessOptions,
-            onChanged: onBrightnessAfterChanged,
-            suffix: '%',
-          ),
-          SizedBox(height: 8),
+              // 感應前亮度
+              _buildDropdown(
+                label: '感應前亮度',
+                value: brightnessBefore,
+                items: BrightnessWattageMap.brightnessOptionsBefore,
+                onChanged: onBrightnessBeforeChanged,
+                suffix: '%',
+                isDisabled: false,
+              ),
+              SizedBox(height: 8),
 
-          // 感應時間
-          _buildDropdown(
-            label: '感應時間',
-            value: sensingTime,
-            items: BrightnessWattageMap.sensingDurationOptions,
-            onChanged: onSensingTimeChanged,
-            suffix: '秒',
+              // 感應後亮度
+              _buildDropdown(
+                label: '感應後亮度',
+                value: brightnessAfter,
+                items: BrightnessWattageMap.brightnessOptionsAfter,
+                onChanged: onBrightnessAfterChanged,
+                suffix: '%',
+                isDisabled: false,
+              ),
+              SizedBox(height: 8),
+
+              // 感應時間
+              _buildDropdown(
+                label: '感應時間',
+                value: sensingTime,
+                items: BrightnessWattageMap.sensingDurationOptions,
+                onChanged: onSensingTimeChanged,
+                suffix: '秒',
+                isDisabled: false,
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -269,38 +314,42 @@ class LightingStrategyConfig extends StatelessWidget {
     required List<int> items,
     required ValueChanged<int?> onChanged,
     required String suffix,
+    bool isDisabled = false,
   }) {
     return Row(
       children: [
         Expanded(
           flex: 2,
-          child: Text(label, style: TextStyle(fontSize: 14)),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              color: isDisabled ? Colors.grey[500] : Colors.black,
+            ),
+          ),
         ),
         Expanded(
-          flex: 3,
+          flex: 10,
           child: DropdownButtonFormField<int>(
             value: value,
             decoration: InputDecoration(
               border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              isDense: true,
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              isDense: false,
+              enabled: !isDisabled,
             ),
+            style: TextStyle(fontSize: 16, color: Colors.black),
             items: items.map((int item) {
               return DropdownMenuItem<int>(
                 value: item,
                 child: Text('$item$suffix'),
               );
             }).toList(),
-            onChanged: onChanged,
+            onChanged: isDisabled ? null : onChanged,
           ),
         ),
       ],
     );
-  }
-
-  String _formatTimeOfDay(TimeOfDay time) {
-    final hour = time.hour.toString().padLeft(2, '0');
-    final minute = time.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
   }
 }

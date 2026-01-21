@@ -22,8 +22,8 @@ class ExpandableLightCard extends StatefulWidget {
   final ValueChanged<bool?> onAllDayChanged;
   final TimeOfDay daytimeStart;
   final TimeOfDay daytimeEnd;
-  final VoidCallback onDaytimeStartTap;
-  final VoidCallback onDaytimeEndTap;
+  final ValueChanged<TimeOfDay> onDaytimeStartChanged;
+  final ValueChanged<TimeOfDay> onDaytimeEndChanged;
   final int dayBrightnessBefore;
   final int dayBrightnessAfter;
   final int daySensingTime;
@@ -32,8 +32,8 @@ class ExpandableLightCard extends StatefulWidget {
   final ValueChanged<int?> onDaySensingTimeChanged;
   final TimeOfDay? nighttimeStart;
   final TimeOfDay? nighttimeEnd;
-  final VoidCallback? onNighttimeStartTap;
-  final VoidCallback? onNighttimeEndTap;
+  final ValueChanged<TimeOfDay>? onNighttimeStartChanged;
+  final ValueChanged<TimeOfDay>? onNighttimeEndChanged;
   final int? nightBrightnessBefore;
   final int? nightBrightnessAfter;
   final int? nightSensingTime;
@@ -53,8 +53,8 @@ class ExpandableLightCard extends StatefulWidget {
     required this.onAllDayChanged,
     required this.daytimeStart,
     required this.daytimeEnd,
-    required this.onDaytimeStartTap,
-    required this.onDaytimeEndTap,
+    required this.onDaytimeStartChanged,
+    required this.onDaytimeEndChanged,
     required this.dayBrightnessBefore,
     required this.dayBrightnessAfter,
     required this.daySensingTime,
@@ -63,8 +63,8 @@ class ExpandableLightCard extends StatefulWidget {
     required this.onDaySensingTimeChanged,
     this.nighttimeStart,
     this.nighttimeEnd,
-    this.onNighttimeStartTap,
-    this.onNighttimeEndTap,
+    this.onNighttimeStartChanged,
+    this.onNighttimeEndChanged,
     this.nightBrightnessBefore,
     this.nightBrightnessAfter,
     this.nightSensingTime,
@@ -87,7 +87,7 @@ class _ExpandableLightCardState extends State<ExpandableLightCard> {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: widget.color.withOpacity(0.3), width: 1),
+        side: BorderSide(color: widget.color.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
         children: [
@@ -105,7 +105,7 @@ class _ExpandableLightCardState extends State<ExpandableLightCard> {
             child: Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: widget.color.withOpacity(0.1),
+                color: widget.color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.vertical(
                   top: Radius.circular(12),
                   bottom: _isExpanded ? Radius.zero : Radius.circular(12),
@@ -117,7 +117,7 @@ class _ExpandableLightCardState extends State<ExpandableLightCard> {
                   Container(
                     padding: EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: widget.color.withOpacity(0.2),
+                      color: widget.color.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(widget.icon, color: widget.color, size: 24),
@@ -172,8 +172,8 @@ class _ExpandableLightCardState extends State<ExpandableLightCard> {
                 onAllDayChanged: widget.onAllDayChanged,
                 daytimeStart: widget.daytimeStart,
                 daytimeEnd: widget.daytimeEnd,
-                onDaytimeStartTap: widget.onDaytimeStartTap,
-                onDaytimeEndTap: widget.onDaytimeEndTap,
+                onDaytimeStartChanged: widget.onDaytimeStartChanged,
+                onDaytimeEndChanged: widget.onDaytimeEndChanged,
                 dayBrightnessBefore: widget.dayBrightnessBefore,
                 dayBrightnessAfter: widget.dayBrightnessAfter,
                 daySensingTime: widget.daySensingTime,
@@ -182,8 +182,8 @@ class _ExpandableLightCardState extends State<ExpandableLightCard> {
                 onDaySensingTimeChanged: widget.onDaySensingTimeChanged,
                 nighttimeStart: widget.nighttimeStart,
                 nighttimeEnd: widget.nighttimeEnd,
-                onNighttimeStartTap: widget.onNighttimeStartTap,
-                onNighttimeEndTap: widget.onNighttimeEndTap,
+                onNighttimeStartChanged: widget.onNighttimeStartChanged,
+                onNighttimeEndChanged: widget.onNighttimeEndChanged,
                 nightBrightnessBefore: widget.nightBrightnessBefore,
                 nightBrightnessAfter: widget.nightBrightnessAfter,
                 nightSensingTime: widget.nightSensingTime,

@@ -18,6 +18,15 @@ class ElectricityPricing {
   /// 非夏季流動電價（元/度）
   static const double nonSummerUnitPrice = 3.87;
 
+  // 簡化計算用平均電價（元/度）
+  // 用於快速估算，不考慮契約容量和超約費用
+
+  /// 夏季平均電價（元/度） - 簡化計算
+  static const double summerAveragePrice = 4.08;
+
+  /// 非夏季平均電價（元/度） - 簡化計算
+  static const double nonSummerAveragePrice = 3.87;
+
   // AI 燈管消耗瓦數
   /// AI 燈管基礎消耗瓦數
   static const double aiLightWatt = 12.0;

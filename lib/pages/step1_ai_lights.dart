@@ -7,6 +7,7 @@
  */
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../widgets/expandable_light_card.dart';
 
 class Step1AILights extends StatelessWidget {
@@ -23,8 +24,8 @@ class Step1AILights extends StatelessWidget {
   final ValueChanged<bool?> onDrivewayAllDayChanged;
   final TimeOfDay drivewayDaytimeStart;
   final TimeOfDay drivewayDaytimeEnd;
-  final VoidCallback onDrivewayDaytimeStartTap;
-  final VoidCallback onDrivewayDaytimeEndTap;
+  final ValueChanged<TimeOfDay> onDrivewayDaytimeStartChanged;
+  final ValueChanged<TimeOfDay> onDrivewayDaytimeEndChanged;
   final int drivewayDayBrightnessBefore;
   final int drivewayDayBrightnessAfter;
   final int drivewayDaySensingTime;
@@ -33,8 +34,8 @@ class Step1AILights extends StatelessWidget {
   final ValueChanged<int?> onDrivewayDaySensingTimeChanged;
   final TimeOfDay? drivewayNighttimeStart;
   final TimeOfDay? drivewayNighttimeEnd;
-  final VoidCallback? onDrivewayNighttimeStartTap;
-  final VoidCallback? onDrivewayNighttimeEndTap;
+  final ValueChanged<TimeOfDay>? onDrivewayNighttimeStartChanged;
+  final ValueChanged<TimeOfDay>? onDrivewayNighttimeEndChanged;
   final int? drivewayNightBrightnessBefore;
   final int? drivewayNightBrightnessAfter;
   final int? drivewayNightSensingTime;
@@ -49,8 +50,8 @@ class Step1AILights extends StatelessWidget {
   final ValueChanged<bool?> onParkingAllDayChanged;
   final TimeOfDay parkingDaytimeStart;
   final TimeOfDay parkingDaytimeEnd;
-  final VoidCallback onParkingDaytimeStartTap;
-  final VoidCallback onParkingDaytimeEndTap;
+  final ValueChanged<TimeOfDay> onParkingDaytimeStartChanged;
+  final ValueChanged<TimeOfDay> onParkingDaytimeEndChanged;
   final int parkingDayBrightnessBefore;
   final int parkingDayBrightnessAfter;
   final int parkingDaySensingTime;
@@ -59,8 +60,8 @@ class Step1AILights extends StatelessWidget {
   final ValueChanged<int?> onParkingDaySensingTimeChanged;
   final TimeOfDay? parkingNighttimeStart;
   final TimeOfDay? parkingNighttimeEnd;
-  final VoidCallback? onParkingNighttimeStartTap;
-  final VoidCallback? onParkingNighttimeEndTap;
+  final ValueChanged<TimeOfDay>? onParkingNighttimeStartChanged;
+  final ValueChanged<TimeOfDay>? onParkingNighttimeEndChanged;
   final int? parkingNightBrightnessBefore;
   final int? parkingNightBrightnessAfter;
   final int? parkingNightSensingTime;
@@ -71,12 +72,6 @@ class Step1AILights extends StatelessWidget {
 
   // 計算按鈕回調
   final VoidCallback onCalculate;
-
-  // 計算結果顯示
-  final double? aiMonthlyConsumption;
-  final double? monthlySavings;
-  final double? savingsRate;
-  final bool hasCalculated;
 
   const Step1AILights({
     Key? key,
@@ -90,8 +85,8 @@ class Step1AILights extends StatelessWidget {
     required this.onDrivewayAllDayChanged,
     required this.drivewayDaytimeStart,
     required this.drivewayDaytimeEnd,
-    required this.onDrivewayDaytimeStartTap,
-    required this.onDrivewayDaytimeEndTap,
+    required this.onDrivewayDaytimeStartChanged,
+    required this.onDrivewayDaytimeEndChanged,
     required this.drivewayDayBrightnessBefore,
     required this.drivewayDayBrightnessAfter,
     required this.drivewayDaySensingTime,
@@ -100,8 +95,8 @@ class Step1AILights extends StatelessWidget {
     required this.onDrivewayDaySensingTimeChanged,
     this.drivewayNighttimeStart,
     this.drivewayNighttimeEnd,
-    this.onDrivewayNighttimeStartTap,
-    this.onDrivewayNighttimeEndTap,
+    this.onDrivewayNighttimeStartChanged,
+    this.onDrivewayNighttimeEndChanged,
     this.drivewayNightBrightnessBefore,
     this.drivewayNightBrightnessAfter,
     this.drivewayNightSensingTime,
@@ -114,8 +109,8 @@ class Step1AILights extends StatelessWidget {
     required this.onParkingAllDayChanged,
     required this.parkingDaytimeStart,
     required this.parkingDaytimeEnd,
-    required this.onParkingDaytimeStartTap,
-    required this.onParkingDaytimeEndTap,
+    required this.onParkingDaytimeStartChanged,
+    required this.onParkingDaytimeEndChanged,
     required this.parkingDayBrightnessBefore,
     required this.parkingDayBrightnessAfter,
     required this.parkingDaySensingTime,
@@ -124,8 +119,8 @@ class Step1AILights extends StatelessWidget {
     required this.onParkingDaySensingTimeChanged,
     this.parkingNighttimeStart,
     this.parkingNighttimeEnd,
-    this.onParkingNighttimeStartTap,
-    this.onParkingNighttimeEndTap,
+    this.onParkingNighttimeStartChanged,
+    this.onParkingNighttimeEndChanged,
     this.parkingNightBrightnessBefore,
     this.parkingNightBrightnessAfter,
     this.parkingNightSensingTime,
@@ -134,10 +129,6 @@ class Step1AILights extends StatelessWidget {
     this.onParkingNightSensingTimeChanged,
     this.onParkingCountChanged,
     required this.onCalculate,
-    this.aiMonthlyConsumption,
-    this.monthlySavings,
-    this.savingsRate,
-    required this.hasCalculated,
   }) : super(key: key);
 
   @override
@@ -179,14 +170,21 @@ class Step1AILights extends StatelessWidget {
                   controller: traditionalWattController,
                   decoration: InputDecoration(
                     labelText: '目前使用燈管瓦數',
+                    labelStyle: TextStyle(fontSize: 16),
                     suffixText: 'W',
+                    suffixStyle: TextStyle(fontSize: 14),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     filled: true,
                     fillColor: Colors.grey[50],
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                   ),
-                  keyboardType: TextInputType.number,
+                  style: TextStyle(fontSize: 16),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')),
+                  ],
                   onChanged: onTraditionalWattChanged,
                 ),
               ),
@@ -197,14 +195,21 @@ class Step1AILights extends StatelessWidget {
                   controller: traditionalLightCountController,
                   decoration: InputDecoration(
                     labelText: '數量',
+                    labelStyle: TextStyle(fontSize: 16),
                     suffixText: '支',
+                    suffixStyle: TextStyle(fontSize: 14),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     filled: true,
                     fillColor: Colors.grey[50],
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                   ),
+                  style: TextStyle(fontSize: 16),
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
                   onChanged: onTraditionalCountChanged,
                 ),
               ),
@@ -256,8 +261,8 @@ class Step1AILights extends StatelessWidget {
             onAllDayChanged: onDrivewayAllDayChanged,
             daytimeStart: drivewayDaytimeStart,
             daytimeEnd: drivewayDaytimeEnd,
-            onDaytimeStartTap: onDrivewayDaytimeStartTap,
-            onDaytimeEndTap: onDrivewayDaytimeEndTap,
+            onDaytimeStartChanged: onDrivewayDaytimeStartChanged,
+            onDaytimeEndChanged: onDrivewayDaytimeEndChanged,
             dayBrightnessBefore: drivewayDayBrightnessBefore,
             dayBrightnessAfter: drivewayDayBrightnessAfter,
             daySensingTime: drivewayDaySensingTime,
@@ -266,8 +271,8 @@ class Step1AILights extends StatelessWidget {
             onDaySensingTimeChanged: onDrivewayDaySensingTimeChanged,
             nighttimeStart: drivewayNighttimeStart,
             nighttimeEnd: drivewayNighttimeEnd,
-            onNighttimeStartTap: onDrivewayNighttimeStartTap,
-            onNighttimeEndTap: onDrivewayNighttimeEndTap,
+            onNighttimeStartChanged: onDrivewayNighttimeStartChanged,
+            onNighttimeEndChanged: onDrivewayNighttimeEndChanged,
             nightBrightnessBefore: drivewayNightBrightnessBefore,
             nightBrightnessAfter: drivewayNightBrightnessAfter,
             nightSensingTime: drivewayNightSensingTime,
@@ -291,8 +296,8 @@ class Step1AILights extends StatelessWidget {
             onAllDayChanged: onParkingAllDayChanged,
             daytimeStart: parkingDaytimeStart,
             daytimeEnd: parkingDaytimeEnd,
-            onDaytimeStartTap: onParkingDaytimeStartTap,
-            onDaytimeEndTap: onParkingDaytimeEndTap,
+            onDaytimeStartChanged: onParkingDaytimeStartChanged,
+            onDaytimeEndChanged: onParkingDaytimeEndChanged,
             dayBrightnessBefore: parkingDayBrightnessBefore,
             dayBrightnessAfter: parkingDayBrightnessAfter,
             daySensingTime: parkingDaySensingTime,
@@ -301,8 +306,8 @@ class Step1AILights extends StatelessWidget {
             onDaySensingTimeChanged: onParkingDaySensingTimeChanged,
             nighttimeStart: parkingNighttimeStart,
             nighttimeEnd: parkingNighttimeEnd,
-            onNighttimeStartTap: onParkingNighttimeStartTap,
-            onNighttimeEndTap: onParkingNighttimeEndTap,
+            onNighttimeStartChanged: onParkingNighttimeStartChanged,
+            onNighttimeEndChanged: onParkingNighttimeEndChanged,
             nightBrightnessBefore: parkingNightBrightnessBefore,
             nightBrightnessAfter: parkingNightBrightnessAfter,
             nightSensingTime: parkingNightSensingTime,
@@ -317,174 +322,22 @@ class Step1AILights extends StatelessWidget {
           // 計算按鈕
           SizedBox(
             width: double.infinity,
-            height: 48,
             child: ElevatedButton(
               onPressed: onCalculate,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: Colors.blue[600],
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
               child: Text(
                 '計算結果',
-                style: TextStyle(fontSize: 18, color: Colors.white),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ),
-
-          // 計算結果顯示
-          if (hasCalculated) ...[
-            SizedBox(height: 32),
-            Text(
-              '計算結果',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
-            ),
-            SizedBox(height: 16),
-
-            // 結果卡片行
-            Row(
-              children: [
-                // AI燈管每月耗電
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.lightbulb, color: Colors.green[700], size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              'AI燈管每月耗電',
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              aiMonthlyConsumption?.toStringAsFixed(2) ?? '0',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green[900],
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              '度',
-                              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12),
-                // 每月節電量
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.bolt, color: Colors.blue[700], size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              '每月節電量',
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              monthlySavings?.toStringAsFixed(2) ?? '0',
-                              style: TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue[900],
-                              ),
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              '度',
-                              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12),
-            // 節電率
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.orange[50],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.trending_down, color: Colors.orange[700], size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        '節電率',
-                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        savingsRate?.toStringAsFixed(1) ?? '0',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange[900],
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        '%',
-                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );

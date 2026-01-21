@@ -38,6 +38,14 @@ class BrightnessWattageMap {
   /// 取得所有可選的亮度選項 (用於下拉選單)
   static List<int> get brightnessOptions => wattageByBrightness.keys.toList();
 
+  /// 取得更換前亮度選項 (限制在50%以下)
+  static List<int> get brightnessOptionsBefore =>
+      wattageByBrightness.keys.where((b) => b <= 50).toList();
+
+  /// 取得更換後亮度選項 (完整範圍 0-100%)
+  static List<int> get brightnessOptionsAfter =>
+      wattageByBrightness.keys.toList();
+
   /// 可選的感應時間選項 (秒)
   static const List<int> sensingDurationOptions = [
     5,
@@ -50,7 +58,6 @@ class BrightnessWattageMap {
     60,
     90,
     120,
-    180,
     300
   ];
 }
