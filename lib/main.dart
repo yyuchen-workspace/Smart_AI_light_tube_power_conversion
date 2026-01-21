@@ -64,6 +64,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
   // 是否已計算
   bool _hasCalculated = false;
 
+  // 手機版滾動控制器
+  final ScrollController _mobileScrollController = ScrollController();
+
   // ==================== State Variables ====================
 
   // 傳統燈管
@@ -163,6 +166,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
     totalMonthlySavingController.dispose();
     buyoutTotalController.dispose();
     paybackPeriodController.dispose();
+    _mobileScrollController.dispose();
     super.dispose();
   }
 
@@ -538,6 +542,20 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
     // 驗證通過，執行計算
     _calculateResults();
+  }
+
+  /// 滾動到頂部（手機版）
+  void _scrollToTop() {
+    // 使用 WidgetsBinding 確保在 UI 更新後執行滾動
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_mobileScrollController.hasClients) {
+        _mobileScrollController.animateTo(
+          0.0,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   /// 完成按鈕驗證與計算（只驗證 Step 3，然後計算所有步驟）
@@ -1023,6 +1041,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
   /// 手機版佈局 (垂直堆疊：步驟內容 + 圖表)
   Widget _buildMobileLayout() {
     return SingleChildScrollView(
+      controller: _mobileScrollController,
       child: Column(
         children: [
           // 步驟內容（直接顯示當前步驟，不使用 IndexedStack）
@@ -1487,6 +1506,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
                 setState(() {
                   _currentStep--;
                 });
+                // 滾動到頂部（手機版）
+                _scrollToTop();
               },
               icon: Icon(Icons.arrow_back),
               label: Text('上一步'),
@@ -1506,6 +1527,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
                 setState(() {
                   _currentStep++;
                 });
+                // 滾動到頂部（手機版）
+                _scrollToTop();
               },
               icon: Icon(Icons.arrow_forward),
               label: Text('下一步'),
