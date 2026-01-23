@@ -26,7 +26,7 @@ class StepIndicator extends StatelessWidget {
     final isMobile = screenWidth < 600;
 
     // 手機版大幅縮小垂直間距
-    final verticalPadding = isMobile ? 12.0 : 24.0;
+    final verticalPadding = isMobile ? 6.0 : 12.0;
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: verticalPadding, horizontal: 16),
@@ -111,7 +111,9 @@ class StepIndicator extends StatelessWidget {
       circleChild = Text(
         '${index + 1}',
         style: TextStyle(
-            color: Colors.white, fontWeight: FontWeight.bold, fontSize: circleFontSize),
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: circleFontSize),
       );
     } else {
       // 未完成步驟：灰色 + 數字
@@ -120,7 +122,9 @@ class StepIndicator extends StatelessWidget {
       circleChild = Text(
         '${index + 1}',
         style: TextStyle(
-            color: Colors.grey[600], fontWeight: FontWeight.bold, fontSize: circleFontSize),
+            color: Colors.grey[600],
+            fontWeight: FontWeight.bold,
+            fontSize: circleFontSize),
       );
     }
 

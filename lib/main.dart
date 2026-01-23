@@ -1937,9 +1937,9 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
     final isMobile = screenWidth < 600;
 
     // 手機版大幅縮小 padding
-    final containerPadding = isMobile ? 12.0 : 24.0;
-    final buttonHorizontalPadding = isMobile ? 16.0 : 24.0;
-    final buttonVerticalPadding = isMobile ? 10.0 : 16.0;
+    final containerPadding = isMobile ? 6.0 : 24.0;
+    final buttonHorizontalPadding = isMobile ? 12.0 : 24.0;
+    final buttonVerticalPadding = isMobile ? 8.0 : 16.0;
 
     return Container(
       padding: EdgeInsets.all(containerPadding),
