@@ -22,8 +22,14 @@ class StepIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    // 手機版大幅縮小垂直間距
+    final verticalPadding = isMobile ? 12.0 : 24.0;
+
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      padding: EdgeInsets.symmetric(vertical: verticalPadding, horizontal: 16),
       child: Row(
         children: [
           // 左側空白區 (1/6)
@@ -36,6 +42,7 @@ class StepIndicator extends StatelessWidget {
               onTap: () => onStepTapped(0),
               behavior: HitTestBehavior.opaque,
               child: _buildStep(
+                context: context,
                 index: 0,
                 title: stepTitles[0],
                 isActive: 0 == currentStep,
@@ -61,6 +68,7 @@ class StepIndicator extends StatelessWidget {
               onTap: () => onStepTapped(1),
               behavior: HitTestBehavior.opaque,
               child: _buildStep(
+                context: context,
                 index: 1,
                 title: stepTitles[1],
                 isActive: 1 == currentStep,
@@ -77,11 +85,21 @@ class StepIndicator extends StatelessWidget {
   }
 
   Widget _buildStep({
+    required BuildContext context,
     required int index,
     required String title,
     required bool isActive,
     required bool isCompleted,
   }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    // 手機版縮小尺寸
+    final circleSize = isMobile ? 28.0 : 32.0;
+    final circleFontSize = isMobile ? 14.0 : 16.0;
+    final titleFontSize = isMobile ? 14.0 : 16.0;
+    final spacingHeight = isMobile ? 6.0 : 8.0;
+
     Color circleColor;
     Color textColor;
     Widget circleChild;
@@ -93,7 +111,7 @@ class StepIndicator extends StatelessWidget {
       circleChild = Text(
         '${index + 1}',
         style: TextStyle(
-            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+            color: Colors.white, fontWeight: FontWeight.bold, fontSize: circleFontSize),
       );
     } else {
       // 未完成步驟：灰色 + 數字
@@ -102,7 +120,7 @@ class StepIndicator extends StatelessWidget {
       circleChild = Text(
         '${index + 1}',
         style: TextStyle(
-            color: Colors.grey[600], fontWeight: FontWeight.bold, fontSize: 16),
+            color: Colors.grey[600], fontWeight: FontWeight.bold, fontSize: circleFontSize),
       );
     }
 
@@ -110,21 +128,21 @@ class StepIndicator extends StatelessWidget {
       children: [
         // 圓點
         Container(
-          width: 32,
-          height: 32,
+          width: circleSize,
+          height: circleSize,
           decoration: BoxDecoration(
             color: circleColor,
             shape: BoxShape.circle,
           ),
           child: Center(child: circleChild),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: spacingHeight),
 
         // 標題
         Text(
           title,
           style: TextStyle(
-            fontSize: 16,
+            fontSize: titleFontSize,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
             color: textColor,
           ),

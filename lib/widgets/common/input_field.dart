@@ -29,22 +29,30 @@ class InputFieldWithUnit extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    // 手機版縮小高度和間距
+    final fieldHeight = isMobile ? 50.0 : 56.0;
+    final titleBottomPadding = isMobile ? 2.0 : 4.0;
+    final fontSize = isMobile ? 15.0 : 16.0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 標題行（包含可選的信息按鈕）
         Row(
           children: [
-            Flexible(child: _buildTitle()),
+            Flexible(child: _buildTitle(titleBottomPadding, fontSize)),
             if (hasInfo) ...[
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               _buildInfoButton(),
             ],
           ],
         ),
         // 輸入欄位
         SizedBox(
-          height: 56,
+          height: fieldHeight,
           child: TextField(
             controller: controller,
             onTap: () {
@@ -78,13 +86,13 @@ class InputFieldWithUnit extends StatelessWidget {
   }
 
   /// 建構標題文字
-  Widget _buildTitle() {
+  Widget _buildTitle(double bottomPadding, double fontSize) {
     return Padding(
-      padding: EdgeInsets.only(top: 8, bottom: 4),
+      padding: EdgeInsets.only(top: 8, bottom: bottomPadding),
       child: Text(
         title,
         style: TextStyle(
-          fontSize: 16,
+          fontSize: fontSize,
           fontWeight: FontWeight.bold,
           color: titleRed ? Colors.red : null,
         ),
@@ -146,22 +154,30 @@ class ReadOnlyFieldWithUnit extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    // 手機版縮小高度和間距
+    final fieldHeight = isMobile ? 50.0 : 56.0;
+    final titleBottomPadding = isMobile ? 2.0 : 4.0;
+    final fontSize = isMobile ? 15.0 : 16.0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 標題行（包含可選的信息按鈕）
         Row(
           children: [
-            Flexible(child: _buildTitle()),
+            Flexible(child: _buildTitle(titleBottomPadding, fontSize)),
             if (hasInfo) ...[
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               _buildInfoButton(),
             ],
           ],
         ),
         // 唯讀欄位
         SizedBox(
-          height: 56,
+          height: fieldHeight,
           child: MouseRegion(
             cursor: SystemMouseCursors.forbidden,
             child: TextField(
@@ -170,15 +186,15 @@ class ReadOnlyFieldWithUnit extends StatelessWidget {
               enableInteractiveSelection: false,
               mouseCursor: SystemMouseCursors.forbidden,
               style: TextStyle(
-                fontSize: 16,
+                fontSize: fontSize,
                 color: grayed ? Colors.grey[500] : (isRed ? Colors.red : null),
               ),
               decoration: InputDecoration(
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
                 fillColor: grayed ? Colors.grey[300] : Colors.white,
                 filled: grayed,
                 contentPadding:
-                    EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 suffixText: unit,
                 suffixStyle: TextStyle(
                   fontSize: 14,
@@ -193,13 +209,13 @@ class ReadOnlyFieldWithUnit extends StatelessWidget {
   }
 
   /// 建構標題文字
-  Widget _buildTitle() {
+  Widget _buildTitle(double bottomPadding, double fontSize) {
     return Padding(
-      padding: EdgeInsets.only(top: 8, bottom: 4),
+      padding: EdgeInsets.only(top: 8, bottom: bottomPadding),
       child: Text(
         title,
         style: TextStyle(
-          fontSize: 16,
+          fontSize: fontSize,
           fontWeight: FontWeight.bold,
           color: titleRed ? Colors.red : null,
         ),

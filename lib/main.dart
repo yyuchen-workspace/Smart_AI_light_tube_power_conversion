@@ -1451,7 +1451,7 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
           // 步驟內容（直接顯示當前步驟，不使用 IndexedStack）
           RepaintBoundary(
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12), // 從 16 縮小到 12
               child: _buildCurrentStepContent(),
             ),
           ),
@@ -1460,7 +1460,7 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
           if (_hasCalculated)
             RepaintBoundary(
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), // 從 16/8 縮小到 12/6
                 child: _buildSidebar(),
               ),
             ),
@@ -1933,8 +1933,16 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
 
   /// 底部導航按鈕
   Widget _buildNavigationButtons() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    // 手機版大幅縮小 padding
+    final containerPadding = isMobile ? 12.0 : 24.0;
+    final buttonHorizontalPadding = isMobile ? 16.0 : 24.0;
+    final buttonVerticalPadding = isMobile ? 10.0 : 16.0;
+
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(containerPadding),
       decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -1962,8 +1970,9 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey[300],
                 foregroundColor: Colors.black87,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: EdgeInsets.symmetric(
+                    horizontal: buttonHorizontalPadding,
+                    vertical: buttonVerticalPadding),
               ),
             ),
 
@@ -1984,8 +1993,9 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: EdgeInsets.symmetric(
+                    horizontal: buttonHorizontalPadding,
+                    vertical: buttonVerticalPadding),
               ),
             ),
 
@@ -2001,8 +2011,9 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: EdgeInsets.symmetric(
+                    horizontal: buttonHorizontalPadding,
+                    vertical: buttonVerticalPadding),
               ),
             ),
         ],

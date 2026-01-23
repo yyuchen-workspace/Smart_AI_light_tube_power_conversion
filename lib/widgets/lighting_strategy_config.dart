@@ -98,8 +98,16 @@ class LightingStrategyConfig extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    // 根據螢幕尺寸調整間距
+    final containerPadding = isMobile ? 12.0 : 16.0;
+    final sectionSpacing = isMobile ? 10.0 : 12.0;
+    final titleFontSize = isMobile ? 16.0 : 18.0;
+
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: EdgeInsets.all(containerPadding),
       decoration: BoxDecoration(
         color: Colors.green[50],
         borderRadius: BorderRadius.circular(8),
@@ -111,9 +119,9 @@ class LightingStrategyConfig extends StatelessWidget {
           // 標題
           Text(
             title,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: titleFontSize, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 12),
+          SizedBox(height: sectionSpacing),
 
           // 數量輸入
           TextField(
@@ -141,7 +149,7 @@ class LightingStrategyConfig extends StatelessWidget {
             ],
             onChanged: onCountChanged,
           ),
-          SizedBox(height: 16),
+          SizedBox(height: sectionSpacing),
 
           // 全天候選項
           Row(
@@ -150,21 +158,22 @@ class LightingStrategyConfig extends StatelessWidget {
                 value: isAllDay,
                 onChanged: onAllDayChanged,
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 '全天候 (24小時)',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: isMobile ? 15.0 : 16.0,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
                 ),
               ),
             ],
           ),
-          SizedBox(height: 8),
+          SizedBox(height: isMobile ? 6 : 8),
 
           // 日間設定
           _buildTimeSlotSection(
+            context: context,
             title: '日間時段',
             start: daytimeStart,
             end: daytimeEnd,
@@ -184,8 +193,9 @@ class LightingStrategyConfig extends StatelessWidget {
 
           // 夜間設定 (只在非全天候模式顯示)
           if (!isAllDay) ...[
-            SizedBox(height: 16),
+            SizedBox(height: sectionSpacing),
             _buildTimeSlotSection(
+              context: context,
               title: '夜間時段',
               start: nighttimeStart ?? TimeOfDay(hour: 18, minute: 0),
               end: nighttimeEnd ?? TimeOfDay(hour: 6, minute: 0),
@@ -209,6 +219,7 @@ class LightingStrategyConfig extends StatelessWidget {
   }
 
   Widget _buildTimeSlotSection({
+    required BuildContext context,
     required String title,
     required TimeOfDay start,
     required TimeOfDay end,
@@ -225,12 +236,20 @@ class LightingStrategyConfig extends StatelessWidget {
     String? resultTitle,
     bool isDisabled = false,
   }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    // 手機版縮小間距和字體
+    final containerPadding = isMobile ? 10.0 : 12.0;
+    final sectionSpacing = isMobile ? 10.0 : 12.0;
+    final titleFontSize = isMobile ? 15.0 : 16.0;
+    final labelFontSize = isMobile ? 14.0 : 15.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 時間選擇區域（灰色背景當禁用時）
         Container(
-          padding: EdgeInsets.all(12),
+          padding: EdgeInsets.all(containerPadding),
           decoration: BoxDecoration(
             color: isDisabled ? Colors.grey[200] : Colors.white,
             borderRadius: BorderRadius.circular(8),
@@ -243,46 +262,74 @@ class LightingStrategyConfig extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: titleFontSize,
                   fontWeight: FontWeight.bold,
                   color: isDisabled ? Colors.grey[500] : Colors.black,
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: sectionSpacing),
 
               // 時間選擇（新版：小時分鐘分離輸入）
-              Row(
-                children: [
-                  SizedBox(
-                    width: 150,
-                    child: TimeInputField(
-                      label: '開始時間',
-                      initialTime: start,
-                      onChanged: onStartChanged,
-                      enabled: !isDisabled,
-                    ),
-                  ),
-                  SizedBox(width: 50),
-                  SizedBox(
-                    width: 150,
-                    child: TimeInputField(
-                      label: '結束時間',
-                      initialTime: end,
-                      onChanged: onEndChanged,
-                      enabled: !isDisabled,
-                    ),
-                  ),
-                ],
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isMobile = constraints.maxWidth < 400;
+
+                  if (isMobile) {
+                    // 手機版：垂直排列
+                    return Column(
+                      children: [
+                        TimeInputField(
+                          label: '開始時間',
+                          initialTime: start,
+                          onChanged: onStartChanged,
+                          enabled: !isDisabled,
+                        ),
+                        const SizedBox(height: 8),
+                        TimeInputField(
+                          label: '結束時間',
+                          initialTime: end,
+                          onChanged: onEndChanged,
+                          enabled: !isDisabled,
+                        ),
+                      ],
+                    );
+                  } else {
+                    // 桌面版：水平排列
+                    return Row(
+                      children: [
+                        SizedBox(
+                          width: 150,
+                          child: TimeInputField(
+                            label: '開始時間',
+                            initialTime: start,
+                            onChanged: onStartChanged,
+                            enabled: !isDisabled,
+                          ),
+                        ),
+                        const SizedBox(width: 50),
+                        SizedBox(
+                          width: 150,
+                          child: TimeInputField(
+                            label: '結束時間',
+                            initialTime: end,
+                            onChanged: onEndChanged,
+                            enabled: !isDisabled,
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                },
               ),
             ],
           ),
         ),
 
-        SizedBox(height: 12),
+        SizedBox(height: sectionSpacing),
 
         // 亮度設定區域（始終保持白色背景）
         Container(
-          padding: EdgeInsets.all(12),
+          padding: EdgeInsets.all(containerPadding),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8),
@@ -295,12 +342,12 @@ class LightingStrategyConfig extends StatelessWidget {
               Text(
                 '亮度設定',
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: labelFontSize,
                   fontWeight: FontWeight.w600,
                   color: Colors.black,
                 ),
               ),
-              SizedBox(height: 8),
+              SizedBox(height: isMobile ? 6 : 8),
 
               // 感應前亮度
               _buildDropdown(
@@ -311,7 +358,7 @@ class LightingStrategyConfig extends StatelessWidget {
                 suffix: '%',
                 isDisabled: false,
               ),
-              SizedBox(height: 8),
+              SizedBox(height: isMobile ? 6 : 8),
 
               // 感應後亮度
               _buildDropdown(
@@ -322,7 +369,7 @@ class LightingStrategyConfig extends StatelessWidget {
                 suffix: '%',
                 isDisabled: false,
               ),
-              SizedBox(height: 8),
+              SizedBox(height: isMobile ? 6 : 8),
 
               // 感應時間
               _buildDropdown(
@@ -339,60 +386,68 @@ class LightingStrategyConfig extends StatelessWidget {
 
         // 計算結果顯示區域
         if (resultTitle != null) ...[
-          SizedBox(height: 12),
+          SizedBox(height: sectionSpacing),
           Container(
-            padding: EdgeInsets.all(12),
+            padding: EdgeInsets.all(containerPadding),
             decoration: BoxDecoration(
               color: Colors.blue[50],
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Colors.blue[200]!),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Text(
-                        resultTitle,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
+                // 標題與資訊按鈕（不可擴展）
+                Row(
+                  children: [
+                    Text(
+                      resultTitle,
+                      style: TextStyle(
+                        fontSize: labelFontSize,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
                       ),
-                      if (onInfoTap != null) ...[
-                        SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: onInfoTap,
-                          child: Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: Colors.blue,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                'i',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                    ),
+                    if (onInfoTap != null) ...[
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: onInfoTap,
+                        child: Container(
+                          width: 20,
+                          height: 20,
+                          decoration: const BoxDecoration(
+                            color: Colors.blue,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'i',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
                         ),
-                      ],
+                      ),
                     ],
-                  ),
+                  ],
                 ),
-                Text(
-                  monthlyConsumption ?? '0.00 度',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue[900],
+                const SizedBox(width: 8),
+                // 數值（可擴展，自動縮放）
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      monthlyConsumption ?? '0.00 度',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue[900],
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -411,38 +466,37 @@ class LightingStrategyConfig extends StatelessWidget {
     required String suffix,
     bool isDisabled = false,
   }) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          flex: 2,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 16,
-              color: isDisabled ? Colors.grey[500] : Colors.black,
-            ),
+        // 標題在上方（與 TimeInputField 一致）
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: isDisabled ? Colors.grey[500] : Colors.grey[700],
           ),
         ),
-        Expanded(
-          flex: 10,
-          child: DropdownButtonFormField<int>(
-            value: value,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-              isDense: false,
-              enabled: !isDisabled,
-            ),
-            style: TextStyle(fontSize: 16, color: Colors.black),
-            items: items.map((int item) {
-              return DropdownMenuItem<int>(
-                value: item,
-                child: Text('$item$suffix'),
-              );
-            }).toList(),
-            onChanged: isDisabled ? null : onChanged,
+        const SizedBox(height: 6),
+        // 下拉選單
+        DropdownButtonFormField<int>(
+          value: value,
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            isDense: true,
+            enabled: !isDisabled,
           ),
+          style: const TextStyle(fontSize: 16, color: Colors.black),
+          items: items.map((int item) {
+            return DropdownMenuItem<int>(
+              value: item,
+              child: Text('$item$suffix'),
+            );
+          }).toList(),
+          onChanged: isDisabled ? null : onChanged,
         ),
       ],
     );

@@ -26,20 +26,30 @@ class PowerSavingChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 判斷是否為負節電率（AI燈管反而更耗電）
+    final bool isNegativeSavings = savingsRate < 0;
+
     return Container(
       margin: EdgeInsets.zero,
       padding: EdgeInsets.all(8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.green[50]!, Colors.green[100]!],
+          colors: isNegativeSavings
+              ? [Colors.grey[200]!, Colors.grey[300]!]
+              : [Colors.green[50]!, Colors.green[100]!],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green[400]!, width: 2),
+        border: Border.all(
+          color: isNegativeSavings ? Colors.grey[400]! : Colors.green[400]!,
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withValues(alpha: 0.2),
+            color: isNegativeSavings
+                ? Colors.grey.withValues(alpha: 0.2)
+                : Colors.green.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: Offset(0, 4),
           ),
@@ -64,20 +74,31 @@ class PowerSavingChart extends StatelessWidget {
                       sectionsSpace: 0,
                       centerSpaceRadius: 55,
                       sections: [
-                        // 節省部分（綠色）
+                        // 節省部分
                         PieChartSectionData(
-                          value: savingsRate,
-                          color: Colors.green[600],
+                          value: isNegativeSavings
+                              ? savingsRate.abs().clamp(0, 100)
+                              : (savingsRate >= 100 ? 100 : savingsRate),
+                          color: isNegativeSavings ? Colors.grey[500] : Colors.green[600],
                           radius: 25,
                           showTitle: false,
                         ),
-                        // 未節省部分（灰色）
-                        PieChartSectionData(
-                          value: 100 - savingsRate,
-                          color: Colors.grey[300],
-                          radius: 25,
-                          showTitle: false,
-                        ),
+                        // 未節省部分（如果超過100%或為負數則不顯示）
+                        if (savingsRate < 100 && !isNegativeSavings)
+                          PieChartSectionData(
+                            value: 100 - savingsRate,
+                            color: Colors.grey[300],
+                            radius: 25,
+                            showTitle: false,
+                          ),
+                        // 負數時的未節省部分
+                        if (isNegativeSavings && savingsRate.abs() < 100)
+                          PieChartSectionData(
+                            value: 100 - savingsRate.abs(),
+                            color: Colors.grey[300],
+                            radius: 25,
+                            showTitle: false,
+                          ),
                       ],
                     ),
                   ),
@@ -91,7 +112,7 @@ class PowerSavingChart extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
-                        color: Colors.green[700],
+                        color: isNegativeSavings ? Colors.grey[600] : Colors.green[700],
                       ),
                     ),
                     Text(
