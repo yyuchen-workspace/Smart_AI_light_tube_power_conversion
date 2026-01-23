@@ -42,6 +42,16 @@ class ExpandableLightCard extends StatefulWidget {
   final ValueChanged<int?>? onNightSensingTimeChanged;
   final ValueChanged<String>? onCountChanged;
 
+  // 資訊按鈕回調
+  final VoidCallback? onDaytimeInfoTap;
+  final VoidCallback? onNighttimeInfoTap;
+
+  // 計算結果顯示
+  final String? daytimeMonthlyConsumption;
+  final String? nighttimeMonthlyConsumption;
+  final String? daytimeResultTitle;
+  final String? nighttimeResultTitle;
+
   const ExpandableLightCard({
     Key? key,
     required this.title,
@@ -72,6 +82,12 @@ class ExpandableLightCard extends StatefulWidget {
     this.onNightBrightnessAfterChanged,
     this.onNightSensingTimeChanged,
     this.onCountChanged,
+    this.onDaytimeInfoTap,
+    this.onNighttimeInfoTap,
+    this.daytimeMonthlyConsumption,
+    this.nighttimeMonthlyConsumption,
+    this.daytimeResultTitle,
+    this.nighttimeResultTitle,
   }) : super(key: key);
 
   @override
@@ -191,6 +207,12 @@ class _ExpandableLightCardState extends State<ExpandableLightCard> {
                 onNightBrightnessAfterChanged: widget.onNightBrightnessAfterChanged,
                 onNightSensingTimeChanged: widget.onNightSensingTimeChanged,
                 onCountChanged: widget.onCountChanged,
+                onDaytimeInfoTap: widget.onDaytimeInfoTap,
+                onNighttimeInfoTap: widget.onNighttimeInfoTap,
+                daytimeMonthlyConsumption: widget.daytimeMonthlyConsumption,
+                nighttimeMonthlyConsumption: widget.nighttimeMonthlyConsumption,
+                daytimeResultTitle: widget.daytimeResultTitle,
+                nighttimeResultTitle: widget.nighttimeResultTitle,
               ),
             ),
         ],

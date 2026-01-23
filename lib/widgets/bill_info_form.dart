@@ -256,6 +256,13 @@ class BillInfoForm extends StatelessWidget {
   }) {
     return TextField(
       controller: controller,
+      onTap: () {
+        // 點擊時自動全選文字
+        controller.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: controller.text.length,
+        );
+      },
       decoration: InputDecoration(
         labelText: label,
         suffixText: unit,
@@ -264,14 +271,14 @@ class BillInfoForm extends StatelessWidget {
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       ),
-      keyboardType: TextInputType.numberWithOptions(decimal: true),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')),
       ],
       onChanged: onChanged,
-      style: TextStyle(fontSize: 16),
+      style: const TextStyle(fontSize: 16),
     );
   }
 

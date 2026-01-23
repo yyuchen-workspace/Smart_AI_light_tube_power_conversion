@@ -51,6 +51,16 @@ class LightingStrategyConfig extends StatelessWidget {
   // 通用回調
   final ValueChanged<String>? onCountChanged;
 
+  // 資訊按鈕回調
+  final VoidCallback? onDaytimeInfoTap;
+  final VoidCallback? onNighttimeInfoTap;
+
+  // 計算結果顯示
+  final String? daytimeMonthlyConsumption;
+  final String? nighttimeMonthlyConsumption;
+  final String? daytimeResultTitle;
+  final String? nighttimeResultTitle;
+
   const LightingStrategyConfig({
     Key? key,
     required this.title,
@@ -78,6 +88,12 @@ class LightingStrategyConfig extends StatelessWidget {
     this.onNightBrightnessAfterChanged,
     this.onNightSensingTimeChanged,
     this.onCountChanged,
+    this.onDaytimeInfoTap,
+    this.onNighttimeInfoTap,
+    this.daytimeMonthlyConsumption,
+    this.nighttimeMonthlyConsumption,
+    this.daytimeResultTitle,
+    this.nighttimeResultTitle,
   }) : super(key: key);
 
   @override
@@ -102,16 +118,23 @@ class LightingStrategyConfig extends StatelessWidget {
           // 數量輸入
           TextField(
             controller: countController,
+            onTap: () {
+              // 點擊時自動全選文字
+              countController.selection = TextSelection(
+                baseOffset: 0,
+                extentOffset: countController.text.length,
+              );
+            },
             decoration: InputDecoration(
               labelText: '數量',
-              labelStyle: TextStyle(fontSize: 16),
+              labelStyle: const TextStyle(fontSize: 16),
               suffixText: '支',
-              suffixStyle: TextStyle(fontSize: 14),
-              border: OutlineInputBorder(),
+              suffixStyle: const TextStyle(fontSize: 14),
+              border: const OutlineInputBorder(),
               contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
             ),
-            style: TextStyle(fontSize: 16),
+            style: const TextStyle(fontSize: 16),
             keyboardType: TextInputType.number,
             inputFormatters: [
               FilteringTextInputFormatter.digitsOnly,
@@ -153,6 +176,9 @@ class LightingStrategyConfig extends StatelessWidget {
             onBrightnessBeforeChanged: onDayBrightnessBeforeChanged,
             onBrightnessAfterChanged: onDayBrightnessAfterChanged,
             onSensingTimeChanged: onDaySensingTimeChanged,
+            onInfoTap: onDaytimeInfoTap,
+            monthlyConsumption: daytimeMonthlyConsumption,
+            resultTitle: daytimeResultTitle,
             isDisabled: isAllDay,
           ),
 
@@ -172,6 +198,9 @@ class LightingStrategyConfig extends StatelessWidget {
                   onNightBrightnessBeforeChanged ?? (_) {},
               onBrightnessAfterChanged: onNightBrightnessAfterChanged ?? (_) {},
               onSensingTimeChanged: onNightSensingTimeChanged ?? (_) {},
+              onInfoTap: onNighttimeInfoTap,
+              monthlyConsumption: nighttimeMonthlyConsumption,
+              resultTitle: nighttimeResultTitle,
             ),
           ],
         ],
@@ -191,6 +220,9 @@ class LightingStrategyConfig extends StatelessWidget {
     required ValueChanged<int?> onBrightnessBeforeChanged,
     required ValueChanged<int?> onBrightnessAfterChanged,
     required ValueChanged<int?> onSensingTimeChanged,
+    VoidCallback? onInfoTap,
+    String? monthlyConsumption,
+    String? resultTitle,
     bool isDisabled = false,
   }) {
     return Column(
@@ -216,7 +248,7 @@ class LightingStrategyConfig extends StatelessWidget {
                   color: isDisabled ? Colors.grey[500] : Colors.black,
                 ),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
 
               // 時間選擇（新版：小時分鐘分離輸入）
               Row(
@@ -304,6 +336,69 @@ class LightingStrategyConfig extends StatelessWidget {
             ],
           ),
         ),
+
+        // 計算結果顯示區域
+        if (resultTitle != null) ...[
+          SizedBox(height: 12),
+          Container(
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Text(
+                        resultTitle,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                      if (onInfoTap != null) ...[
+                        SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: onInfoTap,
+                          child: Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: Colors.blue,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                'i',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Text(
+                  monthlyConsumption ?? '0.00 度',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue[900],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }

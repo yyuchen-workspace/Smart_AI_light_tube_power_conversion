@@ -70,6 +70,26 @@ class Step1AILights extends StatelessWidget {
   final ValueChanged<int?>? onParkingNightSensingTimeChanged;
   final ValueChanged<String>? onParkingCountChanged;
 
+  // 資訊按鈕回調（車道燈）
+  final VoidCallback? onDrivewayDaytimeInfoTap;
+  final VoidCallback? onDrivewayNighttimeInfoTap;
+
+  // 資訊按鈕回調（車位燈）
+  final VoidCallback? onParkingDaytimeInfoTap;
+  final VoidCallback? onParkingNighttimeInfoTap;
+
+  // 計算結果顯示（車道燈）
+  final String? drivewayDaytimeConsumption;
+  final String? drivewayNighttimeConsumption;
+  final String? drivewayDaytimeTitle;
+  final String? drivewayNighttimeTitle;
+
+  // 計算結果顯示（車位燈）
+  final String? parkingDaytimeConsumption;
+  final String? parkingNighttimeConsumption;
+  final String? parkingDaytimeTitle;
+  final String? parkingNighttimeTitle;
+
   // 計算按鈕回調
   final VoidCallback onCalculate;
 
@@ -128,6 +148,18 @@ class Step1AILights extends StatelessWidget {
     this.onParkingNightBrightnessAfterChanged,
     this.onParkingNightSensingTimeChanged,
     this.onParkingCountChanged,
+    this.onDrivewayDaytimeInfoTap,
+    this.onDrivewayNighttimeInfoTap,
+    this.onParkingDaytimeInfoTap,
+    this.onParkingNighttimeInfoTap,
+    this.drivewayDaytimeConsumption,
+    this.drivewayNighttimeConsumption,
+    this.drivewayDaytimeTitle,
+    this.drivewayNighttimeTitle,
+    this.parkingDaytimeConsumption,
+    this.parkingNighttimeConsumption,
+    this.parkingDaytimeTitle,
+    this.parkingNighttimeTitle,
     required this.onCalculate,
   }) : super(key: key);
 
@@ -168,44 +200,58 @@ class Step1AILights extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: traditionalWattController,
+                  onTap: () {
+                    // 點擊時自動全選文字
+                    traditionalWattController.selection = TextSelection(
+                      baseOffset: 0,
+                      extentOffset: traditionalWattController.text.length,
+                    );
+                  },
                   decoration: InputDecoration(
                     labelText: '目前使用燈管瓦數',
-                    labelStyle: TextStyle(fontSize: 16),
+                    labelStyle: const TextStyle(fontSize: 16),
                     suffixText: 'W',
-                    suffixStyle: TextStyle(fontSize: 14),
+                    suffixStyle: const TextStyle(fontSize: 14),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     filled: true,
                     fillColor: Colors.grey[50],
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                   ),
-                  style: TextStyle(fontSize: 16),
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  style: const TextStyle(fontSize: 16),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')),
                   ],
                   onChanged: onTraditionalWattChanged,
                 ),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               // 數量
               Expanded(
                 child: TextField(
                   controller: traditionalLightCountController,
+                  onTap: () {
+                    // 點擊時自動全選文字
+                    traditionalLightCountController.selection = TextSelection(
+                      baseOffset: 0,
+                      extentOffset: traditionalLightCountController.text.length,
+                    );
+                  },
                   decoration: InputDecoration(
                     labelText: '數量',
-                    labelStyle: TextStyle(fontSize: 16),
+                    labelStyle: const TextStyle(fontSize: 16),
                     suffixText: '支',
-                    suffixStyle: TextStyle(fontSize: 14),
+                    suffixStyle: const TextStyle(fontSize: 14),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     filled: true,
                     fillColor: Colors.grey[50],
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                   ),
-                  style: TextStyle(fontSize: 16),
+                  style: const TextStyle(fontSize: 16),
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
@@ -282,6 +328,12 @@ class Step1AILights extends StatelessWidget {
                 onDrivewayNightBrightnessAfterChanged,
             onNightSensingTimeChanged: onDrivewayNightSensingTimeChanged,
             onCountChanged: onDrivewayCountChanged,
+            onDaytimeInfoTap: onDrivewayDaytimeInfoTap,
+            onNighttimeInfoTap: onDrivewayNighttimeInfoTap,
+            daytimeMonthlyConsumption: drivewayDaytimeConsumption,
+            nighttimeMonthlyConsumption: drivewayNighttimeConsumption,
+            daytimeResultTitle: drivewayDaytimeTitle,
+            nighttimeResultTitle: drivewayNighttimeTitle,
           ),
           SizedBox(height: 16),
 
@@ -316,6 +368,12 @@ class Step1AILights extends StatelessWidget {
             onNightBrightnessAfterChanged: onParkingNightBrightnessAfterChanged,
             onNightSensingTimeChanged: onParkingNightSensingTimeChanged,
             onCountChanged: onParkingCountChanged,
+            onDaytimeInfoTap: onParkingDaytimeInfoTap,
+            onNighttimeInfoTap: onParkingNighttimeInfoTap,
+            daytimeMonthlyConsumption: parkingDaytimeConsumption,
+            nighttimeMonthlyConsumption: parkingNighttimeConsumption,
+            daytimeResultTitle: parkingDaytimeTitle,
+            nighttimeResultTitle: parkingNighttimeTitle,
           ),
           SizedBox(height: 32),
 

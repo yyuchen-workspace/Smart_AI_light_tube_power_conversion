@@ -24,6 +24,7 @@ import 'utils/lighting_calculator.dart';
 import 'utils/electricity_calculator.dart';
 import 'models/lighting_strategy.dart';
 import 'constants/electricity_pricing.dart';
+import 'constants/brightness_wattage_map.dart';
 
 void main() {
   runApp(MyApp());
@@ -81,13 +82,13 @@ class _CalculatorPageState extends State<CalculatorPage> {
   bool drivewayAllDay = false;
   TimeOfDay drivewayDaytimeStart = TimeOfDay(hour: 6, minute: 0);
   TimeOfDay drivewayDaytimeEnd = TimeOfDay(hour: 0, minute: 0);
-  int drivewayDayBrightnessBefore = 0;
-  int drivewayDayBrightnessAfter = 0;
+  int drivewayDayBrightnessBefore = 30;
+  int drivewayDayBrightnessAfter = 70;
   int drivewayDaySensingTime = 10;
   TimeOfDay drivewayNighttimeStart = TimeOfDay(hour: 0, minute: 0);
   TimeOfDay drivewayNighttimeEnd = TimeOfDay(hour: 6, minute: 0);
-  int drivewayNightBrightnessBefore = 0;
-  int drivewayNightBrightnessAfter = 0;
+  int drivewayNightBrightnessBefore = 10;
+  int drivewayNightBrightnessAfter = 70;
   int drivewayNightSensingTime = 10;
 
   // 車位燈策略
@@ -97,13 +98,13 @@ class _CalculatorPageState extends State<CalculatorPage> {
   TimeOfDay parkingDaytimeStart = TimeOfDay(hour: 6, minute: 0);
   TimeOfDay parkingDaytimeEnd = TimeOfDay(hour: 18, minute: 0);
   int parkingDayBrightnessBefore = 0;
-  int parkingDayBrightnessAfter = 0;
-  int parkingDaySensingTime = 10;
+  int parkingDayBrightnessAfter = 50;
+  int parkingDaySensingTime = 120;
   TimeOfDay parkingNighttimeStart = TimeOfDay(hour: 18, minute: 0);
   TimeOfDay parkingNighttimeEnd = TimeOfDay(hour: 6, minute: 0);
   int parkingNightBrightnessBefore = 0;
-  int parkingNightBrightnessAfter = 0;
-  int parkingNightSensingTime = 10;
+  int parkingNightBrightnessAfter = 50;
+  int parkingNightSensingTime = 120;
 
   // Step 2: 台電帳單資訊
   bool timeTypeSummer = true; // 預設夏季
@@ -124,10 +125,12 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
   // Step 3: 攤提時間試算
   String? pricingMethod = '租賃'; // 預設租賃
-  final TextEditingController rentalPriceController = TextEditingController();
-  final TextEditingController buyoutPriceController = TextEditingController();
+  final TextEditingController rentalPriceController =
+      TextEditingController(text: '0');
+  final TextEditingController buyoutPriceController =
+      TextEditingController(text: '0');
   final TextEditingController step3LightCountController =
-      TextEditingController();
+      TextEditingController(text: '0');
   final TextEditingController monthlyRentalController = TextEditingController();
   final TextEditingController totalMonthlySavingController =
       TextEditingController();
@@ -140,6 +143,12 @@ class _CalculatorPageState extends State<CalculatorPage> {
   double? traditionalMonthlyConsumption;
   double? monthlySavings;
   double? savingsRate;
+
+  // 日間/夜間計算結果
+  double? drivewayDaytimeConsumption;
+  double? drivewayNighttimeConsumption;
+  double? parkingDaytimeConsumption;
+  double? parkingNighttimeConsumption;
 
   // 圖表組件
   Widget? pieChart;
@@ -209,7 +218,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
           children: [
             Icon(Icons.check_circle, color: Colors.green, size: 28),
             SizedBox(width: 8),
-            Text('計算成功', style: TextStyle(fontSize: 24, color: Colors.green[700])),
+            Text('計算成功',
+                style: TextStyle(fontSize: 24, color: Colors.green[700])),
           ],
         ),
         content: Text(
@@ -310,6 +320,20 @@ class _CalculatorPageState extends State<CalculatorPage> {
       case '車位燈數量':
         return '''全天候:感應前亮0%，感應後亮50%
 車位燈平均消耗瓦數:${ElectricityPricing.parkingLightWatt}W''';
+
+      // ========== 車道燈日間/夜間時段資訊 ==========
+      case '車道燈-日間時段':
+        return _generateDrivewayDaytimeInfo();
+
+      case '車道燈-夜間時段':
+        return _generateDrivewayNighttimeInfo();
+
+      // ========== 車位燈日間/夜間時段資訊 ==========
+      case '車位燈-日間時段':
+        return _generateParkingDaytimeInfo();
+
+      case '車位燈-夜間時段':
+        return _generateParkingNighttimeInfo();
 
       case '每月節電量':
       case '可節電（度）':
@@ -428,6 +452,164 @@ class _CalculatorPageState extends State<CalculatorPage> {
       default:
         return '此欄位暫無說明';
     }
+  }
+
+  /// 生成車道燈日間時段資訊
+  String _generateDrivewayDaytimeInfo() {
+    int count = int.tryParse(drivewayCountController.text) ?? 0;
+    double startHour =
+        drivewayDaytimeStart.hour + drivewayDaytimeStart.minute / 60.0;
+    double endHour = drivewayDaytimeEnd.hour + drivewayDaytimeEnd.minute / 60.0;
+    double duration =
+        endHour > startHour ? endHour - startHour : 24 - startHour + endHour;
+
+    int brightnessBefore = drivewayDayBrightnessBefore;
+    int brightnessAfter = drivewayDayBrightnessAfter;
+    int sensingTime = drivewayDaySensingTime;
+
+    double wattBefore = BrightnessWattageMap.getWattage(brightnessBefore);
+    double wattAfter = BrightnessWattageMap.getWattage(brightnessAfter);
+
+    int sensingCount = LightingCalculator.drivewayDaytimeSensing;
+    double sensingDurationInHours = sensingCount * sensingTime / 3600.0;
+
+    double perLightWattage = duration * wattBefore +
+        sensingDurationInHours * (wattAfter - wattBefore);
+    double monthlyConsumption = perLightWattage * count * 30 / 1000;
+
+    return '''車道燈日間
+時間：${duration.toStringAsFixed(2)}小時
+感應前：$brightnessBefore%（${wattBefore.toStringAsFixed(1)}W）
+感應後：$brightnessAfter%（${wattAfter.toStringAsFixed(1)}W）
+持續時間：$sensingTime 秒
+模擬人車感應次數$sensingCount次
+
+每支車道燈消耗瓦數
+${duration.toStringAsFixed(2)}小時*${wattBefore.toStringAsFixed(1)}W（$brightnessBefore%亮度）+${sensingDurationInHours.toStringAsFixed(2)}小時（$sensingCount*$sensingTime 秒）*$brightnessAfter%（${wattAfter.toStringAsFixed(1)}W-${wattBefore.toStringAsFixed(1)}W）=${perLightWattage.toStringAsFixed(2)}W
+
+總共車道燈日間月消耗度數
+${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyConsumption.toStringAsFixed(2)} 度''';
+  }
+
+  /// 生成車道燈夜間時段資訊
+  String _generateDrivewayNighttimeInfo() {
+    if (drivewayAllDay) {
+      return '目前為全天候模式，無夜間時段設定';
+    }
+
+    int count = int.tryParse(drivewayCountController.text) ?? 0;
+    double startHour =
+        drivewayNighttimeStart.hour + drivewayNighttimeStart.minute / 60.0;
+    double endHour =
+        drivewayNighttimeEnd.hour + drivewayNighttimeEnd.minute / 60.0;
+    double duration =
+        endHour > startHour ? endHour - startHour : 24 - startHour + endHour;
+
+    int brightnessBefore = drivewayNightBrightnessBefore;
+    int brightnessAfter = drivewayNightBrightnessAfter;
+    int sensingTime = drivewayNightSensingTime;
+
+    double wattBefore = BrightnessWattageMap.getWattage(brightnessBefore);
+    double wattAfter = BrightnessWattageMap.getWattage(brightnessAfter);
+
+    int sensingCount = LightingCalculator.drivewayNighttimeSensing;
+    double sensingDurationInHours = sensingCount * sensingTime / 3600.0;
+
+    double perLightWattage = duration * wattBefore +
+        sensingDurationInHours * (wattAfter - wattBefore);
+    double monthlyConsumption = perLightWattage * count * 30 / 1000;
+
+    return '''車道燈夜間
+時間：${duration.toStringAsFixed(2)}小時
+感應前：$brightnessBefore%（${wattBefore.toStringAsFixed(1)}W）
+感應後：$brightnessAfter%（${wattAfter.toStringAsFixed(1)}W）
+持續時間：$sensingTime 秒
+模擬人車感應次數$sensingCount次
+
+每支車道燈消耗瓦數
+${duration.toStringAsFixed(2)}小時*${wattBefore.toStringAsFixed(1)}W（$brightnessBefore%亮度）+${sensingDurationInHours.toStringAsFixed(2)}小時（$sensingCount*$sensingTime 秒）*$brightnessAfter%（${wattAfter.toStringAsFixed(1)}W-${wattBefore.toStringAsFixed(1)}W）=${perLightWattage.toStringAsFixed(2)}W
+
+總共車道燈夜間月消耗度數
+${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyConsumption.toStringAsFixed(2)} 度''';
+  }
+
+  /// 生成車位燈日間時段資訊
+  String _generateParkingDaytimeInfo() {
+    int count = int.tryParse(parkingCountController.text) ?? 0;
+    double startHour =
+        parkingDaytimeStart.hour + parkingDaytimeStart.minute / 60.0;
+    double endHour = parkingDaytimeEnd.hour + parkingDaytimeEnd.minute / 60.0;
+    double duration =
+        endHour > startHour ? endHour - startHour : 24 - startHour + endHour;
+
+    int brightnessBefore = parkingDayBrightnessBefore;
+    int brightnessAfter = parkingDayBrightnessAfter;
+    int sensingTime = parkingDaySensingTime;
+
+    double wattBefore = BrightnessWattageMap.getWattage(brightnessBefore);
+    double wattAfter = BrightnessWattageMap.getWattage(brightnessAfter);
+
+    int sensingCount = LightingCalculator.parkingDaytimeSensing;
+    double sensingDurationInHours = sensingCount * sensingTime / 3600.0;
+
+    double perLightWattage = duration * wattBefore +
+        sensingDurationInHours * (wattAfter - wattBefore);
+    double monthlyConsumption = perLightWattage * count * 30 / 1000;
+
+    return '''車位燈日間
+時間：${duration.toStringAsFixed(2)}小時
+感應前：$brightnessBefore%（${wattBefore.toStringAsFixed(1)}W）
+感應後：$brightnessAfter%（${wattAfter.toStringAsFixed(1)}W）
+持續時間：$sensingTime 秒
+模擬人車感應次數$sensingCount次
+
+每支車位燈消耗瓦數
+${duration.toStringAsFixed(2)}小時*${wattBefore.toStringAsFixed(1)}W（$brightnessBefore%亮度）+${sensingDurationInHours.toStringAsFixed(2)}小時（$sensingCount*$sensingTime 秒）*$brightnessAfter%（${wattAfter.toStringAsFixed(1)}W-${wattBefore.toStringAsFixed(1)}W）=${perLightWattage.toStringAsFixed(2)}W
+
+總共車位燈日間月消耗度數
+${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyConsumption.toStringAsFixed(2)} 度''';
+  }
+
+  /// 生成車位燈夜間時段資訊
+  String _generateParkingNighttimeInfo() {
+    if (parkingAllDay) {
+      return '目前為全天候模式，無夜間時段設定';
+    }
+
+    int count = int.tryParse(parkingCountController.text) ?? 0;
+    double startHour =
+        parkingNighttimeStart.hour + parkingNighttimeStart.minute / 60.0;
+    double endHour =
+        parkingNighttimeEnd.hour + parkingNighttimeEnd.minute / 60.0;
+    double duration =
+        endHour > startHour ? endHour - startHour : 24 - startHour + endHour;
+
+    int brightnessBefore = parkingNightBrightnessBefore;
+    int brightnessAfter = parkingNightBrightnessAfter;
+    int sensingTime = parkingNightSensingTime;
+
+    double wattBefore = BrightnessWattageMap.getWattage(brightnessBefore);
+    double wattAfter = BrightnessWattageMap.getWattage(brightnessAfter);
+
+    int sensingCount = LightingCalculator.parkingNighttimeSensing;
+    double sensingDurationInHours = sensingCount * sensingTime / 3600.0;
+
+    double perLightWattage = duration * wattBefore +
+        sensingDurationInHours * (wattAfter - wattBefore);
+    double monthlyConsumption = perLightWattage * count * 30 / 1000;
+
+    return '''車位燈夜間
+時間：${duration.toStringAsFixed(2)}小時
+感應前：$brightnessBefore%（${wattBefore.toStringAsFixed(1)}W）
+感應後：$brightnessAfter%（${wattAfter.toStringAsFixed(1)}W）
+持續時間：$sensingTime 秒
+模擬人車感應次數$sensingCount次
+
+每支車位燈消耗瓦數
+${duration.toStringAsFixed(2)}小時*${wattBefore.toStringAsFixed(1)}W（$brightnessBefore%亮度）+${sensingDurationInHours.toStringAsFixed(2)}小時（$sensingCount*$sensingTime 秒）*$brightnessAfter%（${wattAfter.toStringAsFixed(1)}W-${wattBefore.toStringAsFixed(1)}W）=${perLightWattage.toStringAsFixed(2)}W
+
+總共車位燈夜間月消耗度數
+${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyConsumption.toStringAsFixed(2)} 度''';
   }
 
   // ==================== 計算方法 ====================
@@ -558,6 +740,166 @@ class _CalculatorPageState extends State<CalculatorPage> {
     });
   }
 
+  /// Step 1 計算（只計算 Step 1 的結果）
+  void _calculateStep1Only() {
+    setState(() {
+      // 建立車道燈策略
+      int drivewayCount = int.tryParse(drivewayCountController.text) ?? 0;
+      var drivewayStrategy = LightingStrategy(
+        count: drivewayCount,
+        daytime: TimeSlotConfig(
+          startHour:
+              drivewayDaytimeStart.hour + drivewayDaytimeStart.minute / 60.0,
+          endHour: drivewayDaytimeEnd.hour + drivewayDaytimeEnd.minute / 60.0,
+          isAllDay: drivewayAllDay,
+          brightness: BrightnessConfig(
+            brightnessBeforeSensing: drivewayDayBrightnessBefore,
+            brightnessAfterSensing: drivewayDayBrightnessAfter,
+            sensingDuration: drivewayDaySensingTime,
+          ),
+        ),
+        nighttime: drivewayAllDay
+            ? null
+            : TimeSlotConfig(
+                startHour: drivewayNighttimeStart.hour +
+                    drivewayNighttimeStart.minute / 60.0,
+                endHour: drivewayNighttimeEnd.hour +
+                    drivewayNighttimeEnd.minute / 60.0,
+                isAllDay: false,
+                brightness: BrightnessConfig(
+                  brightnessBeforeSensing: drivewayNightBrightnessBefore,
+                  brightnessAfterSensing: drivewayNightBrightnessAfter,
+                  sensingDuration: drivewayNightSensingTime,
+                ),
+              ),
+      );
+
+      // 建立車位燈策略
+      int parkingCount = int.tryParse(parkingCountController.text) ?? 0;
+      var parkingStrategy = LightingStrategy(
+        count: parkingCount,
+        daytime: TimeSlotConfig(
+          startHour:
+              parkingDaytimeStart.hour + parkingDaytimeStart.minute / 60.0,
+          endHour: parkingDaytimeEnd.hour + parkingDaytimeEnd.minute / 60.0,
+          isAllDay: parkingAllDay,
+          brightness: BrightnessConfig(
+            brightnessBeforeSensing: parkingDayBrightnessBefore,
+            brightnessAfterSensing: parkingDayBrightnessAfter,
+            sensingDuration: parkingDaySensingTime,
+          ),
+        ),
+        nighttime: parkingAllDay
+            ? null
+            : TimeSlotConfig(
+                startHour: parkingNighttimeStart.hour +
+                    parkingNighttimeStart.minute / 60.0,
+                endHour: parkingNighttimeEnd.hour +
+                    parkingNighttimeEnd.minute / 60.0,
+                isAllDay: false,
+                brightness: BrightnessConfig(
+                  brightnessBeforeSensing: parkingNightBrightnessBefore,
+                  brightnessAfterSensing: parkingNightBrightnessAfter,
+                  sensingDuration: parkingNightSensingTime,
+                ),
+              ),
+      );
+
+      // 計算AI燈管消耗
+      double drivewayDailyWattage =
+          LightingCalculator.calculateDrivewayWattage(drivewayStrategy);
+      double parkingDailyWattage =
+          LightingCalculator.calculateParkingWattage(parkingStrategy);
+
+      aiMonthlyConsumption = LightingCalculator.calculateMonthlyConsumption(
+              drivewayDailyWattage, drivewayCount) +
+          LightingCalculator.calculateMonthlyConsumption(
+              parkingDailyWattage, parkingCount);
+
+      // 計算日間/夜間單獨的耗電量
+      if (drivewayAllDay) {
+        // 車道燈全天候模式
+        drivewayDaytimeConsumption = LightingCalculator.calculateMonthlyConsumption(
+            drivewayDailyWattage, drivewayCount);
+        drivewayNighttimeConsumption = null;
+      } else {
+        // 車道燈分時段模式 - 需要分別計算日間和夜間
+        double drivewayDayWattage = _calculateTimeSlotWattage(
+            drivewayStrategy.daytime, LightingCalculator.drivewayDaytimeSensing);
+        double drivewayNightWattage = _calculateTimeSlotWattage(
+            drivewayStrategy.nighttime!, LightingCalculator.drivewayNighttimeSensing);
+        drivewayDaytimeConsumption = LightingCalculator.calculateMonthlyConsumption(
+            drivewayDayWattage, drivewayCount);
+        drivewayNighttimeConsumption = LightingCalculator.calculateMonthlyConsumption(
+            drivewayNightWattage, drivewayCount);
+      }
+
+      if (parkingAllDay) {
+        // 車位燈全天候模式
+        parkingDaytimeConsumption = LightingCalculator.calculateMonthlyConsumption(
+            parkingDailyWattage, parkingCount);
+        parkingNighttimeConsumption = null;
+      } else {
+        // 車位燈分時段模式 - 需要分別計算日間和夜間
+        double parkingDayWattage = _calculateTimeSlotWattage(
+            parkingStrategy.daytime, LightingCalculator.parkingDaytimeSensing);
+        double parkingNightWattage = _calculateTimeSlotWattage(
+            parkingStrategy.nighttime!, LightingCalculator.parkingNighttimeSensing);
+        parkingDaytimeConsumption = LightingCalculator.calculateMonthlyConsumption(
+            parkingDayWattage, parkingCount);
+        parkingNighttimeConsumption = LightingCalculator.calculateMonthlyConsumption(
+            parkingNightWattage, parkingCount);
+      }
+
+      // 計算傳統燈管消耗
+      double traditionalWatt =
+          double.tryParse(traditionalWattController.text) ?? 18.0;
+      int traditionalCount =
+          int.tryParse(traditionalLightCountController.text) ?? 0;
+      traditionalMonthlyConsumption =
+          ElectricityCalculator.calculateTraditionalConsumption(
+        watt: traditionalWatt,
+        count: traditionalCount.toDouble(),
+      );
+
+      // 計算節電量和節電率
+      double savingUnits =
+          traditionalMonthlyConsumption! - aiMonthlyConsumption!;
+      monthlySavings = savingUnits;
+      savingsRate = (monthlySavings! / traditionalMonthlyConsumption!) * 100;
+
+      // 計算電費（簡化模式）
+      double oldMonthlyCost = traditionalMonthlyConsumption! *
+          (timeTypeSummer
+              ? ElectricityPricing.summerAveragePrice
+              : ElectricityPricing.nonSummerAveragePrice);
+
+      double newMonthlyCost = aiMonthlyConsumption! *
+          (timeTypeSummer
+              ? ElectricityPricing.summerAveragePrice
+              : ElectricityPricing.nonSummerAveragePrice);
+
+      // 建立 Step 1 節電成果圖表
+      powerSavingChart = PowerSavingChart(
+        traditionalMonthlyConsumption: traditionalMonthlyConsumption!,
+        aiMonthlyConsumption: aiMonthlyConsumption!,
+        monthlySavings: monthlySavings!,
+        savingsRate: savingsRate!,
+        oldMonthlyCost: oldMonthlyCost,
+        newMonthlyCost: newMonthlyCost,
+      );
+
+      // Step 1 計算完成
+      step1Calculated = true;
+      _hasCalculated = true;
+    });
+
+    // 顯示計算成功對話框
+    Future.delayed(Duration(milliseconds: 100), () {
+      _showSuccessDialog();
+    });
+  }
+
   /// 完成按鈕驗證與計算（只驗證 Step 3，然後計算所有步驟）
   void _validateAndCalculateAll() {
     List<String> errors = [];
@@ -605,6 +947,25 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
     // 驗證通過，直接計算所有步驟（不檢查前置步驟是否已計算）
     _calculateResults();
+  }
+
+  /// 計算單一時段的瓦數消耗
+  double _calculateTimeSlotWattage(TimeSlotConfig timeSlot, int sensingCount) {
+    double wattBefore = BrightnessWattageMap.getWattage(
+      timeSlot.brightness.brightnessBeforeSensing,
+    );
+    double wattAfter = BrightnessWattageMap.getWattage(
+      timeSlot.brightness.brightnessAfterSensing,
+    );
+
+    double duration = timeSlot.duration;
+    double sensingDurationInHours =
+        sensingCount * timeSlot.brightness.sensingDuration / 3600.0;
+
+    double baseWattage = duration * wattBefore;
+    double sensingWattage = sensingDurationInHours * (wattAfter - wattBefore);
+
+    return baseWattage + sensingWattage;
   }
 
   /// 計算結果
@@ -683,6 +1044,41 @@ class _CalculatorPageState extends State<CalculatorPage> {
           LightingCalculator.calculateMonthlyConsumption(
               parkingDailyWattage, parkingCount);
 
+      // 計算日間/夜間單獨的耗電量
+      if (drivewayAllDay) {
+        // 車道燈全天候模式
+        drivewayDaytimeConsumption = LightingCalculator.calculateMonthlyConsumption(
+            drivewayDailyWattage, drivewayCount);
+        drivewayNighttimeConsumption = null;
+      } else {
+        // 車道燈分時段模式 - 需要分別計算日間和夜間
+        double drivewayDayWattage = _calculateTimeSlotWattage(
+            drivewayStrategy.daytime, LightingCalculator.drivewayDaytimeSensing);
+        double drivewayNightWattage = _calculateTimeSlotWattage(
+            drivewayStrategy.nighttime!, LightingCalculator.drivewayNighttimeSensing);
+        drivewayDaytimeConsumption = LightingCalculator.calculateMonthlyConsumption(
+            drivewayDayWattage, drivewayCount);
+        drivewayNighttimeConsumption = LightingCalculator.calculateMonthlyConsumption(
+            drivewayNightWattage, drivewayCount);
+      }
+
+      if (parkingAllDay) {
+        // 車位燈全天候模式
+        parkingDaytimeConsumption = LightingCalculator.calculateMonthlyConsumption(
+            parkingDailyWattage, parkingCount);
+        parkingNighttimeConsumption = null;
+      } else {
+        // 車位燈分時段模式 - 需要分別計算日間和夜間
+        double parkingDayWattage = _calculateTimeSlotWattage(
+            parkingStrategy.daytime, LightingCalculator.parkingDaytimeSensing);
+        double parkingNightWattage = _calculateTimeSlotWattage(
+            parkingStrategy.nighttime!, LightingCalculator.parkingNighttimeSensing);
+        parkingDaytimeConsumption = LightingCalculator.calculateMonthlyConsumption(
+            parkingDayWattage, parkingCount);
+        parkingNighttimeConsumption = LightingCalculator.calculateMonthlyConsumption(
+            parkingNightWattage, parkingCount);
+      }
+
       // 計算傳統燈管消耗
       double traditionalWatt =
           double.tryParse(traditionalWattController.text) ?? 18.0;
@@ -752,7 +1148,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
           if (pricingMethod == '租賃' && rentalPriceController.text.isNotEmpty) {
             double rentalPrice = double.parse(rentalPriceController.text);
             double monthlyRental = rentalPrice * step3LightCount;
-            double totalMonthlySaving = totalMonthlySavingAmount - monthlyRental;
+            double totalMonthlySaving =
+                totalMonthlySavingAmount - monthlyRental;
 
             monthlyRentalController.text =
                 ElectricityCalculator.roundUpFirstDecimal(monthlyRental)
@@ -804,169 +1201,175 @@ class _CalculatorPageState extends State<CalculatorPage> {
         // 【模式 B】台電複雜計算（基本電價 + 流動電價 + 超約費用）
         // ========================================
         // Step 2: 台電帳單計算（條件性執行）
-      bool hasStep2Data = contractCapacityController.text.isNotEmpty &&
-          maxDemandController.text.isNotEmpty &&
-          billingUnitsController.text.isNotEmpty;
+        bool hasStep2Data = contractCapacityController.text.isNotEmpty &&
+            maxDemandController.text.isNotEmpty &&
+            billingUnitsController.text.isNotEmpty;
 
-      if (hasStep2Data) {
-        double contractCapacity = double.parse(contractCapacityController.text);
-        double maxDemand = double.parse(maxDemandController.text);
-        double billingUnits = double.parse(billingUnitsController.text);
+        if (hasStep2Data) {
+          double contractCapacity =
+              double.parse(contractCapacityController.text);
+          double maxDemand = double.parse(maxDemandController.text);
+          double billingUnits = double.parse(billingUnitsController.text);
 
-        // 計算基本電價
-        double basicElectricity =
-            ElectricityCalculator.calculateBasicElectricity(
-          contractCapacity: contractCapacity,
-          isSummer: timeTypeSummer,
-        );
+          // 計算基本電價
+          double basicElectricity =
+              ElectricityCalculator.calculateBasicElectricity(
+            contractCapacity: contractCapacity,
+            isSummer: timeTypeSummer,
+          );
 
-        // 計算超約費用
-        double excessDemand = ElectricityCalculator.calculateExcessDemand(
-          maxDemand: maxDemand,
-          contractCapacity: contractCapacity,
-          isSummer: timeTypeSummer,
-        );
-        String excessText = excessDemand > 0
-            ? ElectricityCalculator.roundUpFirstDecimal(excessDemand)
-                .toStringAsFixed(1)
-            : '無超約';
+          // 計算超約費用
+          double excessDemand = ElectricityCalculator.calculateExcessDemand(
+            maxDemand: maxDemand,
+            contractCapacity: contractCapacity,
+            isSummer: timeTypeSummer,
+          );
+          String excessText = excessDemand > 0
+              ? ElectricityCalculator.roundUpFirstDecimal(excessDemand)
+                  .toStringAsFixed(1)
+              : '無超約';
 
-        // 計算流動電價
-        double flowElectricity = ElectricityCalculator.calculateFlowElectricity(
-          billingUnits: billingUnits,
-          isSummer: timeTypeSummer,
-        );
+          // 計算流動電價
+          double flowElectricity =
+              ElectricityCalculator.calculateFlowElectricity(
+            billingUnits: billingUnits,
+            isSummer: timeTypeSummer,
+          );
 
-        // 計算總電價
-        double totalElectricity =
-            ElectricityCalculator.calculateTotalElectricity(
-          basicElectricity: basicElectricity,
-          flowElectricity: flowElectricity,
-          excessDemand: excessDemand,
-        );
+          // 計算總電價
+          double totalElectricity =
+              ElectricityCalculator.calculateTotalElectricity(
+            basicElectricity: basicElectricity,
+            flowElectricity: flowElectricity,
+            excessDemand: excessDemand,
+          );
 
-        // 更新 Step2 結果
-        basicElectricityController.text =
-            ElectricityCalculator.roundUpFirstDecimal(basicElectricity)
-                .toStringAsFixed(1);
-        excessDemandController.text = excessText;
-        flowElectricityController.text =
-            ElectricityCalculator.roundUpFirstDecimal(flowElectricity)
-                .toStringAsFixed(1);
-        totalElectricityController.text =
-            ElectricityCalculator.roundUpFirstDecimal(totalElectricity)
-                .toStringAsFixed(1);
+          // 更新 Step2 結果
+          basicElectricityController.text =
+              ElectricityCalculator.roundUpFirstDecimal(basicElectricity)
+                  .toStringAsFixed(1);
+          excessDemandController.text = excessText;
+          flowElectricityController.text =
+              ElectricityCalculator.roundUpFirstDecimal(flowElectricity)
+                  .toStringAsFixed(1);
+          totalElectricityController.text =
+              ElectricityCalculator.roundUpFirstDecimal(totalElectricity)
+                  .toStringAsFixed(1);
 
-        step2Calculated = true;
+          step2Calculated = true;
 
-        // 計算電費（複雜模式：使用流動電價計算）
-        double oldMonthlyCost = traditionalMonthlyConsumption! *
-            (timeTypeSummer
-                ? ElectricityPricing.summerUnitPrice
-                : ElectricityPricing.nonSummerUnitPrice);
-        double newMonthlyCost = aiMonthlyConsumption! *
-            (timeTypeSummer
-                ? ElectricityPricing.summerUnitPrice
-                : ElectricityPricing.nonSummerUnitPrice);
+          // 計算電費（複雜模式：使用流動電價計算）
+          double oldMonthlyCost = traditionalMonthlyConsumption! *
+              (timeTypeSummer
+                  ? ElectricityPricing.summerUnitPrice
+                  : ElectricityPricing.nonSummerUnitPrice);
+          double newMonthlyCost = aiMonthlyConsumption! *
+              (timeTypeSummer
+                  ? ElectricityPricing.summerUnitPrice
+                  : ElectricityPricing.nonSummerUnitPrice);
 
-        // 建立 Step 1 節電成果圖表（複雜模式也需要顯示）
-        powerSavingChart = PowerSavingChart(
-          traditionalMonthlyConsumption: traditionalMonthlyConsumption!,
-          aiMonthlyConsumption: aiMonthlyConsumption!,
-          monthlySavings: monthlySavings!,
-          savingsRate: savingsRate!,
-          oldMonthlyCost: oldMonthlyCost,
-          newMonthlyCost: newMonthlyCost,
-        );
+          // 建立 Step 1 節電成果圖表（複雜模式也需要顯示）
+          powerSavingChart = PowerSavingChart(
+            traditionalMonthlyConsumption: traditionalMonthlyConsumption!,
+            aiMonthlyConsumption: aiMonthlyConsumption!,
+            monthlySavings: monthlySavings!,
+            savingsRate: savingsRate!,
+            oldMonthlyCost: oldMonthlyCost,
+            newMonthlyCost: newMonthlyCost,
+          );
 
-        // Step 1 計算完成
-        step1Calculated = true;
+          // Step 1 計算完成
+          step1Calculated = true;
 
-        // 建立圓餅圖
-        pieChart = ElectricityCostPieChart(
-          basicElectricity: basicElectricity,
-          flowElectricity: flowElectricity,
-          excessDemand: excessDemand > 0 ? excessDemand : 0,
-        );
+          // 建立圓餅圖
+          pieChart = ElectricityCostPieChart(
+            basicElectricity: basicElectricity,
+            flowElectricity: flowElectricity,
+            excessDemand: excessDemand > 0 ? excessDemand : 0,
+          );
 
-        // Step 3: 攤提時間計算（條件性執行，需要 Step2 數據）
-        bool hasStep3Data = step3LightCountController.text.isNotEmpty &&
-            ((pricingMethod == '租賃' && rentalPriceController.text.isNotEmpty) ||
-                (pricingMethod == '買斷' &&
-                    buyoutPriceController.text.isNotEmpty));
+          // Step 3: 攤提時間計算（條件性執行，需要 Step2 數據）
+          bool hasStep3Data = step3LightCountController.text.isNotEmpty &&
+              ((pricingMethod == '租賃' &&
+                      rentalPriceController.text.isNotEmpty) ||
+                  (pricingMethod == '買斷' &&
+                      buyoutPriceController.text.isNotEmpty));
 
-        if (hasStep3Data) {
-          double step3LightCount = double.parse(step3LightCountController.text);
+          if (hasStep3Data) {
+            double step3LightCount =
+                double.parse(step3LightCountController.text);
 
-          // 計算每月總共可節省費用（使用 Step 1 的電費差額）
-          double totalMonthlySavingAmount = oldMonthlyCost - newMonthlyCost;
+            // 計算每月總共可節省費用（使用 Step 1 的電費差額）
+            double totalMonthlySavingAmount = oldMonthlyCost - newMonthlyCost;
 
-          if (pricingMethod == '租賃' && rentalPriceController.text.isNotEmpty) {
-            double rentalPrice = double.parse(rentalPriceController.text);
-            double monthlyRental = rentalPrice * step3LightCount;
-            double totalMonthlySaving = totalMonthlySavingAmount - monthlyRental;
+            if (pricingMethod == '租賃' &&
+                rentalPriceController.text.isNotEmpty) {
+              double rentalPrice = double.parse(rentalPriceController.text);
+              double monthlyRental = rentalPrice * step3LightCount;
+              double totalMonthlySaving =
+                  totalMonthlySavingAmount - monthlyRental;
 
-            monthlyRentalController.text =
-                ElectricityCalculator.roundUpFirstDecimal(monthlyRental)
-                    .toStringAsFixed(1);
-            totalMonthlySavingController.text =
-                ElectricityCalculator.roundUpFirstDecimal(totalMonthlySaving)
-                    .toStringAsFixed(1);
+              monthlyRentalController.text =
+                  ElectricityCalculator.roundUpFirstDecimal(monthlyRental)
+                      .toStringAsFixed(1);
+              totalMonthlySavingController.text =
+                  ElectricityCalculator.roundUpFirstDecimal(totalMonthlySaving)
+                      .toStringAsFixed(1);
 
-            // 建立租賃模式圖表（複雜模式）
-            paybackSummaryChart = PaybackSummaryChart(
-              isRental: true,
-              monthlyRental: monthlyRental,
-              monthlySaving: totalMonthlySaving,
-            );
-          } else if (pricingMethod == '買斷' &&
-              buyoutPriceController.text.isNotEmpty) {
-            double buyoutPrice = double.parse(buyoutPriceController.text);
-            double buyoutTotal = buyoutPrice * step3LightCount;
-            double paybackPeriod = buyoutTotal / totalMonthlySavingAmount;
+              // 建立租賃模式圖表（複雜模式）
+              paybackSummaryChart = PaybackSummaryChart(
+                isRental: true,
+                monthlyRental: monthlyRental,
+                monthlySaving: totalMonthlySaving,
+              );
+            } else if (pricingMethod == '買斷' &&
+                buyoutPriceController.text.isNotEmpty) {
+              double buyoutPrice = double.parse(buyoutPriceController.text);
+              double buyoutTotal = buyoutPrice * step3LightCount;
+              double paybackPeriod = buyoutTotal / totalMonthlySavingAmount;
 
-            buyoutTotalController.text =
-                ElectricityCalculator.roundUpFirstDecimal(buyoutTotal)
-                    .toStringAsFixed(1);
-            paybackPeriodController.text =
-                ElectricityCalculator.roundUpFirstDecimal(paybackPeriod)
-                    .toStringAsFixed(1);
+              buyoutTotalController.text =
+                  ElectricityCalculator.roundUpFirstDecimal(buyoutTotal)
+                      .toStringAsFixed(1);
+              paybackPeriodController.text =
+                  ElectricityCalculator.roundUpFirstDecimal(paybackPeriod)
+                      .toStringAsFixed(1);
 
-            // 建立買斷模式圖表（複雜模式）
-            paybackSummaryChart = PaybackSummaryChart(
-              isRental: false,
-              buyoutTotal: buyoutTotal,
-              paybackMonths: paybackPeriod,
-              monthlyElectricitySaving: totalMonthlySavingAmount,
-            );
+              // 建立買斷模式圖表（複雜模式）
+              paybackSummaryChart = PaybackSummaryChart(
+                isRental: false,
+                buyoutTotal: buyoutTotal,
+                paybackMonths: paybackPeriod,
+                monthlyElectricitySaving: totalMonthlySavingAmount,
+              );
+            }
+
+            step3Calculated = true;
+          } else {
+            // 清空 Step3 結果
+            monthlyRentalController.text = '';
+            totalMonthlySavingController.text = '';
+            buyoutTotalController.text = '';
+            paybackPeriodController.text = '';
+            paybackSummaryChart = null;
+            step3Calculated = false;
           }
-
-          step3Calculated = true;
         } else {
+          // 清空 Step2 結果
+          basicElectricityController.text = '';
+          excessDemandController.text = '';
+          flowElectricityController.text = '';
+          totalElectricityController.text = '';
+          step2Calculated = false;
+          pieChart = null;
+
           // 清空 Step3 結果
           monthlyRentalController.text = '';
           totalMonthlySavingController.text = '';
           buyoutTotalController.text = '';
           paybackPeriodController.text = '';
-          paybackSummaryChart = null;
           step3Calculated = false;
         }
-      } else {
-        // 清空 Step2 結果
-        basicElectricityController.text = '';
-        excessDemandController.text = '';
-        flowElectricityController.text = '';
-        totalElectricityController.text = '';
-        step2Calculated = false;
-        pieChart = null;
-
-        // 清空 Step3 結果
-        monthlyRentalController.text = '';
-        totalMonthlySavingController.text = '';
-        buyoutTotalController.text = '';
-        paybackPeriodController.text = '';
-        step3Calculated = false;
-      }
       } // End of USE_COMPLEX_ELECTRICITY_CALCULATION
 
       _hasCalculated = true;
@@ -1042,19 +1445,24 @@ class _CalculatorPageState extends State<CalculatorPage> {
   Widget _buildMobileLayout() {
     return SingleChildScrollView(
       controller: _mobileScrollController,
+      physics: const ClampingScrollPhysics(), // 使用原生滾動物理效果
       child: Column(
         children: [
           // 步驟內容（直接顯示當前步驟，不使用 IndexedStack）
-          Container(
-            padding: EdgeInsets.all(16),
-            child: _buildCurrentStepContent(),
+          RepaintBoundary(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              child: _buildCurrentStepContent(),
+            ),
           ),
 
           // 圖表區域（在內容下方）
           if (_hasCalculated)
-            Container(
-              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: _buildSidebar(),
+            RepaintBoundary(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: _buildSidebar(),
+              ),
             ),
         ],
       ),
@@ -1176,7 +1584,27 @@ class _CalculatorPageState extends State<CalculatorPage> {
       onParkingNightSensingTimeChanged: (value) =>
           setState(() => parkingNightSensingTime = value ?? 30),
       onParkingCountChanged: (_) => setState(() {}),
-      onCalculate: _calculateResults,
+      onDrivewayDaytimeInfoTap: () => _showFieldInfo('車道燈-日間時段'),
+      onDrivewayNighttimeInfoTap: () => _showFieldInfo('車道燈-夜間時段'),
+      onParkingDaytimeInfoTap: () => _showFieldInfo('車位燈-日間時段'),
+      onParkingNighttimeInfoTap: () => _showFieldInfo('車位燈-夜間時段'),
+      drivewayDaytimeConsumption: drivewayDaytimeConsumption != null
+          ? '${drivewayDaytimeConsumption!.toStringAsFixed(2)} 度'
+          : null,
+      drivewayNighttimeConsumption: drivewayNighttimeConsumption != null
+          ? '${drivewayNighttimeConsumption!.toStringAsFixed(2)} 度'
+          : null,
+      drivewayDaytimeTitle: '車道燈日間每月耗電',
+      drivewayNighttimeTitle: '車道燈夜間每月耗電',
+      parkingDaytimeConsumption: parkingDaytimeConsumption != null
+          ? '${parkingDaytimeConsumption!.toStringAsFixed(2)} 度'
+          : null,
+      parkingNighttimeConsumption: parkingNighttimeConsumption != null
+          ? '${parkingNighttimeConsumption!.toStringAsFixed(2)} 度'
+          : null,
+      parkingDaytimeTitle: '車位燈日間每月耗電',
+      parkingNighttimeTitle: '車位燈夜間每月耗電',
+      onCalculate: _calculateStep1Only,
     );
   }
 
@@ -1414,7 +1842,27 @@ class _CalculatorPageState extends State<CalculatorPage> {
           onParkingNightSensingTimeChanged: (value) =>
               setState(() => parkingNightSensingTime = value ?? 30),
           onParkingCountChanged: (_) => setState(() {}),
-          onCalculate: _calculateResults,
+          onDrivewayDaytimeInfoTap: () => _showFieldInfo('車道燈-日間時段'),
+          onDrivewayNighttimeInfoTap: () => _showFieldInfo('車道燈-夜間時段'),
+          onParkingDaytimeInfoTap: () => _showFieldInfo('車位燈-日間時段'),
+          onParkingNighttimeInfoTap: () => _showFieldInfo('車位燈-夜間時段'),
+          drivewayDaytimeConsumption: drivewayDaytimeConsumption != null
+              ? '${drivewayDaytimeConsumption!.toStringAsFixed(2)} 度'
+              : null,
+          drivewayNighttimeConsumption: drivewayNighttimeConsumption != null
+              ? '${drivewayNighttimeConsumption!.toStringAsFixed(2)} 度'
+              : null,
+          drivewayDaytimeTitle: '車道燈日間每月耗電',
+          drivewayNighttimeTitle: '車道燈夜間每月耗電',
+          parkingDaytimeConsumption: parkingDaytimeConsumption != null
+              ? '${parkingDaytimeConsumption!.toStringAsFixed(2)} 度'
+              : null,
+          parkingNighttimeConsumption: parkingNighttimeConsumption != null
+              ? '${parkingNighttimeConsumption!.toStringAsFixed(2)} 度'
+              : null,
+          parkingDaytimeTitle: '車位燈日間每月耗電',
+          parkingNighttimeTitle: '車位燈夜間每月耗電',
+          onCalculate: _calculateStep1Only,
         ),
 
         // Step 2（攤提時間）- 原 Step 3
@@ -1486,8 +1934,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
   /// 底部導航按鈕
   Widget _buildNavigationButtons() {
     return Container(
-      padding: EdgeInsets.all(24),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
@@ -1509,16 +1957,17 @@ class _CalculatorPageState extends State<CalculatorPage> {
                 // 滾動到頂部（手機版）
                 _scrollToTop();
               },
-              icon: Icon(Icons.arrow_back),
-              label: Text('上一步'),
+              icon: const Icon(Icons.arrow_back),
+              label: const Text('上一步'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey[300],
                 foregroundColor: Colors.black87,
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               ),
             ),
 
-          Spacer(),
+          const Spacer(),
 
           // 下一步按鈕（目前只有 2 步：AI燈管設定 → 攤提時間）
           if (_currentStep < 1)
@@ -1530,12 +1979,13 @@ class _CalculatorPageState extends State<CalculatorPage> {
                 // 滾動到頂部（手機版）
                 _scrollToTop();
               },
-              icon: Icon(Icons.arrow_forward),
-              label: Text('下一步'),
+              icon: const Icon(Icons.arrow_forward),
+              label: const Text('下一步'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               ),
             ),
 
@@ -1546,12 +1996,13 @@ class _CalculatorPageState extends State<CalculatorPage> {
                 // 只驗證 Step 3，然後計算所有步驟
                 _validateAndCalculateAll();
               },
-              icon: Icon(Icons.check),
-              label: Text('完成'),
+              icon: const Icon(Icons.check),
+              label: const Text('完成'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               ),
             ),
         ],

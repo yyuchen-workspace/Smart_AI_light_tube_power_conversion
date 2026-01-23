@@ -217,10 +217,17 @@ class PaybackForm extends StatelessWidget {
                 Flexible(
                   child: TextField(
                     controller: rentalPriceController,
+                    onTap: () {
+                      // 點擊時自動全選文字
+                      rentalPriceController.selection = TextSelection(
+                        baseOffset: 0,
+                        extentOffset: rentalPriceController.text.length,
+                      );
+                    },
                     onChanged: onRentalPriceChanged,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    style: TextStyle(fontSize: 16),
+                    style: const TextStyle(fontSize: 16),
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -228,10 +235,10 @@ class PaybackForm extends StatelessWidget {
                       fillColor: Colors.white,
                       filled: true,
                       contentPadding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                          const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                       isDense: false,
                       suffixText: '元/支/月',
-                      suffixStyle: TextStyle(fontSize: 14),
+                      suffixStyle: const TextStyle(fontSize: 14),
                     ),
                   ),
                 ),
@@ -254,10 +261,17 @@ class PaybackForm extends StatelessWidget {
                 Flexible(
                   child: TextField(
                     controller: buyoutPriceController,
+                    onTap: () {
+                      // 點擊時自動全選文字
+                      buyoutPriceController.selection = TextSelection(
+                        baseOffset: 0,
+                        extentOffset: buyoutPriceController.text.length,
+                      );
+                    },
                     onChanged: onBuyoutPriceChanged,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    style: TextStyle(fontSize: 16),
+                    style: const TextStyle(fontSize: 16),
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -265,10 +279,10 @@ class PaybackForm extends StatelessWidget {
                       fillColor: Colors.white,
                       filled: true,
                       contentPadding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                          const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                       isDense: false,
                       suffixText: '元/支',
-                      suffixStyle: TextStyle(fontSize: 14),
+                      suffixStyle: const TextStyle(fontSize: 14),
                     ),
                   ),
                 ),
@@ -305,6 +319,13 @@ class PaybackForm extends StatelessWidget {
         SizedBox(height: 4),
         TextField(
           controller: controller,
+          onTap: () {
+            // 點擊時自動全選文字
+            controller.selection = TextSelection(
+              baseOffset: 0,
+              extentOffset: controller.text.length,
+            );
+          },
           decoration: InputDecoration(
             suffixText: unit,
             border: OutlineInputBorder(
@@ -312,13 +333,13 @@ class PaybackForm extends StatelessWidget {
             ),
             filled: true,
             fillColor: Colors.white,
-            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
           ),
           keyboardType: TextInputType.number,
           inputFormatters:
               integerOnly ? [FilteringTextInputFormatter.digitsOnly] : null,
           onChanged: onChanged,
-          style: TextStyle(fontSize: 16),
+          style: const TextStyle(fontSize: 16),
         ),
       ],
     );

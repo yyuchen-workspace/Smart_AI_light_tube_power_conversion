@@ -47,6 +47,13 @@ class InputFieldWithUnit extends StatelessWidget {
           height: 56,
           child: TextField(
             controller: controller,
+            onTap: () {
+              // 點擊時自動全選文字，方便用戶直接輸入覆蓋
+              controller.selection = TextSelection(
+                baseOffset: 0,
+                extentOffset: controller.text.length,
+              );
+            },
             onChanged: onChanged,
             keyboardType: TextInputType.number,
             inputFormatters: [
@@ -54,13 +61,13 @@ class InputFieldWithUnit extends StatelessWidget {
                   ? FilteringTextInputFormatter.digitsOnly
                   : FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))
             ],
-            style: TextStyle(fontSize: 16),
+            style: const TextStyle(fontSize: 16),
             decoration: InputDecoration(
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
               fillColor: Colors.white,
               filled: true,
               contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               suffixText: unit,
               suffixStyle: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
