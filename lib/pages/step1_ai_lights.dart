@@ -11,6 +11,10 @@ import 'package:flutter/services.dart';
 import '../widgets/expandable_light_card.dart';
 
 class Step1AILights extends StatelessWidget {
+  // 夏季/非夏季設定
+  final bool isSummer;
+  final ValueChanged<bool?> onSeasonChanged;
+
   // 傳統燈管數量控制器
   final TextEditingController traditionalWattController;
   final TextEditingController traditionalLightCountController;
@@ -43,6 +47,10 @@ class Step1AILights extends StatelessWidget {
   final ValueChanged<int?>? onDrivewayNightBrightnessAfterChanged;
   final ValueChanged<int?>? onDrivewayNightSensingTimeChanged;
   final ValueChanged<String>? onDrivewayCountChanged;
+  final TextEditingController drivewayDaySensingCountController;
+  final TextEditingController drivewayNightSensingCountController;
+  final ValueChanged<String>? onDrivewayDaySensingCountChanged;
+  final ValueChanged<String>? onDrivewayNightSensingCountChanged;
 
   // 車位燈相關參數
   final TextEditingController parkingCountController;
@@ -69,6 +77,10 @@ class Step1AILights extends StatelessWidget {
   final ValueChanged<int?>? onParkingNightBrightnessAfterChanged;
   final ValueChanged<int?>? onParkingNightSensingTimeChanged;
   final ValueChanged<String>? onParkingCountChanged;
+  final TextEditingController parkingDaySensingCountController;
+  final TextEditingController parkingNightSensingCountController;
+  final ValueChanged<String>? onParkingDaySensingCountChanged;
+  final ValueChanged<String>? onParkingNightSensingCountChanged;
 
   // 資訊按鈕回調（車道燈）
   final VoidCallback? onDrivewayDaytimeInfoTap;
@@ -95,6 +107,8 @@ class Step1AILights extends StatelessWidget {
 
   const Step1AILights({
     Key? key,
+    required this.isSummer,
+    required this.onSeasonChanged,
     required this.traditionalWattController,
     required this.traditionalLightCountController,
     this.onTraditionalWattChanged,
@@ -124,6 +138,10 @@ class Step1AILights extends StatelessWidget {
     this.onDrivewayNightBrightnessAfterChanged,
     this.onDrivewayNightSensingTimeChanged,
     this.onDrivewayCountChanged,
+    required this.drivewayDaySensingCountController,
+    required this.drivewayNightSensingCountController,
+    this.onDrivewayDaySensingCountChanged,
+    this.onDrivewayNightSensingCountChanged,
     required this.parkingCountController,
     required this.parkingAllDay,
     required this.onParkingAllDayChanged,
@@ -148,6 +166,10 @@ class Step1AILights extends StatelessWidget {
     this.onParkingNightBrightnessAfterChanged,
     this.onParkingNightSensingTimeChanged,
     this.onParkingCountChanged,
+    required this.parkingDaySensingCountController,
+    required this.parkingNightSensingCountController,
+    this.onParkingDaySensingCountChanged,
+    this.onParkingNightSensingCountChanged,
     this.onDrivewayDaytimeInfoTap,
     this.onDrivewayNighttimeInfoTap,
     this.onParkingDaytimeInfoTap,
@@ -190,6 +212,46 @@ class Step1AILights extends StatelessWidget {
           ),
           */
           SizedBox(height: 16),
+
+          // 夏季/非夏季選擇
+          _buildSectionTitle('電價季節'),
+          SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: CheckboxListTile(
+                  title: Text('夏季 (6-9月)', style: TextStyle(fontSize: 16)),
+                  subtitle: Text('每度 4.08 元', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                  value: isSummer,
+                  onChanged: onSeasonChanged,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: BorderSide(color: isSummer ? Colors.blue : Colors.grey[300]!, width: 2),
+                  ),
+                  tileColor: isSummer ? Colors.blue[50] : Colors.grey[50],
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: CheckboxListTile(
+                  title: Text('非夏季 (1-5月、10-12月)', style: TextStyle(fontSize: 16)),
+                  subtitle: Text('每度 3.87 元', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                  value: !isSummer,
+                  onChanged: (value) => onSeasonChanged(value == true ? false : true),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    side: BorderSide(color: !isSummer ? Colors.orange : Colors.grey[300]!, width: 2),
+                  ),
+                  tileColor: !isSummer ? Colors.orange[50] : Colors.grey[50],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 24),
 
           // 傳統燈管設定
           _buildSectionTitle('原燈管'),
@@ -328,6 +390,10 @@ class Step1AILights extends StatelessWidget {
                 onDrivewayNightBrightnessAfterChanged,
             onNightSensingTimeChanged: onDrivewayNightSensingTimeChanged,
             onCountChanged: onDrivewayCountChanged,
+            daySensingCountController: drivewayDaySensingCountController,
+            nightSensingCountController: drivewayNightSensingCountController,
+            onDaySensingCountChanged: onDrivewayDaySensingCountChanged,
+            onNightSensingCountChanged: onDrivewayNightSensingCountChanged,
             onDaytimeInfoTap: onDrivewayDaytimeInfoTap,
             onNighttimeInfoTap: onDrivewayNighttimeInfoTap,
             daytimeMonthlyConsumption: drivewayDaytimeConsumption,
@@ -368,6 +434,10 @@ class Step1AILights extends StatelessWidget {
             onNightBrightnessAfterChanged: onParkingNightBrightnessAfterChanged,
             onNightSensingTimeChanged: onParkingNightSensingTimeChanged,
             onCountChanged: onParkingCountChanged,
+            daySensingCountController: parkingDaySensingCountController,
+            nightSensingCountController: parkingNightSensingCountController,
+            onDaySensingCountChanged: onParkingDaySensingCountChanged,
+            onNightSensingCountChanged: onParkingNightSensingCountChanged,
             onDaytimeInfoTap: onParkingDaytimeInfoTap,
             onNighttimeInfoTap: onParkingNighttimeInfoTap,
             daytimeMonthlyConsumption: parkingDaytimeConsumption,

@@ -42,6 +42,12 @@ class ExpandableLightCard extends StatefulWidget {
   final ValueChanged<int?>? onNightSensingTimeChanged;
   final ValueChanged<String>? onCountChanged;
 
+  // 模擬人車感應次數
+  final TextEditingController daySensingCountController;
+  final TextEditingController? nightSensingCountController;
+  final ValueChanged<String>? onDaySensingCountChanged;
+  final ValueChanged<String>? onNightSensingCountChanged;
+
   // 資訊按鈕回調
   final VoidCallback? onDaytimeInfoTap;
   final VoidCallback? onNighttimeInfoTap;
@@ -82,6 +88,10 @@ class ExpandableLightCard extends StatefulWidget {
     this.onNightBrightnessAfterChanged,
     this.onNightSensingTimeChanged,
     this.onCountChanged,
+    required this.daySensingCountController,
+    this.nightSensingCountController,
+    this.onDaySensingCountChanged,
+    this.onNightSensingCountChanged,
     this.onDaytimeInfoTap,
     this.onNighttimeInfoTap,
     this.daytimeMonthlyConsumption,
@@ -207,6 +217,10 @@ class _ExpandableLightCardState extends State<ExpandableLightCard> {
                 onNightBrightnessAfterChanged: widget.onNightBrightnessAfterChanged,
                 onNightSensingTimeChanged: widget.onNightSensingTimeChanged,
                 onCountChanged: widget.onCountChanged,
+                daySensingCountController: widget.daySensingCountController,
+                nightSensingCountController: widget.nightSensingCountController,
+                onDaySensingCountChanged: widget.onDaySensingCountChanged,
+                onNightSensingCountChanged: widget.onNightSensingCountChanged,
                 onDaytimeInfoTap: widget.onDaytimeInfoTap,
                 onNighttimeInfoTap: widget.onNighttimeInfoTap,
                 daytimeMonthlyConsumption: widget.daytimeMonthlyConsumption,

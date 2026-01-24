@@ -28,26 +28,33 @@ class LightingCalculator {
   ///           + 夜間*夜間亮度感應前瓦數 + 1285次*夜間感應時間*(感應後瓦數-感應前瓦數)
   ///
   /// - 全天候模式: 日間*日間亮度感應前瓦數 + 2325次*日間感應時間*(感應後瓦數-感應前瓦數)
-  static double calculateDrivewayWattage(LightingStrategy strategy) {
+  ///
+  /// [daySensingCount] 可選的日間感應次數，若未提供則使用預設值
+  /// [nightSensingCount] 可選的夜間感應次數，若未提供則使用預設值
+  static double calculateDrivewayWattage(
+    LightingStrategy strategy, {
+    int? daySensingCount,
+    int? nightSensingCount,
+  }) {
     double totalWattage = 0.0;
 
     if (strategy.isAllDayMode) {
       // 全天候模式
       totalWattage = _calculateTimeSlotWattage(
         timeSlot: strategy.daytime,
-        sensingCount: drivewayAllDaySensing,
+        sensingCount: daySensingCount ?? drivewayAllDaySensing,
       );
     } else {
       // 一般模式 (日間 + 夜間)
       totalWattage += _calculateTimeSlotWattage(
         timeSlot: strategy.daytime,
-        sensingCount: drivewayDaytimeSensing,
+        sensingCount: daySensingCount ?? drivewayDaytimeSensing,
       );
 
       if (strategy.nighttime != null) {
         totalWattage += _calculateTimeSlotWattage(
           timeSlot: strategy.nighttime!,
-          sensingCount: drivewayNighttimeSensing,
+          sensingCount: nightSensingCount ?? drivewayNighttimeSensing,
         );
       }
     }
@@ -62,26 +69,33 @@ class LightingCalculator {
   ///           + 夜間*夜間亮度感應前瓦數 + 30次*夜間感應時間*(感應後瓦數-感應前瓦數)
   ///
   /// - 全天候模式: 日間*日間亮度感應前瓦數 + 110次*日間感應時間*(感應後瓦數-感應前瓦數)
-  static double calculateParkingWattage(LightingStrategy strategy) {
+  ///
+  /// [daySensingCount] 可選的日間感應次數，若未提供則使用預設值
+  /// [nightSensingCount] 可選的夜間感應次數，若未提供則使用預設值
+  static double calculateParkingWattage(
+    LightingStrategy strategy, {
+    int? daySensingCount,
+    int? nightSensingCount,
+  }) {
     double totalWattage = 0.0;
 
     if (strategy.isAllDayMode) {
       // 全天候模式
       totalWattage = _calculateTimeSlotWattage(
         timeSlot: strategy.daytime,
-        sensingCount: parkingAllDaySensing,
+        sensingCount: daySensingCount ?? parkingAllDaySensing,
       );
     } else {
       // 一般模式 (日間 + 夜間)
       totalWattage += _calculateTimeSlotWattage(
         timeSlot: strategy.daytime,
-        sensingCount: parkingDaytimeSensing,
+        sensingCount: daySensingCount ?? parkingDaytimeSensing,
       );
 
       if (strategy.nighttime != null) {
         totalWattage += _calculateTimeSlotWattage(
           timeSlot: strategy.nighttime!,
-          sensingCount: parkingNighttimeSensing,
+          sensingCount: nightSensingCount ?? parkingNighttimeSensing,
         );
       }
     }

@@ -72,7 +72,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
 
   // 傳統燈管
   final TextEditingController traditionalWattController =
-      TextEditingController(text: '0');
+      TextEditingController(text: '18');
   final TextEditingController traditionalLightCountController =
       TextEditingController(text: '0');
 
@@ -90,6 +90,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
   int drivewayNightBrightnessBefore = 10;
   int drivewayNightBrightnessAfter = 70;
   int drivewayNightSensingTime = 10;
+  final TextEditingController drivewayDaySensingCountController =
+      TextEditingController(text: '2325');
+  final TextEditingController drivewayNightSensingCountController =
+      TextEditingController(text: '285');
 
   // 車位燈策略
   final TextEditingController parkingCountController =
@@ -105,6 +109,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
   int parkingNightBrightnessBefore = 0;
   int parkingNightBrightnessAfter = 50;
   int parkingNightSensingTime = 120;
+  final TextEditingController parkingDaySensingCountController =
+      TextEditingController(text: '35');
+  final TextEditingController parkingNightSensingCountController =
+      TextEditingController(text: '5');
 
   // Step 2: 台電帳單資訊
   bool timeTypeSummer = true; // 預設夏季
@@ -470,7 +478,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
     double wattBefore = BrightnessWattageMap.getWattage(brightnessBefore);
     double wattAfter = BrightnessWattageMap.getWattage(brightnessAfter);
 
-    int sensingCount = LightingCalculator.drivewayDaytimeSensing;
+    // 使用使用者輸入的感應次數
+    int sensingCount = int.tryParse(drivewayDaySensingCountController.text) ??
+        LightingCalculator.drivewayDaytimeSensing;
     double sensingDurationInHours = sensingCount * sensingTime / 3600.0;
 
     double perLightWattage = duration * wattBefore +
@@ -485,7 +495,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
 模擬人車感應次數$sensingCount次
 
 每支車道燈消耗瓦數
-${duration.toStringAsFixed(2)}小時*${wattBefore.toStringAsFixed(1)}W（$brightnessBefore%亮度）+${sensingDurationInHours.toStringAsFixed(2)}小時（$sensingCount*$sensingTime 秒）*$brightnessAfter%（${wattAfter.toStringAsFixed(1)}W-${wattBefore.toStringAsFixed(1)}W）=${perLightWattage.toStringAsFixed(2)}W
+${duration.toStringAsFixed(2)}小時*$brightnessBefore%亮度瓦數(${wattBefore.toStringAsFixed(1)}W)+${sensingDurationInHours.toStringAsFixed(2)}小時($sensingCount*$sensingTime 秒）*$brightnessAfter%亮度瓦數（${wattAfter.toStringAsFixed(1)}W-${wattBefore.toStringAsFixed(1)}W）=${perLightWattage.toStringAsFixed(2)}W
 
 總共車道燈日間月消耗度數
 ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyConsumption.toStringAsFixed(2)} 度''';
@@ -512,7 +522,9 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
     double wattBefore = BrightnessWattageMap.getWattage(brightnessBefore);
     double wattAfter = BrightnessWattageMap.getWattage(brightnessAfter);
 
-    int sensingCount = LightingCalculator.drivewayNighttimeSensing;
+    // 使用使用者輸入的感應次數
+    int sensingCount = int.tryParse(drivewayNightSensingCountController.text) ??
+        LightingCalculator.drivewayNighttimeSensing;
     double sensingDurationInHours = sensingCount * sensingTime / 3600.0;
 
     double perLightWattage = duration * wattBefore +
@@ -527,7 +539,7 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
 模擬人車感應次數$sensingCount次
 
 每支車道燈消耗瓦數
-${duration.toStringAsFixed(2)}小時*${wattBefore.toStringAsFixed(1)}W（$brightnessBefore%亮度）+${sensingDurationInHours.toStringAsFixed(2)}小時（$sensingCount*$sensingTime 秒）*$brightnessAfter%（${wattAfter.toStringAsFixed(1)}W-${wattBefore.toStringAsFixed(1)}W）=${perLightWattage.toStringAsFixed(2)}W
+${duration.toStringAsFixed(2)}小時*$brightnessBefore%亮度瓦數(${wattBefore.toStringAsFixed(1)}W)+${sensingDurationInHours.toStringAsFixed(2)}小時($sensingCount*$sensingTime 秒）*$brightnessAfter%亮度瓦數（${wattAfter.toStringAsFixed(1)}W-${wattBefore.toStringAsFixed(1)}W）=${perLightWattage.toStringAsFixed(2)}W
 
 總共車道燈夜間月消耗度數
 ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyConsumption.toStringAsFixed(2)} 度''';
@@ -549,7 +561,9 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
     double wattBefore = BrightnessWattageMap.getWattage(brightnessBefore);
     double wattAfter = BrightnessWattageMap.getWattage(brightnessAfter);
 
-    int sensingCount = LightingCalculator.parkingDaytimeSensing;
+    // 使用使用者輸入的感應次數
+    int sensingCount = int.tryParse(parkingDaySensingCountController.text) ??
+        LightingCalculator.parkingDaytimeSensing;
     double sensingDurationInHours = sensingCount * sensingTime / 3600.0;
 
     double perLightWattage = duration * wattBefore +
@@ -564,7 +578,7 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
 模擬人車感應次數$sensingCount次
 
 每支車位燈消耗瓦數
-${duration.toStringAsFixed(2)}小時*${wattBefore.toStringAsFixed(1)}W（$brightnessBefore%亮度）+${sensingDurationInHours.toStringAsFixed(2)}小時（$sensingCount*$sensingTime 秒）*$brightnessAfter%（${wattAfter.toStringAsFixed(1)}W-${wattBefore.toStringAsFixed(1)}W）=${perLightWattage.toStringAsFixed(2)}W
+${duration.toStringAsFixed(2)}小時*$brightnessBefore%亮度瓦數(${wattBefore.toStringAsFixed(1)}W)+${sensingDurationInHours.toStringAsFixed(2)}小時($sensingCount*$sensingTime 秒）*$brightnessAfter%亮度瓦數（${wattAfter.toStringAsFixed(1)}W-${wattBefore.toStringAsFixed(1)}W）=${perLightWattage.toStringAsFixed(2)}W
 
 總共車位燈日間月消耗度數
 ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyConsumption.toStringAsFixed(2)} 度''';
@@ -591,7 +605,9 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
     double wattBefore = BrightnessWattageMap.getWattage(brightnessBefore);
     double wattAfter = BrightnessWattageMap.getWattage(brightnessAfter);
 
-    int sensingCount = LightingCalculator.parkingNighttimeSensing;
+    // 使用使用者輸入的感應次數
+    int sensingCount = int.tryParse(parkingNightSensingCountController.text) ??
+        LightingCalculator.parkingNighttimeSensing;
     double sensingDurationInHours = sensingCount * sensingTime / 3600.0;
 
     double perLightWattage = duration * wattBefore +
@@ -606,7 +622,7 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
 模擬人車感應次數$sensingCount次
 
 每支車位燈消耗瓦數
-${duration.toStringAsFixed(2)}小時*${wattBefore.toStringAsFixed(1)}W（$brightnessBefore%亮度）+${sensingDurationInHours.toStringAsFixed(2)}小時（$sensingCount*$sensingTime 秒）*$brightnessAfter%（${wattAfter.toStringAsFixed(1)}W-${wattBefore.toStringAsFixed(1)}W）=${perLightWattage.toStringAsFixed(2)}W
+${duration.toStringAsFixed(2)}小時*$brightnessBefore%亮度瓦數(${wattBefore.toStringAsFixed(1)}W)+${sensingDurationInHours.toStringAsFixed(2)}小時($sensingCount*$sensingTime 秒）*$brightnessAfter%亮度瓦數（${wattAfter.toStringAsFixed(1)}W-${wattBefore.toStringAsFixed(1)}W）=${perLightWattage.toStringAsFixed(2)}W
 
 總共車位燈夜間月消耗度數
 ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyConsumption.toStringAsFixed(2)} 度''';
@@ -805,11 +821,29 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
               ),
       );
 
+      // 解析使用者輸入的感應次數
+      int drivewayDayCount = int.tryParse(drivewayDaySensingCountController.text) ??
+          LightingCalculator.drivewayDaytimeSensing;
+      int drivewayNightCount = int.tryParse(drivewayNightSensingCountController.text) ??
+          LightingCalculator.drivewayNighttimeSensing;
+      int parkingDayCount = int.tryParse(parkingDaySensingCountController.text) ??
+          LightingCalculator.parkingDaytimeSensing;
+      int parkingNightCount = int.tryParse(parkingNightSensingCountController.text) ??
+          LightingCalculator.parkingNighttimeSensing;
+
       // 計算AI燈管消耗
       double drivewayDailyWattage =
-          LightingCalculator.calculateDrivewayWattage(drivewayStrategy);
+          LightingCalculator.calculateDrivewayWattage(
+            drivewayStrategy,
+            daySensingCount: drivewayDayCount,
+            nightSensingCount: drivewayNightCount,
+          );
       double parkingDailyWattage =
-          LightingCalculator.calculateParkingWattage(parkingStrategy);
+          LightingCalculator.calculateParkingWattage(
+            parkingStrategy,
+            daySensingCount: parkingDayCount,
+            nightSensingCount: parkingNightCount,
+          );
 
       aiMonthlyConsumption = LightingCalculator.calculateMonthlyConsumption(
               drivewayDailyWattage, drivewayCount) +
@@ -825,9 +859,9 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
       } else {
         // 車道燈分時段模式 - 需要分別計算日間和夜間
         double drivewayDayWattage = _calculateTimeSlotWattage(
-            drivewayStrategy.daytime, LightingCalculator.drivewayDaytimeSensing);
+            drivewayStrategy.daytime, drivewayDayCount);
         double drivewayNightWattage = _calculateTimeSlotWattage(
-            drivewayStrategy.nighttime!, LightingCalculator.drivewayNighttimeSensing);
+            drivewayStrategy.nighttime!, drivewayNightCount);
         drivewayDaytimeConsumption = LightingCalculator.calculateMonthlyConsumption(
             drivewayDayWattage, drivewayCount);
         drivewayNighttimeConsumption = LightingCalculator.calculateMonthlyConsumption(
@@ -842,9 +876,9 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
       } else {
         // 車位燈分時段模式 - 需要分別計算日間和夜間
         double parkingDayWattage = _calculateTimeSlotWattage(
-            parkingStrategy.daytime, LightingCalculator.parkingDaytimeSensing);
+            parkingStrategy.daytime, parkingDayCount);
         double parkingNightWattage = _calculateTimeSlotWattage(
-            parkingStrategy.nighttime!, LightingCalculator.parkingNighttimeSensing);
+            parkingStrategy.nighttime!, parkingNightCount);
         parkingDaytimeConsumption = LightingCalculator.calculateMonthlyConsumption(
             parkingDayWattage, parkingCount);
         parkingNighttimeConsumption = LightingCalculator.calculateMonthlyConsumption(
@@ -1033,11 +1067,29 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
               ),
       );
 
+      // 解析使用者輸入的感應次數
+      int drivewayDayCount = int.tryParse(drivewayDaySensingCountController.text) ??
+          LightingCalculator.drivewayDaytimeSensing;
+      int drivewayNightCount = int.tryParse(drivewayNightSensingCountController.text) ??
+          LightingCalculator.drivewayNighttimeSensing;
+      int parkingDayCount = int.tryParse(parkingDaySensingCountController.text) ??
+          LightingCalculator.parkingDaytimeSensing;
+      int parkingNightCount = int.tryParse(parkingNightSensingCountController.text) ??
+          LightingCalculator.parkingNighttimeSensing;
+
       // 計算AI燈管消耗
       double drivewayDailyWattage =
-          LightingCalculator.calculateDrivewayWattage(drivewayStrategy);
+          LightingCalculator.calculateDrivewayWattage(
+            drivewayStrategy,
+            daySensingCount: drivewayDayCount,
+            nightSensingCount: drivewayNightCount,
+          );
       double parkingDailyWattage =
-          LightingCalculator.calculateParkingWattage(parkingStrategy);
+          LightingCalculator.calculateParkingWattage(
+            parkingStrategy,
+            daySensingCount: parkingDayCount,
+            nightSensingCount: parkingNightCount,
+          );
 
       aiMonthlyConsumption = LightingCalculator.calculateMonthlyConsumption(
               drivewayDailyWattage, drivewayCount) +
@@ -1053,9 +1105,9 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
       } else {
         // 車道燈分時段模式 - 需要分別計算日間和夜間
         double drivewayDayWattage = _calculateTimeSlotWattage(
-            drivewayStrategy.daytime, LightingCalculator.drivewayDaytimeSensing);
+            drivewayStrategy.daytime, drivewayDayCount);
         double drivewayNightWattage = _calculateTimeSlotWattage(
-            drivewayStrategy.nighttime!, LightingCalculator.drivewayNighttimeSensing);
+            drivewayStrategy.nighttime!, drivewayNightCount);
         drivewayDaytimeConsumption = LightingCalculator.calculateMonthlyConsumption(
             drivewayDayWattage, drivewayCount);
         drivewayNighttimeConsumption = LightingCalculator.calculateMonthlyConsumption(
@@ -1070,9 +1122,9 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
       } else {
         // 車位燈分時段模式 - 需要分別計算日間和夜間
         double parkingDayWattage = _calculateTimeSlotWattage(
-            parkingStrategy.daytime, LightingCalculator.parkingDaytimeSensing);
+            parkingStrategy.daytime, parkingDayCount);
         double parkingNightWattage = _calculateTimeSlotWattage(
-            parkingStrategy.nighttime!, LightingCalculator.parkingNighttimeSensing);
+            parkingStrategy.nighttime!, parkingNightCount);
         parkingDaytimeConsumption = LightingCalculator.calculateMonthlyConsumption(
             parkingDayWattage, parkingCount);
         parkingNighttimeConsumption = LightingCalculator.calculateMonthlyConsumption(
@@ -1484,6 +1536,8 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
   /// 建立 Step 1 組件
   Widget _buildStep1Widget() {
     return Step1AILights(
+      isSummer: timeTypeSummer,
+      onSeasonChanged: (value) => setState(() => timeTypeSummer = value ?? true),
       traditionalWattController: traditionalWattController,
       traditionalLightCountController: traditionalLightCountController,
       onTraditionalWattChanged: (_) => setState(() {}),
@@ -1537,6 +1591,10 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
       onDrivewayNightSensingTimeChanged: (value) =>
           setState(() => drivewayNightSensingTime = value ?? 30),
       onDrivewayCountChanged: (_) => setState(() {}),
+      drivewayDaySensingCountController: drivewayDaySensingCountController,
+      drivewayNightSensingCountController: drivewayNightSensingCountController,
+      onDrivewayDaySensingCountChanged: (_) => setState(() {}),
+      onDrivewayNightSensingCountChanged: (_) => setState(() {}),
       parkingCountController: parkingCountController,
       parkingAllDay: parkingAllDay,
       onParkingAllDayChanged: (value) =>
@@ -1584,6 +1642,10 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
       onParkingNightSensingTimeChanged: (value) =>
           setState(() => parkingNightSensingTime = value ?? 30),
       onParkingCountChanged: (_) => setState(() {}),
+      parkingDaySensingCountController: parkingDaySensingCountController,
+      parkingNightSensingCountController: parkingNightSensingCountController,
+      onParkingDaySensingCountChanged: (_) => setState(() {}),
+      onParkingNightSensingCountChanged: (_) => setState(() {}),
       onDrivewayDaytimeInfoTap: () => _showFieldInfo('車道燈-日間時段'),
       onDrivewayNighttimeInfoTap: () => _showFieldInfo('車道燈-夜間時段'),
       onParkingDaytimeInfoTap: () => _showFieldInfo('車位燈-日間時段'),
@@ -1742,6 +1804,8 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
       children: [
         // Step 1: AI 燈管設定
         Step1AILights(
+          isSummer: timeTypeSummer,
+          onSeasonChanged: (value) => setState(() => timeTypeSummer = value ?? true),
           traditionalWattController: traditionalWattController,
           traditionalLightCountController: traditionalLightCountController,
           onTraditionalWattChanged: (_) => setState(() {}),
@@ -1795,6 +1859,10 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
           onDrivewayNightSensingTimeChanged: (value) =>
               setState(() => drivewayNightSensingTime = value ?? 30),
           onDrivewayCountChanged: (_) => setState(() {}),
+          drivewayDaySensingCountController: drivewayDaySensingCountController,
+          drivewayNightSensingCountController: drivewayNightSensingCountController,
+          onDrivewayDaySensingCountChanged: (_) => setState(() {}),
+          onDrivewayNightSensingCountChanged: (_) => setState(() {}),
           parkingCountController: parkingCountController,
           parkingAllDay: parkingAllDay,
           onParkingAllDayChanged: (value) =>
@@ -1842,6 +1910,10 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
           onParkingNightSensingTimeChanged: (value) =>
               setState(() => parkingNightSensingTime = value ?? 30),
           onParkingCountChanged: (_) => setState(() {}),
+          parkingDaySensingCountController: parkingDaySensingCountController,
+          parkingNightSensingCountController: parkingNightSensingCountController,
+          onParkingDaySensingCountChanged: (_) => setState(() {}),
+          onParkingNightSensingCountChanged: (_) => setState(() {}),
           onDrivewayDaytimeInfoTap: () => _showFieldInfo('車道燈-日間時段'),
           onDrivewayNighttimeInfoTap: () => _showFieldInfo('車道燈-夜間時段'),
           onParkingDaytimeInfoTap: () => _showFieldInfo('車位燈-日間時段'),

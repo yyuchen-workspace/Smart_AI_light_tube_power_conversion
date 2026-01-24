@@ -51,6 +51,12 @@ class LightingStrategyConfig extends StatelessWidget {
   // 通用回調
   final ValueChanged<String>? onCountChanged;
 
+  // 模擬人車感應次數
+  final TextEditingController daySensingCountController;
+  final TextEditingController? nightSensingCountController;
+  final ValueChanged<String>? onDaySensingCountChanged;
+  final ValueChanged<String>? onNightSensingCountChanged;
+
   // 資訊按鈕回調
   final VoidCallback? onDaytimeInfoTap;
   final VoidCallback? onNighttimeInfoTap;
@@ -88,6 +94,10 @@ class LightingStrategyConfig extends StatelessWidget {
     this.onNightBrightnessAfterChanged,
     this.onNightSensingTimeChanged,
     this.onCountChanged,
+    required this.daySensingCountController,
+    this.nightSensingCountController,
+    this.onDaySensingCountChanged,
+    this.onNightSensingCountChanged,
     this.onDaytimeInfoTap,
     this.onNighttimeInfoTap,
     this.daytimeMonthlyConsumption,
@@ -185,6 +195,8 @@ class LightingStrategyConfig extends StatelessWidget {
             onBrightnessBeforeChanged: onDayBrightnessBeforeChanged,
             onBrightnessAfterChanged: onDayBrightnessAfterChanged,
             onSensingTimeChanged: onDaySensingTimeChanged,
+            sensingCountController: daySensingCountController,
+            onSensingCountChanged: onDaySensingCountChanged,
             onInfoTap: onDaytimeInfoTap,
             monthlyConsumption: daytimeMonthlyConsumption,
             resultTitle: daytimeResultTitle,
@@ -208,6 +220,8 @@ class LightingStrategyConfig extends StatelessWidget {
                   onNightBrightnessBeforeChanged ?? (_) {},
               onBrightnessAfterChanged: onNightBrightnessAfterChanged ?? (_) {},
               onSensingTimeChanged: onNightSensingTimeChanged ?? (_) {},
+              sensingCountController: nightSensingCountController ?? TextEditingController(text: '0'),
+              onSensingCountChanged: onNightSensingCountChanged,
               onInfoTap: onNighttimeInfoTap,
               monthlyConsumption: nighttimeMonthlyConsumption,
               resultTitle: nighttimeResultTitle,
@@ -231,6 +245,8 @@ class LightingStrategyConfig extends StatelessWidget {
     required ValueChanged<int?> onBrightnessBeforeChanged,
     required ValueChanged<int?> onBrightnessAfterChanged,
     required ValueChanged<int?> onSensingTimeChanged,
+    required TextEditingController sensingCountController,
+    ValueChanged<String>? onSensingCountChanged,
     VoidCallback? onInfoTap,
     String? monthlyConsumption,
     String? resultTitle,
@@ -379,6 +395,48 @@ class LightingStrategyConfig extends StatelessWidget {
                 onChanged: onSensingTimeChanged,
                 suffix: '秒',
                 isDisabled: false,
+              ),
+              SizedBox(height: isMobile ? 6 : 8),
+
+              // 模擬人車感應次數
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '模擬人車感應次數',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[700], // 永遠保持黑色，不受全天候模式影響
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: sensingCountController,
+                    onTap: () {
+                      sensingCountController.selection = TextSelection(
+                        baseOffset: 0,
+                        extentOffset: sensingCountController.text.length,
+                      );
+                    },
+                    decoration: InputDecoration(
+                      labelText: '次數',
+                      labelStyle: TextStyle(fontSize: 14),
+                      border: OutlineInputBorder(),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      enabled: true, // 改為永遠可編輯，即使在全天候模式下
+                      suffixText: '次',
+                      suffixStyle: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.black),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    onChanged: onSensingCountChanged,
+                  ),
+                ],
               ),
             ],
           ),
