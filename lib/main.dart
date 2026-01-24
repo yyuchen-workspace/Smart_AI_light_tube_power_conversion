@@ -468,8 +468,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
     double startHour =
         drivewayDaytimeStart.hour + drivewayDaytimeStart.minute / 60.0;
     double endHour = drivewayDaytimeEnd.hour + drivewayDaytimeEnd.minute / 60.0;
-    double duration =
-        endHour > startHour ? endHour - startHour : 24 - startHour + endHour;
+    // 全天候模式固定使用 24 小時
+    double duration = drivewayAllDay
+        ? 24.0
+        : (endHour > startHour ? endHour - startHour : 24 - startHour + endHour);
 
     int brightnessBefore = drivewayDayBrightnessBefore;
     int brightnessAfter = drivewayDayBrightnessAfter;
@@ -551,8 +553,10 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
     double startHour =
         parkingDaytimeStart.hour + parkingDaytimeStart.minute / 60.0;
     double endHour = parkingDaytimeEnd.hour + parkingDaytimeEnd.minute / 60.0;
-    double duration =
-        endHour > startHour ? endHour - startHour : 24 - startHour + endHour;
+    // 全天候模式固定使用 24 小時
+    double duration = parkingAllDay
+        ? 24.0
+        : (endHour > startHour ? endHour - startHour : 24 - startHour + endHour);
 
     int brightnessBefore = parkingDayBrightnessBefore;
     int brightnessAfter = parkingDayBrightnessAfter;
