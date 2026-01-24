@@ -81,11 +81,11 @@ class _CalculatorPageState extends State<CalculatorPage> {
       TextEditingController(text: '0');
   bool drivewayAllDay = false;
   TimeOfDay drivewayDaytimeStart = TimeOfDay(hour: 6, minute: 0);
-  TimeOfDay drivewayDaytimeEnd = TimeOfDay(hour: 0, minute: 0);
+  TimeOfDay drivewayDaytimeEnd = TimeOfDay(hour: 23, minute: 59);
   int drivewayDayBrightnessBefore = 30;
   int drivewayDayBrightnessAfter = 70;
   int drivewayDaySensingTime = 10;
-  TimeOfDay drivewayNighttimeStart = TimeOfDay(hour: 0, minute: 0);
+  TimeOfDay drivewayNighttimeStart = TimeOfDay(hour: 23, minute: 59);
   TimeOfDay drivewayNighttimeEnd = TimeOfDay(hour: 6, minute: 0);
   int drivewayNightBrightnessBefore = 10;
   int drivewayNightBrightnessAfter = 70;
@@ -98,13 +98,13 @@ class _CalculatorPageState extends State<CalculatorPage> {
   // 車位燈策略
   final TextEditingController parkingCountController =
       TextEditingController(text: '0');
-  bool parkingAllDay = false;
+  bool parkingAllDay = true;
   TimeOfDay parkingDaytimeStart = TimeOfDay(hour: 6, minute: 0);
-  TimeOfDay parkingDaytimeEnd = TimeOfDay(hour: 18, minute: 0);
+  TimeOfDay parkingDaytimeEnd = TimeOfDay(hour: 23, minute: 59);
   int parkingDayBrightnessBefore = 0;
   int parkingDayBrightnessAfter = 50;
   int parkingDaySensingTime = 120;
-  TimeOfDay parkingNighttimeStart = TimeOfDay(hour: 18, minute: 0);
+  TimeOfDay parkingNighttimeStart = TimeOfDay(hour: 23, minute: 59);
   TimeOfDay parkingNighttimeEnd = TimeOfDay(hour: 6, minute: 0);
   int parkingNightBrightnessBefore = 0;
   int parkingNightBrightnessAfter = 50;
