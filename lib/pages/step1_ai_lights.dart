@@ -216,40 +216,83 @@ class Step1AILights extends StatelessWidget {
           // 夏季/非夏季選擇
           _buildSectionTitle('電價季節'),
           SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: CheckboxListTile(
-                  title: Text('夏季 (6-9月)', style: TextStyle(fontSize: 16)),
-                  subtitle: Text('每度 4.08 元', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-                  value: isSummer,
-                  onChanged: onSeasonChanged,
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    side: BorderSide(color: isSummer ? Colors.blue : Colors.grey[300]!, width: 2),
-                  ),
-                  tileColor: isSummer ? Colors.blue[50] : Colors.grey[50],
-                ),
-              ),
-              SizedBox(width: 16),
-              Expanded(
-                child: CheckboxListTile(
-                  title: Text('非夏季 (1-5月、10-12月)', style: TextStyle(fontSize: 16)),
-                  subtitle: Text('每度 3.87 元', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
-                  value: !isSummer,
-                  onChanged: (value) => onSeasonChanged(value == true ? false : true),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    side: BorderSide(color: !isSummer ? Colors.orange : Colors.grey[300]!, width: 2),
-                  ),
-                  tileColor: !isSummer ? Colors.orange[50] : Colors.grey[50],
-                ),
-              ),
-            ],
+          // 根據螢幕寬度決定排列方式
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMobile = constraints.maxWidth < 600;
+
+              if (isMobile) {
+                // 手機版：垂直排列
+                return Column(
+                  children: [
+                    CheckboxListTile(
+                      title: Text('夏季 (6-9月)', style: TextStyle(fontSize: 16)),
+                      subtitle: Text('每度 4.08 元', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                      value: isSummer,
+                      onChanged: onSeasonChanged,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: isSummer ? Colors.blue : Colors.grey[300]!, width: 2),
+                      ),
+                      tileColor: isSummer ? Colors.blue[50] : Colors.grey[50],
+                    ),
+                    SizedBox(height: 12),
+                    CheckboxListTile(
+                      title: Text('非夏季 (1-5月、10-12月)', style: TextStyle(fontSize: 16)),
+                      subtitle: Text('每度 3.87 元', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                      value: !isSummer,
+                      onChanged: (value) => onSeasonChanged(value == true ? false : true),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: !isSummer ? Colors.orange : Colors.grey[300]!, width: 2),
+                      ),
+                      tileColor: !isSummer ? Colors.orange[50] : Colors.grey[50],
+                    ),
+                  ],
+                );
+              } else {
+                // 桌面版：水平排列
+                return Row(
+                  children: [
+                    Expanded(
+                      child: CheckboxListTile(
+                        title: Text('夏季 (6-9月)', style: TextStyle(fontSize: 16)),
+                        subtitle: Text('每度 4.08 元', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                        value: isSummer,
+                        onChanged: onSeasonChanged,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: BorderSide(color: isSummer ? Colors.blue : Colors.grey[300]!, width: 2),
+                        ),
+                        tileColor: isSummer ? Colors.blue[50] : Colors.grey[50],
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: CheckboxListTile(
+                        title: Text('非夏季 (1-5月、10-12月)', style: TextStyle(fontSize: 16)),
+                        subtitle: Text('每度 3.87 元', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                        value: !isSummer,
+                        onChanged: (value) => onSeasonChanged(value == true ? false : true),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: BorderSide(color: !isSummer ? Colors.orange : Colors.grey[300]!, width: 2),
+                        ),
+                        tileColor: !isSummer ? Colors.orange[50] : Colors.grey[50],
+                      ),
+                    ),
+                  ],
+                );
+              }
+            },
           ),
           SizedBox(height: 24),
 
