@@ -761,13 +761,13 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
       }
     }
 
-    // 驗證網關數量
+    // 驗證網關數量（可為 0，表示不使用網關）
     if (gatewayCountController.text.isEmpty) {
       errors.add('請填寫網關數量');
     } else {
       double? value = double.tryParse(gatewayCountController.text);
-      if (value == null || value == 0) {
-        errors.add('網關數量不可為 0');
+      if (value == null) {
+        errors.add('網關數量格式錯誤');
       }
     }
 
@@ -796,7 +796,7 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
       }
     }
 
-    // 驗證網關計價方式
+    // 驗證網關計價方式（價格可為 0）
     if (gatewayPricingMethod == null) {
       errors.add('請選擇網關計價方式（租賃或買斷）');
     } else {
@@ -805,8 +805,8 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
         errors.add('請填寫網關租賃價格');
       } else if (gatewayPricingMethod == '租賃') {
         double? value = double.tryParse(gatewayRentalPriceController.text);
-        if (value == null || value == 0) {
-          errors.add('網關租賃價格不可為 0');
+        if (value == null) {
+          errors.add('網關租賃價格格式錯誤');
         }
       }
 
@@ -815,8 +815,8 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
         errors.add('請填寫網關買斷價格');
       } else if (gatewayPricingMethod == '買斷') {
         double? value = double.tryParse(gatewayBuyoutPriceController.text);
-        if (value == null || value == 0) {
-          errors.add('網關買斷價格不可為 0');
+        if (value == null) {
+          errors.add('網關買斷價格格式錯誤');
         }
       }
     }
@@ -1580,9 +1580,10 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text('智慧AI燈管電力換算'),
+        title: Text('智慧AI燈管電力換算', style: TextStyle(fontSize: 18)),
         centerTitle: true,
         elevation: 0,
+        toolbarHeight: 48, // 縮小 AppBar 高度（預設 56）
       ),
       body: Column(
         children: [
@@ -2171,9 +2172,9 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
     final isMobile = screenWidth < 600;
 
     // 手機版大幅縮小 padding
-    final containerPadding = isMobile ? 6.0 : 24.0;
-    final buttonHorizontalPadding = isMobile ? 12.0 : 24.0;
-    final buttonVerticalPadding = isMobile ? 8.0 : 16.0;
+    final containerPadding = isMobile ? 3.0 : 12.0;
+    final buttonHorizontalPadding = isMobile ? 10.0 : 16.0;
+    final buttonVerticalPadding = isMobile ? 6.0 : 10.0;
 
     return Container(
       padding: EdgeInsets.all(containerPadding),

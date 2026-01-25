@@ -93,7 +93,7 @@ class Step3Payback extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24),
+      padding: EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -101,12 +101,12 @@ class Step3Payback extends StatelessWidget {
           Text(
             '攤提計算',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.orange[900],
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: 4),
           Text(
             '此為選填項目，可計算投資回本時間',
             style: TextStyle(

@@ -188,7 +188,7 @@ class Step1AILights extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24),
+      padding: EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -196,12 +196,12 @@ class Step1AILights extends StatelessWidget {
           Text(
             '更換 AI 燈管後電力試算',
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.blue[900],
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: 4),
           /*
           Text(
             '請填寫傳統燈管數量及 AI 燈管亮燈策略',

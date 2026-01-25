@@ -26,7 +26,7 @@ class StepIndicator extends StatelessWidget {
     final isMobile = screenWidth < 600;
 
     // 手機版大幅縮小垂直間距
-    final verticalPadding = isMobile ? 6.0 : 12.0;
+    final verticalPadding = isMobile ? 3.0 : 6.0;
 
     return Container(
       padding: EdgeInsets.symmetric(vertical: verticalPadding, horizontal: 16),
@@ -56,7 +56,7 @@ class StepIndicator extends StatelessWidget {
             flex: 2,
             child: Container(
               height: 2,
-              margin: EdgeInsets.only(bottom: 32), // 對齊圓圈中心
+              margin: EdgeInsets.only(bottom: 24), // 對齊圓圈中心
               color: 0 < currentStep ? Colors.green : Colors.grey[300],
             ),
           ),
@@ -95,10 +95,10 @@ class StepIndicator extends StatelessWidget {
     final isMobile = screenWidth < 600;
 
     // 手機版縮小尺寸
-    final circleSize = isMobile ? 28.0 : 32.0;
-    final circleFontSize = isMobile ? 14.0 : 16.0;
-    final titleFontSize = isMobile ? 14.0 : 16.0;
-    final spacingHeight = isMobile ? 6.0 : 8.0;
+    final circleSize = isMobile ? 20.0 : 24.0;
+    final circleFontSize = isMobile ? 12.0 : 14.0;
+    final titleFontSize = isMobile ? 12.0 : 14.0;
+    final spacingHeight = isMobile ? 3.0 : 4.0;
 
     Color circleColor;
     Color textColor;
