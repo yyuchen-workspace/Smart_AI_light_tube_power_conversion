@@ -132,6 +132,7 @@ class _CalculatorPageState extends State<CalculatorPage> {
   bool step2Calculated = false;
 
   // Step 3: 攤提時間試算
+  // 燈管
   String? pricingMethod = '租賃'; // 預設租賃
   final TextEditingController rentalPriceController =
       TextEditingController(text: '0');
@@ -139,6 +140,17 @@ class _CalculatorPageState extends State<CalculatorPage> {
       TextEditingController(text: '0');
   final TextEditingController step3LightCountController =
       TextEditingController(text: '0');
+
+  // 網關
+  String? gatewayPricingMethod = '租賃'; // 預設租賃
+  final TextEditingController gatewayRentalPriceController =
+      TextEditingController(text: '0');
+  final TextEditingController gatewayBuyoutPriceController =
+      TextEditingController(text: '0');
+  final TextEditingController gatewayCountController =
+      TextEditingController(text: '0');
+
+  // 計算結果
   final TextEditingController monthlyRentalController = TextEditingController();
   final TextEditingController totalMonthlySavingController =
       TextEditingController();
@@ -179,6 +191,9 @@ class _CalculatorPageState extends State<CalculatorPage> {
     rentalPriceController.dispose();
     buyoutPriceController.dispose();
     step3LightCountController.dispose();
+    gatewayRentalPriceController.dispose();
+    gatewayBuyoutPriceController.dispose();
+    gatewayCountController.dispose();
     monthlyRentalController.dispose();
     totalMonthlySavingController.dispose();
     buyoutTotalController.dispose();
@@ -421,6 +436,21 @@ class _CalculatorPageState extends State<CalculatorPage> {
         return '''每支燈管租賃費*燈管支數
 =${rentalPrice.toStringAsFixed(0)}*${step3LightCount.toStringAsFixed(0)}=${totalRental.toStringAsFixed(1)}元''';
 
+      case '每月租賃費用（燈管＋網關）':
+        double rentalPrice = double.tryParse(rentalPriceController.text) ?? 0;
+        double step3LightCount =
+            double.tryParse(step3LightCountController.text) ?? 0;
+        double lightRental = rentalPrice * step3LightCount;
+
+        double gatewayRentalPrice = double.tryParse(gatewayRentalPriceController.text) ?? 0;
+        double gatewayCount = double.tryParse(gatewayCountController.text) ?? 0;
+        double gatewayRental = gatewayRentalPrice * gatewayCount;
+
+        double totalRental = lightRental + gatewayRental;
+        return '''(每支燈管租賃費*燈管支數)+(每台網關租賃費*網關數量)
+=(${rentalPrice.toStringAsFixed(0)}*${step3LightCount.toStringAsFixed(0)})+(${gatewayRentalPrice.toStringAsFixed(0)}*${gatewayCount.toStringAsFixed(0)})
+=${lightRental.toStringAsFixed(1)}+${gatewayRental.toStringAsFixed(1)}=${totalRental.toStringAsFixed(1)}元''';
+
       case '每月總共可節省費用':
         double savingUnits = monthlySavings ?? 0;
         double totalSaving = savingUnits * unitPrice;
@@ -429,10 +459,16 @@ class _CalculatorPageState extends State<CalculatorPage> {
           double rentalPrice = double.tryParse(rentalPriceController.text) ?? 0;
           double step3LightCount =
               double.tryParse(step3LightCountController.text) ?? 0;
-          rentalFee = rentalPrice * step3LightCount;
+          double lightRental = rentalPrice * step3LightCount;
+
+          double gatewayRentalPrice = double.tryParse(gatewayRentalPriceController.text) ?? 0;
+          double gatewayCount = double.tryParse(gatewayCountController.text) ?? 0;
+          double gatewayRental = gatewayRentalPrice * gatewayCount;
+
+          rentalFee = lightRental + gatewayRental;
         }
         double netSaving = totalSaving - rentalFee;
-        return '''共節省電費-每月燈管租賃費用
+        return '''共節省電費-每月租賃費用（燈管＋網關）
 =${totalSaving.toStringAsFixed(1)}-${rentalFee.toStringAsFixed(1)}=${netSaving.toStringAsFixed(1)}元''';
 
       case '買斷總費用':
@@ -443,6 +479,21 @@ class _CalculatorPageState extends State<CalculatorPage> {
         return '''每支燈管買斷費*燈管支數
 =${buyoutPrice.toStringAsFixed(0)}*${step3LightCount.toStringAsFixed(0)}=${totalBuyout.toStringAsFixed(1)}元''';
 
+      case '買斷總費用（燈管＋網關）':
+        double buyoutPrice = double.tryParse(buyoutPriceController.text) ?? 0;
+        double step3LightCount =
+            double.tryParse(step3LightCountController.text) ?? 0;
+        double lightBuyout = buyoutPrice * step3LightCount;
+
+        double gatewayBuyoutPrice = double.tryParse(gatewayBuyoutPriceController.text) ?? 0;
+        double gatewayCount = double.tryParse(gatewayCountController.text) ?? 0;
+        double gatewayBuyout = gatewayBuyoutPrice * gatewayCount;
+
+        double totalBuyout = lightBuyout + gatewayBuyout;
+        return '''(每支燈管買斷費*燈管支數)+(每台網關買斷費*網關數量)
+=(${buyoutPrice.toStringAsFixed(0)}*${step3LightCount.toStringAsFixed(0)})+(${gatewayBuyoutPrice.toStringAsFixed(0)}*${gatewayCount.toStringAsFixed(0)})
+=${lightBuyout.toStringAsFixed(1)}+${gatewayBuyout.toStringAsFixed(1)}=${totalBuyout.toStringAsFixed(1)}元''';
+
       case '多久時間攤提(月)':
         double savingUnits = monthlySavings ?? 0;
         double totalSaving = savingUnits * unitPrice;
@@ -451,10 +502,16 @@ class _CalculatorPageState extends State<CalculatorPage> {
           double buyoutPrice = double.tryParse(buyoutPriceController.text) ?? 0;
           double step3LightCount =
               double.tryParse(step3LightCountController.text) ?? 0;
-          buyoutTotal = buyoutPrice * step3LightCount;
+          double lightBuyout = buyoutPrice * step3LightCount;
+
+          double gatewayBuyoutPrice = double.tryParse(gatewayBuyoutPriceController.text) ?? 0;
+          double gatewayCount = double.tryParse(gatewayCountController.text) ?? 0;
+          double gatewayBuyout = gatewayBuyoutPrice * gatewayCount;
+
+          buyoutTotal = lightBuyout + gatewayBuyout;
         }
         double paybackPeriod = totalSaving > 0 ? buyoutTotal / totalSaving : 0;
-        return '''總費用/共節省電費
+        return '''買斷總費用（燈管＋網關）/共節省電費
 =${buyoutTotal.toStringAsFixed(1)}/${totalSaving.toStringAsFixed(1)}=${paybackPeriod.toStringAsFixed(1)}個月''';
 
       default:
@@ -689,6 +746,11 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
   void _calculateStep3() {
     List<String> errors = [];
 
+    // 驗證燈管與網關的計價方式是否一致
+    if (pricingMethod != gatewayPricingMethod) {
+      errors.add('燈管與網關的計價方式必須相同');
+    }
+
     // 驗證燈管數量
     if (step3LightCountController.text.isEmpty) {
       errors.add('請填寫燈管數量');
@@ -699,27 +761,62 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
       }
     }
 
-    // 驗證計價方式
-    if (pricingMethod == null) {
-      errors.add('請選擇計價方式（租賃或買斷）');
+    // 驗證網關數量
+    if (gatewayCountController.text.isEmpty) {
+      errors.add('請填寫網關數量');
     } else {
-      // 驗證租賃價格
+      double? value = double.tryParse(gatewayCountController.text);
+      if (value == null || value == 0) {
+        errors.add('網關數量不可為 0');
+      }
+    }
+
+    // 驗證燈管計價方式
+    if (pricingMethod == null) {
+      errors.add('請選擇燈管計價方式（租賃或買斷）');
+    } else {
+      // 驗證燈管租賃價格
       if (pricingMethod == '租賃' && rentalPriceController.text.isEmpty) {
-        errors.add('請填寫租賃價格');
+        errors.add('請填寫燈管租賃價格');
       } else if (pricingMethod == '租賃') {
         double? value = double.tryParse(rentalPriceController.text);
         if (value == null || value == 0) {
-          errors.add('租賃價格不可為 0');
+          errors.add('燈管租賃價格不可為 0');
         }
       }
 
-      // 驗證買斷價格
+      // 驗證燈管買斷價格
       if (pricingMethod == '買斷' && buyoutPriceController.text.isEmpty) {
-        errors.add('請填寫買斷價格');
+        errors.add('請填寫燈管買斷價格');
       } else if (pricingMethod == '買斷') {
         double? value = double.tryParse(buyoutPriceController.text);
         if (value == null || value == 0) {
-          errors.add('買斷價格不可為 0');
+          errors.add('燈管買斷價格不可為 0');
+        }
+      }
+    }
+
+    // 驗證網關計價方式
+    if (gatewayPricingMethod == null) {
+      errors.add('請選擇網關計價方式（租賃或買斷）');
+    } else {
+      // 驗證網關租賃價格
+      if (gatewayPricingMethod == '租賃' && gatewayRentalPriceController.text.isEmpty) {
+        errors.add('請填寫網關租賃價格');
+      } else if (gatewayPricingMethod == '租賃') {
+        double? value = double.tryParse(gatewayRentalPriceController.text);
+        if (value == null || value == 0) {
+          errors.add('網關租賃價格不可為 0');
+        }
+      }
+
+      // 驗證網關買斷價格
+      if (gatewayPricingMethod == '買斷' && gatewayBuyoutPriceController.text.isEmpty) {
+        errors.add('請填寫網關買斷價格');
+      } else if (gatewayPricingMethod == '買斷') {
+        double? value = double.tryParse(gatewayBuyoutPriceController.text);
+        if (value == null || value == 0) {
+          errors.add('網關買斷價格不可為 0');
         }
       }
     }
@@ -1191,19 +1288,29 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
 
         // Step 3: 攤提時間計算（簡化模式：使用 Step 1 的電費差額）
         bool hasStep3Data = step3LightCountController.text.isNotEmpty &&
-            ((pricingMethod == '租賃' && rentalPriceController.text.isNotEmpty) ||
-                (pricingMethod == '買斷' &&
-                    buyoutPriceController.text.isNotEmpty));
+            gatewayCountController.text.isNotEmpty &&
+            pricingMethod == gatewayPricingMethod &&
+            ((pricingMethod == '租賃' && rentalPriceController.text.isNotEmpty && gatewayRentalPriceController.text.isNotEmpty) ||
+                (pricingMethod == '買斷' && buyoutPriceController.text.isNotEmpty && gatewayBuyoutPriceController.text.isNotEmpty));
 
         if (hasStep3Data) {
           double step3LightCount = double.parse(step3LightCountController.text);
+          double gatewayCount = double.parse(gatewayCountController.text);
 
           // 計算每月總共可節省費用（使用簡化模式：更換前電費 - 更換後電費）
           double totalMonthlySavingAmount = oldMonthlyCost - newMonthlyCost;
 
-          if (pricingMethod == '租賃' && rentalPriceController.text.isNotEmpty) {
+          if (pricingMethod == '租賃' && rentalPriceController.text.isNotEmpty && gatewayRentalPriceController.text.isNotEmpty) {
+            // 燈管租賃費用
             double rentalPrice = double.parse(rentalPriceController.text);
-            double monthlyRental = rentalPrice * step3LightCount;
+            double lightRental = rentalPrice * step3LightCount;
+
+            // 網關租賃費用
+            double gatewayRentalPrice = double.parse(gatewayRentalPriceController.text);
+            double gatewayRental = gatewayRentalPrice * gatewayCount;
+
+            // 總租賃費用（燈管+網關）
+            double monthlyRental = lightRental + gatewayRental;
             double totalMonthlySaving =
                 totalMonthlySavingAmount - monthlyRental;
 
@@ -1221,9 +1328,17 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
               monthlySaving: totalMonthlySaving,
             );
           } else if (pricingMethod == '買斷' &&
-              buyoutPriceController.text.isNotEmpty) {
+              buyoutPriceController.text.isNotEmpty && gatewayBuyoutPriceController.text.isNotEmpty) {
+            // 燈管買斷費用
             double buyoutPrice = double.parse(buyoutPriceController.text);
-            double buyoutTotal = buyoutPrice * step3LightCount;
+            double lightBuyout = buyoutPrice * step3LightCount;
+
+            // 網關買斷費用
+            double gatewayBuyoutPrice = double.parse(gatewayBuyoutPriceController.text);
+            double gatewayBuyout = gatewayBuyoutPrice * gatewayCount;
+
+            // 總買斷費用（燈管+網關）
+            double buyoutTotal = lightBuyout + gatewayBuyout;
             double paybackPeriod = buyoutTotal / totalMonthlySavingAmount;
 
             buyoutTotalController.text =
@@ -1346,22 +1461,32 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
 
           // Step 3: 攤提時間計算（條件性執行，需要 Step2 數據）
           bool hasStep3Data = step3LightCountController.text.isNotEmpty &&
-              ((pricingMethod == '租賃' &&
-                      rentalPriceController.text.isNotEmpty) ||
-                  (pricingMethod == '買斷' &&
-                      buyoutPriceController.text.isNotEmpty));
+              gatewayCountController.text.isNotEmpty &&
+              pricingMethod == gatewayPricingMethod &&
+              ((pricingMethod == '租賃' && rentalPriceController.text.isNotEmpty && gatewayRentalPriceController.text.isNotEmpty) ||
+                  (pricingMethod == '買斷' && buyoutPriceController.text.isNotEmpty && gatewayBuyoutPriceController.text.isNotEmpty));
 
           if (hasStep3Data) {
             double step3LightCount =
                 double.parse(step3LightCountController.text);
+            double gatewayCount = double.parse(gatewayCountController.text);
 
             // 計算每月總共可節省費用（使用 Step 1 的電費差額）
             double totalMonthlySavingAmount = oldMonthlyCost - newMonthlyCost;
 
             if (pricingMethod == '租賃' &&
-                rentalPriceController.text.isNotEmpty) {
+                rentalPriceController.text.isNotEmpty &&
+                gatewayRentalPriceController.text.isNotEmpty) {
+              // 燈管租賃費用
               double rentalPrice = double.parse(rentalPriceController.text);
-              double monthlyRental = rentalPrice * step3LightCount;
+              double lightRental = rentalPrice * step3LightCount;
+
+              // 網關租賃費用
+              double gatewayRentalPrice = double.parse(gatewayRentalPriceController.text);
+              double gatewayRental = gatewayRentalPrice * gatewayCount;
+
+              // 總租賃費用（燈管+網關）
+              double monthlyRental = lightRental + gatewayRental;
               double totalMonthlySaving =
                   totalMonthlySavingAmount - monthlyRental;
 
@@ -1379,9 +1504,18 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
                 monthlySaving: totalMonthlySaving,
               );
             } else if (pricingMethod == '買斷' &&
-                buyoutPriceController.text.isNotEmpty) {
+                buyoutPriceController.text.isNotEmpty &&
+                gatewayBuyoutPriceController.text.isNotEmpty) {
+              // 燈管買斷費用
               double buyoutPrice = double.parse(buyoutPriceController.text);
-              double buyoutTotal = buyoutPrice * step3LightCount;
+              double lightBuyout = buyoutPrice * step3LightCount;
+
+              // 網關買斷費用
+              double gatewayBuyoutPrice = double.parse(gatewayBuyoutPriceController.text);
+              double gatewayBuyout = gatewayBuyoutPrice * gatewayCount;
+
+              // 總買斷費用（燈管+網關）
+              double buyoutTotal = lightBuyout + gatewayBuyout;
               double paybackPeriod = buyoutTotal / totalMonthlySavingAmount;
 
               buyoutTotalController.text =
@@ -1689,6 +1823,18 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
       onBuyoutPriceChanged: (_) => setState(() {}),
       step3LightCountController: step3LightCountController,
       onLightCountChanged: (_) => setState(() {}),
+      gatewayPricingMethod: gatewayPricingMethod,
+      onGatewayPricingMethodChanged: (value) {
+        setState(() {
+          gatewayPricingMethod = value;
+        });
+      },
+      gatewayRentalPriceController: gatewayRentalPriceController,
+      onGatewayRentalPriceChanged: (_) => setState(() {}),
+      gatewayBuyoutPriceController: gatewayBuyoutPriceController,
+      onGatewayBuyoutPriceChanged: (_) => setState(() {}),
+      gatewayCountController: gatewayCountController,
+      onGatewayCountChanged: (_) => setState(() {}),
       monthlyRentalController: monthlyRentalController,
       totalMonthlySavingController: totalMonthlySavingController,
       buyoutTotalController: buyoutTotalController,
@@ -1955,6 +2101,18 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
           onBuyoutPriceChanged: (_) => setState(() {}),
           step3LightCountController: step3LightCountController,
           onLightCountChanged: (_) => setState(() {}),
+          gatewayPricingMethod: gatewayPricingMethod,
+          onGatewayPricingMethodChanged: (value) {
+            setState(() {
+              gatewayPricingMethod = value;
+            });
+          },
+          gatewayRentalPriceController: gatewayRentalPriceController,
+          onGatewayRentalPriceChanged: (_) => setState(() {}),
+          gatewayBuyoutPriceController: gatewayBuyoutPriceController,
+          onGatewayBuyoutPriceChanged: (_) => setState(() {}),
+          gatewayCountController: gatewayCountController,
+          onGatewayCountChanged: (_) => setState(() {}),
           monthlyRentalController: monthlyRentalController,
           totalMonthlySavingController: totalMonthlySavingController,
           buyoutTotalController: buyoutTotalController,

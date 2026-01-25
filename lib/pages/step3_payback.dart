@@ -8,21 +8,37 @@ import 'package:flutter/material.dart';
 import '../widgets/payback_form.dart';
 
 class Step3Payback extends StatelessWidget {
-  // 計價方式
+  // 燈管計價方式
   final String? pricingMethod; // '租賃' or '買斷'
   final ValueChanged<String?> onPricingMethodChanged;
 
-  // 租賃價格
+  // 燈管租賃價格
   final TextEditingController rentalPriceController;
   final ValueChanged<String>? onRentalPriceChanged;
 
-  // 買斷價格
+  // 燈管買斷價格
   final TextEditingController buyoutPriceController;
   final ValueChanged<String>? onBuyoutPriceChanged;
 
   // 燈管數量
   final TextEditingController step3LightCountController;
   final ValueChanged<String>? onLightCountChanged;
+
+  // 網關計價方式
+  final String? gatewayPricingMethod; // '租賃' or '買斷'
+  final ValueChanged<String?> onGatewayPricingMethodChanged;
+
+  // 網關租賃價格
+  final TextEditingController gatewayRentalPriceController;
+  final ValueChanged<String>? onGatewayRentalPriceChanged;
+
+  // 網關買斷價格
+  final TextEditingController gatewayBuyoutPriceController;
+  final ValueChanged<String>? onGatewayBuyoutPriceChanged;
+
+  // 網關數量
+  final TextEditingController gatewayCountController;
+  final ValueChanged<String>? onGatewayCountChanged;
 
   // 計算結果控制器
   final TextEditingController monthlyRentalController;
@@ -54,6 +70,14 @@ class Step3Payback extends StatelessWidget {
     this.onBuyoutPriceChanged,
     required this.step3LightCountController,
     this.onLightCountChanged,
+    required this.gatewayPricingMethod,
+    required this.onGatewayPricingMethodChanged,
+    required this.gatewayRentalPriceController,
+    this.onGatewayRentalPriceChanged,
+    required this.gatewayBuyoutPriceController,
+    this.onGatewayBuyoutPriceChanged,
+    required this.gatewayCountController,
+    this.onGatewayCountChanged,
     required this.monthlyRentalController,
     required this.totalMonthlySavingController,
     required this.buyoutTotalController,
@@ -102,6 +126,14 @@ class Step3Payback extends StatelessWidget {
             onBuyoutPriceChanged: onBuyoutPriceChanged,
             step3LightCountController: step3LightCountController,
             onLightCountChanged: onLightCountChanged,
+            gatewayPricingMethod: gatewayPricingMethod,
+            onGatewayPricingMethodChanged: onGatewayPricingMethodChanged,
+            gatewayRentalPriceController: gatewayRentalPriceController,
+            onGatewayRentalPriceChanged: onGatewayRentalPriceChanged,
+            gatewayBuyoutPriceController: gatewayBuyoutPriceController,
+            onGatewayBuyoutPriceChanged: onGatewayBuyoutPriceChanged,
+            gatewayCountController: gatewayCountController,
+            onGatewayCountChanged: onGatewayCountChanged,
             monthlyRentalController: monthlyRentalController,
             totalMonthlySavingController: totalMonthlySavingController,
             buyoutTotalController: buyoutTotalController,
