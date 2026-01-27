@@ -91,7 +91,7 @@ class PaybackForm extends StatelessWidget {
   Widget build(BuildContext context) {
     // 檢查燈管和網關的計價方式是否一致
     bool pricingMethodsMatch = pricingMethod == gatewayPricingMethod;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -174,11 +174,11 @@ class PaybackForm extends StatelessWidget {
                 ),
                 SizedBox(height: 12),
                 _buildReadOnlyFieldWithUnit(
-                  '每月總共可節省費用',
+                  '每月淨利',
                   totalMonthlySavingController,
                   '元',
                   hasInfo: true,
-                  showRed: !step2Calculated,
+                  showRed: true,
                 ),
               ] else if (pricingMethodsMatch && pricingMethod == '買斷') ...[
                 _buildReadOnlyFieldWithUnit(
@@ -193,7 +193,7 @@ class PaybackForm extends StatelessWidget {
                   paybackPeriodController,
                   '個月',
                   hasInfo: true,
-                  showRed: !step2Calculated,
+                  showRed: true,
                 ),
               ] else ...[
                 // 混合模式警告
@@ -206,12 +206,14 @@ class PaybackForm extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.warning_amber_rounded, color: Colors.amber[800]),
+                      Icon(Icons.warning_amber_rounded,
+                          color: Colors.amber[800]),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           '燈管與網關的計價方式必須相同（皆為租賃或皆為買斷）',
-                          style: TextStyle(color: Colors.amber[900], fontSize: 14),
+                          style:
+                              TextStyle(color: Colors.amber[900], fontSize: 14),
                         ),
                       ),
                     ],
@@ -228,10 +230,11 @@ class PaybackForm extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: (useSimplifiedMode ? step1Calculated : step2Calculated) &&
-                    pricingMethodsMatch
-                ? onCalculateStep3
-                : null,
+            onPressed:
+                (useSimplifiedMode ? step1Calculated : step2Calculated) &&
+                        pricingMethodsMatch
+                    ? onCalculateStep3
+                    : null,
             style: ElevatedButton.styleFrom(
               backgroundColor:
                   (useSimplifiedMode ? step1Calculated : step2Calculated) &&
@@ -246,9 +249,7 @@ class PaybackForm extends StatelessWidget {
             ),
             child: Text(
               (useSimplifiedMode ? step1Calculated : step2Calculated)
-                  ? (pricingMethodsMatch
-                      ? '計算結果'
-                      : '請確保燈管與網關計價方式相同')
+                  ? (pricingMethodsMatch ? '計算結果' : '請確保燈管與網關計價方式相同')
                   : useSimplifiedMode
                       ? '請先完成 Step 1 計算'
                       : '請先完成 Step 2 計算',
@@ -330,8 +331,8 @@ class PaybackForm extends StatelessWidget {
                       ),
                       fillColor: Colors.white,
                       filled: true,
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 16),
                       isDense: false,
                       suffixText: rentalUnit,
                       suffixStyle: const TextStyle(fontSize: 14),
@@ -373,8 +374,8 @@ class PaybackForm extends StatelessWidget {
                       ),
                       fillColor: Colors.white,
                       filled: true,
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 16),
                       isDense: false,
                       suffixText: buyoutUnit,
                       suffixStyle: const TextStyle(fontSize: 14),
@@ -427,7 +428,8 @@ class PaybackForm extends StatelessWidget {
             ),
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
           ),
           keyboardType: TextInputType.number,
           inputFormatters:
