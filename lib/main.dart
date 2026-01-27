@@ -1326,6 +1326,7 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
               isRental: true,
               monthlyRental: monthlyRental,
               monthlySaving: totalMonthlySaving,
+              monthlyElectricitySavingRental: totalMonthlySavingAmount,
             );
           } else if (pricingMethod == '買斷' &&
               buyoutPriceController.text.isNotEmpty && gatewayBuyoutPriceController.text.isNotEmpty) {
@@ -1502,6 +1503,7 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
                 isRental: true,
                 monthlyRental: monthlyRental,
                 monthlySaving: totalMonthlySaving,
+                monthlyElectricitySavingRental: totalMonthlySavingAmount,
               );
             } else if (pricingMethod == '買斷' &&
                 buyoutPriceController.text.isNotEmpty &&

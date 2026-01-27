@@ -8,7 +8,8 @@ import 'package:flutter/material.dart';
 class PaybackSummaryChart extends StatelessWidget {
   final bool isRental; // true: 租賃模式, false: 買斷模式
   final double? monthlyRental; // 每月租賃費用（租賃模式）
-  final double? monthlySaving; // 每月可節省費用（租賃模式）
+  final double? monthlySaving; // 每月淨利（租賃模式）
+  final double? monthlyElectricitySavingRental; // 每月可節省電費（租賃模式）
   final double? buyoutTotal; // 總費用（買斷模式）
   final double? paybackMonths; // 攤提時間（買斷模式，月）
   final double? monthlyElectricitySaving; // 之後每月節省電費（買斷模式）
@@ -18,6 +19,7 @@ class PaybackSummaryChart extends StatelessWidget {
     required this.isRental,
     this.monthlyRental,
     this.monthlySaving,
+    this.monthlyElectricitySavingRental,
     this.buyoutTotal,
     this.paybackMonths,
     this.monthlyElectricitySaving,
@@ -61,6 +63,18 @@ class PaybackSummaryChart extends StatelessWidget {
         ),
         SizedBox(height: 20),
 
+        // 每月可節省電費卡片
+        _buildInfoCard(
+          iconColor: Colors.green[600]!,
+          title: '每月可節省電費',
+          value: monthlyElectricitySavingRental ?? 0,
+          unit: '元/月',
+          backgroundColor: Colors.green[50]!,
+          emoji: '💰', // 省錢
+        ),
+
+        SizedBox(height: 12),
+
         // 每月租賃費用卡片
         _buildInfoCard(
           iconColor: Colors.red[600]!,
@@ -73,14 +87,15 @@ class PaybackSummaryChart extends StatelessWidget {
 
         SizedBox(height: 12),
 
-        // 每月可節省卡片
+        // 每月淨利卡片
         _buildInfoCard(
           iconColor: Colors.green[600]!,
-          title: '每月可節省',
+          title: '每月淨利',
           value: monthlySaving ?? 0,
           unit: '元/月',
           backgroundColor: Colors.green[50]!,
           emoji: '😊', // 省錢開心
+          showCrown: true, // 顯示皇冠圖示
         ),
       ],
     );
@@ -163,88 +178,109 @@ class PaybackSummaryChart extends StatelessWidget {
     required Color backgroundColor,
     required String emoji,
     String? subtitle,
+    bool showCrown = false,
   }) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: iconColor.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        children: [
-          // Emoji (+ Icon 可選)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // 主卡片
+        Container(
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: iconColor.withValues(alpha: 0.3)),
+          ),
+          child: Column(
             children: [
-              Text(
-                emoji,
-                style: TextStyle(fontSize: 32),
-              ),
-              if (icon != null) ...[
-                SizedBox(width: 6),
-                Icon(icon, color: iconColor, size: 26),
-              ],
-            ],
-          ),
-          SizedBox(height: 12),
-
-          // 標題
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 8),
-
-          // 數值
-          RichText(
-            text: TextSpan(
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: iconColor,
-              ),
-              children: [
-                TextSpan(text: value.toStringAsFixed(0)),
-                TextSpan(
-                  text: ' $unit',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.normal,
-                    color: Colors.grey[600],
+              // Emoji (+ Icon 可選)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    emoji,
+                    style: TextStyle(fontSize: 32),
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          // 副標題（可選）
-          if (subtitle != null) ...[
-            SizedBox(height: 10),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.7),
-                borderRadius: BorderRadius.circular(4),
+                  if (icon != null) ...[
+                    SizedBox(width: 6),
+                    Icon(icon, color: iconColor, size: 26),
+                  ],
+                ],
               ),
-              child: Text(
-                subtitle,
+              SizedBox(height: 12),
+
+              // 標題
+              Text(
+                title,
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 14,
                   color: Colors.grey[700],
                   fontWeight: FontWeight.w500,
                 ),
                 textAlign: TextAlign.center,
               ),
+              SizedBox(height: 8),
+
+              // 數值
+              RichText(
+                text: TextSpan(
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: iconColor,
+                  ),
+                  children: [
+                    TextSpan(text: value.toStringAsFixed(0)),
+                    TextSpan(
+                      text: ' $unit',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.normal,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 副標題（可選）
+              if (subtitle != null) ...[
+                SizedBox(height: 10),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        // 皇冠圖示（卡片外部右上角，斜向）
+        if (showCrown)
+          Positioned(
+            top: -8,
+            right: -8,
+            child: Transform.rotate(
+              angle: 0.35, // 約 20 度傾斜
+              child: Text(
+                '👑',
+                style: TextStyle(fontSize: 28),
+              ),
             ),
-          ],
-        ],
-      ),
+          ),
+      ],
     );
   }
 }
