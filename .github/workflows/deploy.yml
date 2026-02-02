@@ -44,6 +44,7 @@ jobs:
       run: |
         flutter build web \
           --release \
+          --wasm \
           --base-href="/Smart_AI_light_tube_power_conversion/" \
           --dart-define=dart.vm.product=true \
           --no-source-maps \
