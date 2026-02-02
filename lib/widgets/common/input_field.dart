@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'text_field_helpers.dart';
 
 /// 帶單位的輸入欄位組件
 ///
@@ -55,13 +56,7 @@ class InputFieldWithUnit extends StatelessWidget {
           height: fieldHeight,
           child: TextField(
             controller: controller,
-            onTap: () {
-              // 點擊時自動全選文字，方便用戶直接輸入覆蓋
-              controller.selection = TextSelection(
-                baseOffset: 0,
-                extentOffset: controller.text.length,
-              );
-            },
+            onTap: autoSelectOnTap(controller),
             onChanged: onChanged,
             keyboardType: TextInputType.number,
             inputFormatters: [

@@ -11,6 +11,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'common/text_field_helpers.dart';
 
 class PaybackForm extends StatelessWidget {
   // 燈管計價方式
@@ -315,12 +316,7 @@ class PaybackForm extends StatelessWidget {
                 Flexible(
                   child: TextField(
                     controller: rentalPriceController,
-                    onTap: () {
-                      rentalPriceController.selection = TextSelection(
-                        baseOffset: 0,
-                        extentOffset: rentalPriceController.text.length,
-                      );
-                    },
+                    onTap: autoSelectOnTap(rentalPriceController),
                     onChanged: onRentalPriceChanged,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -358,12 +354,7 @@ class PaybackForm extends StatelessWidget {
                 Flexible(
                   child: TextField(
                     controller: buyoutPriceController,
-                    onTap: () {
-                      buyoutPriceController.selection = TextSelection(
-                        baseOffset: 0,
-                        extentOffset: buyoutPriceController.text.length,
-                      );
-                    },
+                    onTap: autoSelectOnTap(buyoutPriceController),
                     onChanged: onBuyoutPriceChanged,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -415,12 +406,7 @@ class PaybackForm extends StatelessWidget {
         SizedBox(height: 4),
         TextField(
           controller: controller,
-          onTap: () {
-            controller.selection = TextSelection(
-              baseOffset: 0,
-              extentOffset: controller.text.length,
-            );
-          },
+          onTap: autoSelectOnTap(controller),
           decoration: InputDecoration(
             suffixText: unit,
             border: OutlineInputBorder(

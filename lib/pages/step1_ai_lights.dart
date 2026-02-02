@@ -9,6 +9,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/expandable_light_card.dart';
+import '../widgets/common/text_field_helpers.dart';
 
 class Step1AILights extends StatelessWidget {
   // 夏季/非夏季設定
@@ -305,13 +306,7 @@ class Step1AILights extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: traditionalWattController,
-                  onTap: () {
-                    // 點擊時自動全選文字
-                    traditionalWattController.selection = TextSelection(
-                      baseOffset: 0,
-                      extentOffset: traditionalWattController.text.length,
-                    );
-                  },
+                  onTap: autoSelectOnTap(traditionalWattController),
                   decoration: InputDecoration(
                     labelText: '目前使用燈管瓦數',
                     labelStyle: const TextStyle(fontSize: 16),
@@ -337,13 +332,7 @@ class Step1AILights extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: traditionalLightCountController,
-                  onTap: () {
-                    // 點擊時自動全選文字
-                    traditionalLightCountController.selection = TextSelection(
-                      baseOffset: 0,
-                      extentOffset: traditionalLightCountController.text.length,
-                    );
-                  },
+                  onTap: autoSelectOnTap(traditionalLightCountController),
                   decoration: InputDecoration(
                     labelText: '數量',
                     labelStyle: const TextStyle(fontSize: 16),

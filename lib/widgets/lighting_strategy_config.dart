@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants/brightness_wattage_map.dart';
 import 'common/time_input_field.dart';
+import 'common/text_field_helpers.dart';
 
 class LightingStrategyConfig extends StatelessWidget {
   final String title; // 標題 (車道燈/車位燈)
@@ -136,13 +137,7 @@ class LightingStrategyConfig extends StatelessWidget {
           // 數量輸入
           TextField(
             controller: countController,
-            onTap: () {
-              // 點擊時自動全選文字
-              countController.selection = TextSelection(
-                baseOffset: 0,
-                extentOffset: countController.text.length,
-              );
-            },
+            onTap: autoSelectOnTap(countController),
             decoration: InputDecoration(
               labelText: '數量',
               labelStyle: const TextStyle(fontSize: 16),
@@ -413,12 +408,7 @@ class LightingStrategyConfig extends StatelessWidget {
                   const SizedBox(height: 6),
                   TextField(
                     controller: sensingCountController,
-                    onTap: () {
-                      sensingCountController.selection = TextSelection(
-                        baseOffset: 0,
-                        extentOffset: sensingCountController.text.length,
-                      );
-                    },
+                    onTap: autoSelectOnTap(sensingCountController),
                     decoration: InputDecoration(
                       labelText: '次數',
                       labelStyle: TextStyle(fontSize: 14),

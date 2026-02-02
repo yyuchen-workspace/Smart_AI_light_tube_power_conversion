@@ -12,6 +12,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'common/text_field_helpers.dart';
 
 class BillInfoForm extends StatelessWidget {
   // 季節選擇
@@ -256,13 +257,7 @@ class BillInfoForm extends StatelessWidget {
   }) {
     return TextField(
       controller: controller,
-      onTap: () {
-        // 點擊時自動全選文字
-        controller.selection = TextSelection(
-          baseOffset: 0,
-          extentOffset: controller.text.length,
-        );
-      },
+      onTap: autoSelectOnTap(controller),
       decoration: InputDecoration(
         labelText: label,
         suffixText: unit,
