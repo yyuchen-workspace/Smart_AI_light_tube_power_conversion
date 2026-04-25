@@ -187,24 +187,22 @@ class PdfGenerator {
     required double monthlyCostSaving,
     required double yearlyCostSaving,
   }) {
-    // 使用 Wrap 包裝以防止標題與表格分頁
-    return pw.Wrap(
+    // 使用 Column 並添加 keepTogether 屬性，避免標題和表格分頁
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          // 區域標題（縮小字體）
-          pw.Text(
-            '電費估算',
-            style: pw.TextStyle(
-              fontSize: 14,
-              fontWeight: pw.FontWeight.bold,
-            ),
+        // 區域標題
+        pw.Text(
+          '電費估算',
+          style: pw.TextStyle(
+            fontSize: 14,
+            fontWeight: pw.FontWeight.bold,
           ),
-          pw.SizedBox(height: 12),
+        ),
+        pw.SizedBox(height: 12),
 
-          // 主表格
-          pw.Table(
+        // 主表格
+        pw.Table(
           border: pw.TableBorder.all(color: PdfColors.black, width: 1),
           columnWidths: {
             0: const pw.FlexColumnWidth(3),
@@ -291,8 +289,6 @@ class PdfGenerator {
           ],
         ),
       ],
-        ),
-      ],
     );
   }
 
@@ -333,24 +329,22 @@ class PdfGenerator {
     final gatewayAmount = (double.tryParse(gatewayCount) ?? 0) *
         (double.tryParse(gatewayUnitPrice) ?? 0);
 
-    // 使用 Wrap 包裝以防止標題與表格分頁
-    return pw.Wrap(
+    // 使用 Column 並確保標題和表格不被分頁分隔
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          // 區域標題（縮小字體）
-          pw.Text(
-            '費用攤提',
-            style: pw.TextStyle(
-              fontSize: 14,
-              fontWeight: pw.FontWeight.bold,
-            ),
+        // 區域標題
+        pw.Text(
+          '費用攤提',
+          style: pw.TextStyle(
+            fontSize: 14,
+            fontWeight: pw.FontWeight.bold,
           ),
-          pw.SizedBox(height: 12),
+        ),
+        pw.SizedBox(height: 12),
 
-          // 黑字白底表格
-          pw.Table(
+        // 黑字白底表格
+        pw.Table(
             border: pw.TableBorder.all(color: PdfColors.black, width: 1),
             columnWidths: {
               0: const pw.FlexColumnWidth(3),
@@ -416,8 +410,6 @@ class PdfGenerator {
               ),
             ],
           ),
-        ],
-        ),
       ],
     );
   }
@@ -477,7 +469,7 @@ class PdfGenerator {
     );
   }
 
-  /// 建立第三區域：圖表
+  /// 建立第三區域：圖表（並排顯示）
   static pw.Widget _buildChartsSection(
     Uint8List? chart1Image,
     Uint8List? chart2Image,
@@ -495,69 +487,95 @@ class PdfGenerator {
         ),
         pw.SizedBox(height: 12),
 
-        // 第一個圖表：AI燈管設定圖表
-        if (chart1Image != null) ...[
-          pw.Text(
-            '電費估算圖表',
-            style: pw.TextStyle(
-              fontSize: 12,
-              fontWeight: pw.FontWeight.bold,
-            ),
-          ),
-          pw.SizedBox(height: 8),
-          pw.Container(
-            width: double.infinity,
-            child: pw.Image(pw.MemoryImage(chart1Image)),
-          ),
-          pw.SizedBox(height: 20),
-        ] else ...[
-          pw.Container(
-            padding: const pw.EdgeInsets.all(40),
-            alignment: pw.Alignment.center,
-            decoration: pw.BoxDecoration(
-              border: pw.Border.all(color: PdfColors.grey400),
-            ),
-            child: pw.Text(
-              '圖表載入失敗',
-              style: pw.TextStyle(
-                fontSize: 12,
-                color: PdfColors.grey600,
+        // 兩個圖表並排顯示
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            // 第一個圖表：電費估算圖表
+            pw.Expanded(
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    '電費估算圖表',
+                    style: pw.TextStyle(
+                      fontSize: 12,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.SizedBox(height: 8),
+                  if (chart1Image != null)
+                    pw.Container(
+                      height: 250,
+                      child: pw.Image(
+                        pw.MemoryImage(chart1Image),
+                        fit: pw.BoxFit.contain,
+                      ),
+                    )
+                  else
+                    pw.Container(
+                      height: 250,
+                      padding: const pw.EdgeInsets.all(20),
+                      alignment: pw.Alignment.center,
+                      decoration: pw.BoxDecoration(
+                        border: pw.Border.all(color: PdfColors.grey400),
+                      ),
+                      child: pw.Text(
+                        '圖表載入失敗',
+                        style: pw.TextStyle(
+                          fontSize: 10,
+                          color: PdfColors.grey600,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-          ),
-          pw.SizedBox(height: 20),
-        ],
 
-        // 第二個圖表：攤提時間圖表
-        if (chart2Image != null) ...[
-          pw.Text(
-            '費用攤提圖表',
-            style: pw.TextStyle(
-              fontSize: 12,
-              fontWeight: pw.FontWeight.bold,
-            ),
-          ),
-          pw.SizedBox(height: 8),
-          pw.Container(
-            width: double.infinity,
-            child: pw.Image(pw.MemoryImage(chart2Image)),
-          ),
-        ] else ...[
-          pw.Container(
-            padding: const pw.EdgeInsets.all(40),
-            alignment: pw.Alignment.center,
-            decoration: pw.BoxDecoration(
-              border: pw.Border.all(color: PdfColors.grey400),
-            ),
-            child: pw.Text(
-              '圖表載入失敗',
-              style: pw.TextStyle(
-                fontSize: 12,
-                color: PdfColors.grey600,
+            pw.SizedBox(width: 20), // 圖表之間的間距
+
+            // 第二個圖表：費用攤提圖表
+            pw.Expanded(
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    '費用攤提圖表',
+                    style: pw.TextStyle(
+                      fontSize: 12,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.SizedBox(height: 8),
+                  if (chart2Image != null)
+                    pw.Container(
+                      height: 250,
+                      child: pw.Image(
+                        pw.MemoryImage(chart2Image),
+                        fit: pw.BoxFit.contain,
+                      ),
+                    )
+                  else
+                    pw.Container(
+                      height: 250,
+                      padding: const pw.EdgeInsets.all(20),
+                      alignment: pw.Alignment.center,
+                      decoration: pw.BoxDecoration(
+                        border: pw.Border.all(color: PdfColors.grey400),
+                      ),
+                      child: pw.Text(
+                        '圖表載入失敗',
+                        style: pw.TextStyle(
+                          fontSize: 10,
+                          color: PdfColors.grey600,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ],
     );
   }
@@ -566,15 +584,14 @@ class PdfGenerator {
   static void _downloadPdf(Uint8List pdfBytes, String projectName) {
     final blob = html.Blob([pdfBytes], 'application/pdf');
     final url = html.Url.createObjectUrlFromBlob(blob);
-    final timestamp = DateTime.now()
-        .toString()
-        .substring(0, 19)
-        .replaceAll(':', '-')
-        .replaceAll(' ', '_');
+
+    // 只使用日期（年-月-日），不包含時間
+    final now = DateTime.now();
+    final dateString = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
     final filename = projectName.isEmpty
-        ? 'AI燈管節電效能評估_$timestamp.pdf'
-        : 'AI燈管節電效能評估_${projectName}_$timestamp.pdf';
+        ? 'AI燈管節電效能評估_$dateString.pdf'
+        : 'AI燈管節電效能評估_${projectName}_$dateString.pdf';
 
     html.AnchorElement(href: url)
       ..setAttribute('download', filename)

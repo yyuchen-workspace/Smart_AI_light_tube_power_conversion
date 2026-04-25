@@ -7,6 +7,9 @@
  */
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
 
 // 新版頁面元件
 import 'pages/step1_ai_lights.dart';
@@ -25,6 +28,9 @@ import 'utils/electricity_calculator.dart';
 import 'models/lighting_strategy.dart';
 import 'constants/electricity_pricing.dart';
 import 'constants/brightness_wattage_map.dart';
+
+// 服務
+import 'services/pdf_generator.dart';
 
 void main() {
   runApp(MyApp());
@@ -174,6 +180,10 @@ class _CalculatorPageState extends State<CalculatorPage> {
   Widget? pieChart;
   Widget? powerSavingChart;
   Widget? paybackSummaryChart;
+
+  // 圖表截圖用的 GlobalKey
+  final GlobalKey _powerSavingChartKey = GlobalKey();
+  final GlobalKey _paybackSummaryChartKey = GlobalKey();
 
   @override
   void dispose() {
@@ -649,7 +659,7 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
 模擬人車感應次數$sensingCount次
 
 每支車位燈消耗瓦數
-${duration.toStringAsFixed(2)}小時*$brightnessBefore%亮度瓦數(${wattBefore.toStringAsFixed(1)}W)+${sensingDurationInHours.toStringAsFixed(2)}小時($sensingCount*$sensingTime 秒）*$brightnessAfter%亮度瓦數（${wattAfter.toStringAsFixed(1)}W-${wattBefore.toStringAsFixed(1)}W）=${perLightWattage.toStringAsFixed(2)}W
+${duration.toStringAsFixed(2)}小時*$brightnessBefore%���度瓦數(${wattBefore.toStringAsFixed(1)}W)+${sensingDurationInHours.toStringAsFixed(2)}小時($sensingCount*$sensingTime 秒）*$brightnessAfter%亮度瓦數（${wattAfter.toStringAsFixed(1)}W-${wattBefore.toStringAsFixed(1)}W）=${perLightWattage.toStringAsFixed(2)}W
 
 總共車位燈日間月消耗度數
 ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyConsumption.toStringAsFixed(2)} 度''';
@@ -834,7 +844,7 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
     }
 
     // 檢查前置步驟是否已計算
-    // 簡化模式：檢查 Step 1；複雜模式：檢查 Step 2
+    // 簡化模式：檢查 Step 1；複雜模���：檢查 Step 2
     if (USE_COMPLEX_ELECTRICITY_CALCULATION) {
       if (!step2Calculated) {
         errors.add('請先完成 Step 2 計算');
@@ -1616,6 +1626,202 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
     });
   }
 
+  /// PDF 匯出功能
+  Future<void> _exportPdf() async {
+    // 彈出對話框請求輸入專案名稱
+    String? projectName = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        String inputText = '';
+        return AlertDialog(
+          title: const Text('輸入專案名稱'),
+          content: TextField(
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: '請輸入專案名稱（可留空）',
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (value) => inputText = value,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, null),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, inputText),
+              child: const Text('確定'),
+            ),
+          ],
+        );
+      },
+    );
+
+    // 使用者按取消，不執行匯出
+    if (projectName == null) return;
+
+    // 顯示載入對話框，遮蓋背後的步驟切換
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => PopScope(
+        canPop: false,
+        child: const AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+              Text('正在生成 PDF，請稍候...'),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    try {
+      // 保存當前步驟
+      final int originalStep = _currentStep;
+
+      // 截取圖表圖片（需要切換步驟以確保圖表可見）
+      Uint8List? chart1Image;
+      Uint8List? chart2Image;
+
+      // 切換到 Step 1 截取節電成果圖表
+      if (powerSavingChart != null) {
+        setState(() => _currentStep = 0);
+        await Future.delayed(const Duration(milliseconds: 100)); // 等待 UI 更新
+        chart1Image = await _captureWidget(_powerSavingChartKey);
+      }
+
+      // 切換到 Step 3 截取攤提摘要圖表
+      if (paybackSummaryChart != null) {
+        setState(() => _currentStep = 1);
+        await Future.delayed(const Duration(milliseconds: 100)); // 等待 UI 更新
+        chart2Image = await _captureWidget(_paybackSummaryChartKey);
+      }
+
+      // 恢復原本的步驟
+      setState(() => _currentStep = originalStep);
+
+      // 計算電費
+      double oldMonthlyCost = (traditionalMonthlyConsumption ?? 0) *
+          (timeTypeSummer
+              ? ElectricityPricing.summerAveragePrice
+              : ElectricityPricing.nonSummerAveragePrice);
+      double newMonthlyCost = (aiMonthlyConsumption ?? 0) *
+          (timeTypeSummer
+              ? ElectricityPricing.summerAveragePrice
+              : ElectricityPricing.nonSummerAveragePrice);
+
+      // 計算車道與車位分離耗電
+      double drivewayConsumption = (drivewayDaytimeConsumption ?? 0) +
+                                    (drivewayNighttimeConsumption ?? 0);
+      double parkingConsumption = (parkingDaytimeConsumption ?? 0) +
+                                   (parkingNighttimeConsumption ?? 0);
+
+      // 呼叫 PDF 生成器 (版本 13.0 - 新格式)
+      await PdfGenerator.generateAndDownloadReport(
+        // 專案資訊
+        projectName: projectName,
+
+        // Step 1 數據 (AI 燈管設定)
+        drivewayCount: drivewayCountController.text,
+        parkingCount: parkingCountController.text,
+        oldLightCount: traditionalLightCountController.text,
+        oldLightWattage: traditionalWattController.text,
+        oldMonthlyConsumption: traditionalMonthlyConsumption?.toStringAsFixed(1) ?? '-',
+        drivewayConsumption: drivewayConsumption,
+        parkingConsumption: parkingConsumption,
+        monthlySavings: monthlySavings?.toStringAsFixed(1) ?? '-',
+        oldMonthlyCost: oldMonthlyCost.toStringAsFixed(1),
+        newMonthlyCost: newMonthlyCost.toStringAsFixed(1),
+
+        // Step 3 數據 (攤提計算) - 僅租賃模式
+        step3LightCount: step3LightCountController.text,
+        lightUnitPrice: pricingMethod == '租賃'
+            ? rentalPriceController.text
+            : buyoutPriceController.text,
+        gatewayCount: gatewayCountController.text,
+        gatewayUnitPrice: gatewayPricingMethod == '租賃'
+            ? gatewayRentalPriceController.text
+            : gatewayBuyoutPriceController.text,
+        monthlyRental: monthlyRentalController.text,
+        monthlySaving: totalMonthlySavingController.text,
+
+        // 圖表圖片
+        chart1Image: chart1Image,
+        chart2Image: chart2Image,
+      );
+
+      // 關閉載入對話框
+      if (mounted) Navigator.pop(context);
+
+      // 顯示成功訊息
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('PDF 報告已成功下載！'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      // 關閉載入對話框
+      if (mounted) Navigator.pop(context);
+
+      // 顯示錯誤訊息
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('PDF 生成失敗：$e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  /// 截取 Widget 為圖片
+  Future<Uint8List?> _captureWidget(GlobalKey key) async {
+    try {
+      // 等待 fl_chart 的動畫完成（fl_chart 預設動畫時長約 150ms）
+      // 額外增加緩衝時間確保完全穩定
+      await Future.delayed(const Duration(milliseconds: 1000));
+
+      // 獲取 RenderObject
+      final renderObject = key.currentContext?.findRenderObject();
+
+      if (renderObject == null) {
+        print('無法找到 RenderObject - 圖表可能未渲染');
+        return null;
+      }
+
+      if (renderObject is! RenderRepaintBoundary) {
+        print('RenderObject 不是 RenderRepaintBoundary 類型');
+        return null;
+      }
+
+      final boundary = renderObject;
+
+      // 轉換為圖片
+      ui.Image image = await boundary.toImage(pixelRatio: 2.0);
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+
+      if (byteData == null) {
+        print('無法轉換圖片為 ByteData');
+        return null;
+      }
+
+      print('成功截取圖表，大小: ${byteData.lengthInBytes} bytes');
+      return byteData.buffer.asUint8List();
+    } catch (e) {
+      print('截取圖表失敗：$e');
+      return null;
+    }
+  }
+
   // ==================== UI Build ====================
 
   @override
@@ -1630,25 +1836,30 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
         elevation: 0,
         toolbarHeight: 48, // 縮小 AppBar 高度（預設 56）
       ),
-      body: Column(
+      body: Stack(
         children: [
-          // 步驟進度指示器（暫時移除 Step 2）
-          StepIndicator(
-            currentStep: _currentStep,
-            stepTitles: ['AI燈管設定', /* '台電帳單', */ '攤提時間'],
-            onStepTapped: (index) {
-              setState(() {
-                _currentStep = index; // 更新目前的步驟索引
-              });
-            },
-          ),
+          // 主要內容
+          Column(
+            children: [
+              // 步驟進度指示器（暫時移除 Step 2）
+              StepIndicator(
+                currentStep: _currentStep,
+                stepTitles: ['AI燈管設定', /* '台電帳單', */ '攤提時間'],
+                onStepTapped: (index) {
+                  setState(() {
+                    _currentStep = index; // 更新目前的步驟索引
+                  });
+                },
+              ),
 
-          Expanded(
-            child: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(),
-          ),
+              Expanded(
+                child: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(),
+              ),
 
-          // 底部導航按鈕
-          _buildNavigationButtons(),
+              // 底部導航按鈕
+              _buildNavigationButtons(),
+            ],
+          ),
         ],
       ),
     );
@@ -1926,7 +2137,10 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
       case 0: // Step 1 - 顯示節電成果圖表
         if (powerSavingChart != null) {
           return SingleChildScrollView(
-            child: powerSavingChart!,
+            child: RepaintBoundary(
+              key: _powerSavingChartKey,
+              child: powerSavingChart!,
+            ),
           );
         } else {
           return _buildEmptySidebar('請完成 Step 1 計算以查看圖表');
@@ -1934,7 +2148,10 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
       case 1: // Step 2（攤提時間）- 顯示攤提摘要圖表
         if (paybackSummaryChart != null) {
           return SingleChildScrollView(
-            child: paybackSummaryChart!,
+            child: RepaintBoundary(
+              key: _paybackSummaryChartKey,
+              child: paybackSummaryChart!,
+            ),
           );
         } else {
           return _buildEmptySidebar('請完成攤提時間計算以查看圖表');
@@ -2299,6 +2516,24 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
                 padding: EdgeInsets.symmetric(
                     horizontal: buttonHorizontalPadding,
                     vertical: buttonVerticalPadding),
+              ),
+            ),
+
+          // PDF 匯出按鈕 (僅在計算完成後顯示)
+          if (_currentStep == 1 && step3Calculated)
+            Padding(
+              padding: EdgeInsets.only(left: isMobile ? 4.0 : 8.0),
+              child: ElevatedButton.icon(
+                onPressed: _exportPdf,
+                icon: const Icon(Icons.picture_as_pdf),
+                label: Text(isMobile ? 'PDF' : '匯出 PDF'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange[700],
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(
+                      horizontal: buttonHorizontalPadding,
+                      vertical: buttonVerticalPadding),
+                ),
               ),
             ),
         ],
