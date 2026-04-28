@@ -1719,7 +1719,7 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
       double parkingConsumption = (parkingDaytimeConsumption ?? 0) +
                                    (parkingNighttimeConsumption ?? 0);
 
-      // 呼叫 PDF 生成器 (版本 13.0 - 新格式)
+      // 呼叫 PDF 生成器 (版本 13.1 - 新格式)
       await PdfGenerator.generateAndDownloadReport(
         // 專案資訊
         projectName: projectName,
@@ -1735,6 +1735,12 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
         monthlySavings: monthlySavings?.toStringAsFixed(1) ?? '-',
         oldMonthlyCost: oldMonthlyCost.toStringAsFixed(1),
         newMonthlyCost: newMonthlyCost.toStringAsFixed(1),
+
+        // 亮燈策略百分比（版本 13.1 新增）
+        drivewayBeforeBrightness: drivewayDayBrightnessBefore,
+        drivewayAfterBrightness: drivewayDayBrightnessAfter,
+        parkingBeforeBrightness: parkingDayBrightnessBefore,
+        parkingAfterBrightness: parkingDayBrightnessAfter,
 
         // Step 3 數據 (攤提計算) - 僅租賃模式
         step3LightCount: step3LightCountController.text,

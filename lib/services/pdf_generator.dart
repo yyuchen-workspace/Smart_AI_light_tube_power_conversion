@@ -34,7 +34,7 @@ class PdfGenerator {
     }
   }
 
-  /// 生成並下載 PDF 報告（版本 13.0 - 新格式）
+  /// 生成並下載 PDF 報告（版本 13.1 - 新格式）
   static Future<void> generateAndDownloadReport({
     // 專案資訊
     required String projectName,
@@ -50,6 +50,12 @@ class PdfGenerator {
     required String monthlySavings,
     required String oldMonthlyCost,
     required String newMonthlyCost,
+
+    // 亮燈策略百分比（版本 13.1 新增）
+    required int drivewayBeforeBrightness, // 車道感應前亮度 %
+    required int drivewayAfterBrightness,  // 車道感應後亮度 %
+    required int parkingBeforeBrightness,  // 車位感應前亮度 %
+    required int parkingAfterBrightness,   // 車位感應後亮度 %
 
     // Step 3 數據 (攤提計算) - 僅租賃模式
     required String step3LightCount,
@@ -69,9 +75,8 @@ class PdfGenerator {
     final pdf = pw.Document();
 
     // 計算節省電費
-    final double monthlyCostSaving =
-        (double.tryParse(oldMonthlyCost) ?? 0) -
-            (double.tryParse(newMonthlyCost) ?? 0);
+    final double monthlyCostSaving = (double.tryParse(oldMonthlyCost) ?? 0) -
+        (double.tryParse(newMonthlyCost) ?? 0);
     final double yearlyCostSaving = monthlyCostSaving * 12;
 
     // 計算淨利
@@ -106,8 +111,14 @@ class PdfGenerator {
               monthlySavings: monthlySavings,
               monthlyCostSaving: monthlyCostSaving,
               yearlyCostSaving: yearlyCostSaving,
+              drivewayBeforeBrightness: drivewayBeforeBrightness,
+              drivewayAfterBrightness: drivewayAfterBrightness,
+              parkingBeforeBrightness: parkingBeforeBrightness,
+              parkingAfterBrightness: parkingAfterBrightness,
             ),
-            pw.SizedBox(height: 30),
+
+            // 強制換頁，確保「費用攤提」從新頁開始
+            pw.NewPage(),
 
             // 第二區域：費用攤提
             _buildPaybackSection(
@@ -156,17 +167,23 @@ class PdfGenerator {
         ),
         pw.SizedBox(height: 8),
 
-        // 專案名稱 - 置中對齊標題
-        pw.Text(
-          '專案名：${projectName.isEmpty ? '（未命名）' : projectName}',
-          style: pw.TextStyle(fontSize: 16),
-        ),
-        pw.SizedBox(height: 4),
-
-        // 製表時間 - 置中對齊標題
-        pw.Text(
-          '製表時間：$dateString',
-          style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
+        // 專案名稱與製表時間 - 靠左對齊
+        pw.Container(
+          alignment: pw.Alignment.centerLeft,
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                '專案名：${projectName.isEmpty ? '（未命名）' : projectName}',
+                style: pw.TextStyle(fontSize: 16),
+              ),
+              pw.SizedBox(height: 4),
+              pw.Text(
+                '製表時間：$dateString',
+                style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700),
+              ),
+            ],
+          ),
         ),
         pw.SizedBox(height: 12),
         pw.Divider(thickness: 2),
@@ -186,22 +203,28 @@ class PdfGenerator {
     required String monthlySavings,
     required double monthlyCostSaving,
     required double yearlyCostSaving,
+    required int drivewayBeforeBrightness,
+    required int drivewayAfterBrightness,
+    required int parkingBeforeBrightness,
+    required int parkingAfterBrightness,
   }) {
-    // 使用 Column 並添加 keepTogether 屬性，避免標題和表格分頁
+    // 使用 Column 包裝標題和表格，標題無框線，只有表格有框線
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        // 區域標題
-        pw.Text(
-          '電費估算',
-          style: pw.TextStyle(
-            fontSize: 14,
-            fontWeight: pw.FontWeight.bold,
+        // 標題（無框線）
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(bottom: 8),
+          child: pw.Text(
+            '電費估算',
+            style: pw.TextStyle(
+              fontSize: 14,
+              fontWeight: pw.FontWeight.bold,
+            ),
           ),
         ),
-        pw.SizedBox(height: 12),
 
-        // 主表格
+        // 表格（有框線）
         pw.Table(
           border: pw.TableBorder.all(color: PdfColors.black, width: 1),
           columnWidths: {
@@ -237,7 +260,7 @@ class PdfGenerator {
             // AI T8節電燈管（車道）- 亮度資料移到耗電瓦數欄位
             _buildElectricityRow(
               'AI T8節電燈管（車道）',
-              '感應前:30%\n(3.4W)\n感應後:70%\n(8.6W)',
+              '感應前:$drivewayBeforeBrightness%\n感應後:$drivewayAfterBrightness%',
               '$drivewayCount 支',
               '24小時',
               '${drivewayConsumption.toStringAsFixed(1)} 度',
@@ -247,7 +270,7 @@ class PdfGenerator {
             // AI T8節電燈管（車位）- 亮度資料移到耗電瓦數欄位
             _buildElectricityRow(
               'AI T8節電燈管（車位）',
-              '感應前:0%(0W)\n感應後:50%\n(8.6W)',
+              '感應前:$parkingBeforeBrightness%\n感應後:$parkingAfterBrightness%',
               '$parkingCount 支',
               '24小時',
               '${parkingConsumption.toStringAsFixed(1)} 度',
@@ -307,7 +330,8 @@ class PdfGenerator {
         _buildTableCell(light, isImportant: isImportant),
         _buildTableCell(wattage, isImportant: isImportant),
         _buildTableCell(count, isImportant: isImportant),
-        _buildTableCell(hours, isRed: isRed && hours == '不亮燈', isImportant: isImportant),
+        _buildTableCell(hours,
+            isRed: isRed && hours == '不亮燈', isImportant: isImportant),
         _buildTableCell(consumption, isRed: isRed, isImportant: isImportant),
       ],
     );
@@ -329,87 +353,89 @@ class PdfGenerator {
     final gatewayAmount = (double.tryParse(gatewayCount) ?? 0) *
         (double.tryParse(gatewayUnitPrice) ?? 0);
 
-    // 使用 Column 並確保標題和表格不被分頁分隔
+    // 使用 Column 包裝標題和表格，標題無框線，只有表格有框線
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        // 區域標題
-        pw.Text(
-          '費用攤提',
-          style: pw.TextStyle(
-            fontSize: 14,
-            fontWeight: pw.FontWeight.bold,
+        // 標題（無框線）
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(bottom: 8),
+          child: pw.Text(
+            '費用攤提',
+            style: pw.TextStyle(
+              fontSize: 14,
+              fontWeight: pw.FontWeight.bold,
+            ),
           ),
         ),
-        pw.SizedBox(height: 12),
 
-        // 黑字白底表格
+        // 表格（有框線）
         pw.Table(
-            border: pw.TableBorder.all(color: PdfColors.black, width: 1),
-            columnWidths: {
-              0: const pw.FlexColumnWidth(3),
-              1: const pw.FlexColumnWidth(1.5),
-              2: const pw.FlexColumnWidth(2),
-              3: const pw.FlexColumnWidth(2),
-            },
-            children: [
-              // 表頭（黑底白字）
-              pw.TableRow(
-                decoration: pw.BoxDecoration(color: PdfColors.black),
-                children: [
-                  _buildTableHeaderCell('品項'),
-                  _buildTableHeaderCell('數量'),
-                  _buildTableHeaderCell('月租'),
-                  _buildTableHeaderCell('金額'),
-                ],
-              ),
+          border: pw.TableBorder.all(color: PdfColors.black, width: 1),
+          columnWidths: {
+            0: const pw.FlexColumnWidth(3),
+            1: const pw.FlexColumnWidth(1.5),
+            2: const pw.FlexColumnWidth(2),
+            3: const pw.FlexColumnWidth(2),
+          },
+          children: [
+            // 表頭（黑底白字）
+            pw.TableRow(
+              decoration: pw.BoxDecoration(color: PdfColors.black),
+              children: [
+                _buildTableHeaderCell('品項'),
+                _buildTableHeaderCell('數量'),
+                _buildTableHeaderCell('月租'),
+                _buildTableHeaderCell('金額'),
+              ],
+            ),
 
-              // AI T8節電燈管
-              _buildPaybackRow(
-                'AI T8節電燈管',
-                step3LightCount,
-                '$lightUnitPrice/支',
-                '${lightAmount.toStringAsFixed(0)}',
-              ),
+            // AI T8節電燈管
+            _buildPaybackRow(
+              'AI T8節電燈管',
+              step3LightCount,
+              '$lightUnitPrice/支',
+              '${lightAmount.toStringAsFixed(0)}',
+            ),
 
-              // 邊緣中控網關
-              _buildPaybackRow(
-                '邊緣中控網關',
-                gatewayCount,
-                '$gatewayUnitPrice/台',
-                '${gatewayAmount.toStringAsFixed(0)}',
-              ),
+            // 邊緣中控網關
+            _buildPaybackRow(
+              '邊緣中控網關',
+              gatewayCount,
+              '$gatewayUnitPrice/台',
+              '${gatewayAmount.toStringAsFixed(0)}',
+            ),
 
-              // 設備月租費（重要行，加大字體）
-              _buildPaybackRow(
-                '設備月租費',
-                '-',
-                '-',
-                '$monthlyRental\$',
-                isImportant: true,
-              ),
+            // 設備月租費（重要行，加大字體）
+            _buildPaybackRow(
+              '設備月租費',
+              '-',
+              '-',
+              '$monthlyRental\$',
+              isImportant: true,
+            ),
 
-              // 社區電費淨利(月)（重要行，加大字體，紅色）
-              _buildPaybackRow(
-                '社區電費淨利(月)',
-                '-',
-                '-',
-                '${monthlySaving.toStringAsFixed(0)}\$',
-                isRed: true,
-                isImportant: true,
-              ),
+            // 社區電費淨利(月)（重要行，加大字體，紅色）
+            _buildPaybackRow(
+              '社區電費淨利(月)',
+              '-',
+              '-',
+              '${monthlySaving.toStringAsFixed(0)}\$',
+              isRed: true,
+              isImportant: true,
+            ),
 
-              // 社區電費淨利(年)（重要行，加大字體，紅色）
-              _buildPaybackRow(
-                '社區電費淨利(年)',
-                '-',
-                '-',
-                '${yearlySaving.toStringAsFixed(0)}\$',
-                isRed: true,
-                isImportant: true,
-              ),
-            ],
-          ),
+            // 社區電費淨利(年)（重要行，加大字體，紅色）
+            _buildPaybackRow(
+              '社區電費淨利(年)',
+              '-',
+              '-',
+              '${yearlySaving.toStringAsFixed(0)}\$',
+              isRed: true,
+              isImportant: true,
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -506,7 +532,7 @@ class PdfGenerator {
                   pw.SizedBox(height: 8),
                   if (chart1Image != null)
                     pw.Container(
-                      height: 250,
+                      height: 350,
                       child: pw.Image(
                         pw.MemoryImage(chart1Image),
                         fit: pw.BoxFit.contain,
@@ -514,7 +540,7 @@ class PdfGenerator {
                     )
                   else
                     pw.Container(
-                      height: 250,
+                      height: 350,
                       padding: const pw.EdgeInsets.all(20),
                       alignment: pw.Alignment.center,
                       decoration: pw.BoxDecoration(
@@ -549,7 +575,7 @@ class PdfGenerator {
                   pw.SizedBox(height: 8),
                   if (chart2Image != null)
                     pw.Container(
-                      height: 250,
+                      height: 350,
                       child: pw.Image(
                         pw.MemoryImage(chart2Image),
                         fit: pw.BoxFit.contain,
@@ -557,7 +583,7 @@ class PdfGenerator {
                     )
                   else
                     pw.Container(
-                      height: 250,
+                      height: 350,
                       padding: const pw.EdgeInsets.all(20),
                       alignment: pw.Alignment.center,
                       decoration: pw.BoxDecoration(
@@ -587,7 +613,8 @@ class PdfGenerator {
 
     // 只使用日期（年-月-日），不包含時間
     final now = DateTime.now();
-    final dateString = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final dateString =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
     final filename = projectName.isEmpty
         ? 'AI燈管節電效能評估_$dateString.pdf'

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+//step3
 /// 攤提時間摘要圖表
 ///
 /// 根據租賃/買斷模式顯示不同內容：
@@ -87,15 +88,10 @@ class PaybackSummaryChart extends StatelessWidget {
 
         SizedBox(height: 12),
 
-        // 每月淨利卡片
-        _buildInfoCard(
-          iconColor: Colors.green[600]!,
-          title: '每月淨利',
-          value: monthlySaving ?? 0,
-          unit: '元/月',
-          backgroundColor: Colors.green[50]!,
-          emoji: '😊', // 省錢開心
-          showCrown: true, // 顯示皇冠圖示
+        // 淨利卡片（月淨利 + 年淨利合併顯示）
+        _buildCombinedProfitCard(
+          monthlySaving: monthlySaving ?? 0,
+          yearlySaving: (monthlySaving ?? 0) * 12,
         ),
       ],
     );
@@ -185,6 +181,7 @@ class PaybackSummaryChart extends StatelessWidget {
       children: [
         // 主卡片
         Container(
+          width: double.infinity,
           padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: backgroundColor,
@@ -280,6 +277,124 @@ class PaybackSummaryChart extends StatelessWidget {
               ),
             ),
           ),
+      ],
+    );
+  }
+
+  /// 建立合併淨利卡片（月淨利 + 年淨利上下排列）
+  Widget _buildCombinedProfitCard({
+    required double monthlySaving,
+    required double yearlySaving,
+  }) {
+    final Color iconColor = Colors.green[600]!;
+    final Color backgroundColor = Colors.green[50]!;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // 主卡片
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: iconColor.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            children: [
+              // Emoji
+              Text(
+                '😊',
+                style: TextStyle(fontSize: 32),
+              ),
+              SizedBox(height: 12),
+
+              // 月淨利標題
+              Text(
+                '月淨利',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 8),
+
+              // 月淨利數值
+              RichText(
+                text: TextSpan(
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: iconColor,
+                  ),
+                  children: [
+                    TextSpan(text: monthlySaving.toStringAsFixed(0)),
+                    TextSpan(
+                      text: ' 元/月',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.normal,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 16),
+
+              // 年淨利標題
+              Text(
+                '年淨利',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 8),
+
+              // 年淨利數值
+              RichText(
+                text: TextSpan(
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: iconColor,
+                  ),
+                  children: [
+                    TextSpan(text: yearlySaving.toStringAsFixed(0)),
+                    TextSpan(
+                      text: ' 元/年',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.normal,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // 皇冠圖示（卡片外部右上角，斜向）
+        Positioned(
+          top: -8,
+          right: -8,
+          child: Transform.rotate(
+            angle: 0.35, // 約 20 度傾斜
+            child: Text(
+              '👑',
+              style: TextStyle(fontSize: 28),
+            ),
+          ),
+        ),
       ],
     );
   }

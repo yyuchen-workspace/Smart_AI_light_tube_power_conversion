@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
+//step 1
 /// 節電成果環形進度圖
 ///
 /// 顯示節電百分比（環形進度）和關鍵節省數據
@@ -79,7 +80,9 @@ class PowerSavingChart extends StatelessWidget {
                           value: isNegativeSavings
                               ? savingsRate.abs().clamp(0, 100)
                               : (savingsRate >= 100 ? 100 : savingsRate),
-                          color: isNegativeSavings ? Colors.grey[500] : Colors.green[600],
+                          color: isNegativeSavings
+                              ? Colors.grey[500]
+                              : Colors.green[600],
                           radius: 25,
                           showTitle: false,
                         ),
@@ -112,7 +115,9 @@ class PowerSavingChart extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
-                        color: isNegativeSavings ? Colors.grey[600] : Colors.green[700],
+                        color: isNegativeSavings
+                            ? Colors.grey[600]
+                            : Colors.green[700],
                       ),
                     ),
                     Text(
@@ -176,7 +181,8 @@ class PowerSavingChart extends StatelessWidget {
                 // 第一行：度數
                 _buildTableRow(
                   label: '度數',
-                  oldValue: '${traditionalMonthlyConsumption.toStringAsFixed(1)}',
+                  oldValue:
+                      '${traditionalMonthlyConsumption.toStringAsFixed(1)}',
                   newValue: '${aiMonthlyConsumption.toStringAsFixed(1)}',
                   unit: '度/月',
                 ),
@@ -187,6 +193,14 @@ class PowerSavingChart extends StatelessWidget {
                   label: '每月電費',
                   oldValue: '${oldMonthlyCost.toStringAsFixed(0)}',
                   newValue: '${newMonthlyCost.toStringAsFixed(0)}',
+                  unit: '元',
+                ),
+
+                // 第三行：每年電費
+                _buildTableRow(
+                  label: '每年電費',
+                  oldValue: '${(oldMonthlyCost * 12).toStringAsFixed(0)}',
+                  newValue: '${(newMonthlyCost * 12).toStringAsFixed(0)}',
                   unit: '元',
                 ),
               ],
@@ -209,9 +223,19 @@ class PowerSavingChart extends StatelessWidget {
           _buildSavingDataRow(
             icon: Icons.trending_down,
             iconColor: Colors.blue[800]!,
-            label: '共節省電費',
+            label: '共節省電費(月)',
             value: '${(oldMonthlyCost - newMonthlyCost).toStringAsFixed(0)}',
             unit: '元/月',
+            isHighlight: true,
+          ),
+          SizedBox(height: 10),
+
+          _buildSavingDataRow(
+            icon: Icons.trending_down,
+            iconColor: Colors.blue[800]!,
+            label: '共節省電費(年)',
+            value: '${((oldMonthlyCost - newMonthlyCost) * 12).toStringAsFixed(0)}',
+            unit: '元/年',
             isHighlight: true,
           ),
         ],
