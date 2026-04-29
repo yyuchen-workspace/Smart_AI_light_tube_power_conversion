@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../utils/number_formatter.dart'; // 版本 14.0
 
 //step 1
 /// 節電成果環形進度圖
@@ -181,26 +182,29 @@ class PowerSavingChart extends StatelessWidget {
                 // 第一行：度數
                 _buildTableRow(
                   label: '度數',
-                  oldValue:
-                      '${traditionalMonthlyConsumption.toStringAsFixed(1)}',
-                  newValue: '${aiMonthlyConsumption.toStringAsFixed(1)}',
+                  oldValue: NumberFormatter.formatWithComma(
+                      traditionalMonthlyConsumption,
+                      decimals: 1),
+                  newValue: NumberFormatter.formatWithComma(
+                      aiMonthlyConsumption,
+                      decimals: 1),
                   unit: '度/月',
                 ),
                 SizedBox(height: 12),
 
-                // 第二行：每月電費
+                // 第二行：每月電費（版本 14.0 加入千分位）
                 _buildTableRow(
                   label: '每月電費',
-                  oldValue: '${oldMonthlyCost.toStringAsFixed(0)}',
-                  newValue: '${newMonthlyCost.toStringAsFixed(0)}',
+                  oldValue: NumberFormatter.formatWithComma(oldMonthlyCost, decimals: 0),
+                  newValue: NumberFormatter.formatWithComma(newMonthlyCost, decimals: 0),
                   unit: '元',
                 ),
 
-                // 第三行：每年電費
+                // 第三行：每年電費（版本 14.0 加入千分位）
                 _buildTableRow(
                   label: '每年電費',
-                  oldValue: '${(oldMonthlyCost * 12).toStringAsFixed(0)}',
-                  newValue: '${(newMonthlyCost * 12).toStringAsFixed(0)}',
+                  oldValue: NumberFormatter.formatWithComma(oldMonthlyCost * 12, decimals: 0),
+                  newValue: NumberFormatter.formatWithComma(newMonthlyCost * 12, decimals: 0),
                   unit: '元',
                 ),
               ],
@@ -214,7 +218,7 @@ class PowerSavingChart extends StatelessWidget {
             icon: Icons.trending_down,
             iconColor: Colors.blue[800]!,
             label: '每月節電',
-            value: '${monthlySavings.toStringAsFixed(1)}',
+            value: NumberFormatter.formatWithComma(monthlySavings, decimals: 1),
             unit: '度',
             isHighlight: true,
           ),
@@ -224,7 +228,7 @@ class PowerSavingChart extends StatelessWidget {
             icon: Icons.trending_down,
             iconColor: Colors.blue[800]!,
             label: '共節省電費(月)',
-            value: '${(oldMonthlyCost - newMonthlyCost).toStringAsFixed(0)}',
+            value: NumberFormatter.formatWithComma(oldMonthlyCost - newMonthlyCost, decimals: 0),
             unit: '元/月',
             isHighlight: true,
           ),
@@ -234,7 +238,7 @@ class PowerSavingChart extends StatelessWidget {
             icon: Icons.trending_down,
             iconColor: Colors.blue[800]!,
             label: '共節省電費(年)',
-            value: '${((oldMonthlyCost - newMonthlyCost) * 12).toStringAsFixed(0)}',
+            value: NumberFormatter.formatWithComma((oldMonthlyCost - newMonthlyCost) * 12, decimals: 0),
             unit: '元/年',
             isHighlight: true,
           ),

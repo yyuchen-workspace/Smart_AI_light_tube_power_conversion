@@ -147,6 +147,12 @@ class _CalculatorPageState extends State<CalculatorPage> {
   final TextEditingController step3LightCountController =
       TextEditingController(text: '0');
 
+  // 買斷模式額外費用（版本 14.0 新增）
+  final TextEditingController installationFeeController =
+      TextEditingController(text: '150'); // 安裝工程費，預設 150 元/支
+  final TextEditingController setupFeeController =
+      TextEditingController(text: '2500'); // 設定費（一次性），預設 2500 元
+
   // 網關
   String? gatewayPricingMethod = '租賃'; // 預設租賃
   final TextEditingController gatewayRentalPriceController =
@@ -208,6 +214,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
     totalMonthlySavingController.dispose();
     buyoutTotalController.dispose();
     paybackPeriodController.dispose();
+    installationFeeController.dispose(); // 版本 14.0
+    setupFeeController.dispose(); // 版本 14.0
     _mobileScrollController.dispose();
     super.dispose();
   }
@@ -484,15 +492,8 @@ class _CalculatorPageState extends State<CalculatorPage> {
         return '''共節省電費-每月租賃費用（燈管＋網關）
 =${totalSaving.toStringAsFixed(1)}-${rentalFee.toStringAsFixed(1)}=${netSaving.toStringAsFixed(1)}元''';
 
-      case '買斷總費用':
-        double buyoutPrice = double.tryParse(buyoutPriceController.text) ?? 0;
-        double step3LightCount =
-            double.tryParse(step3LightCountController.text) ?? 0;
-        double totalBuyout = buyoutPrice * step3LightCount;
-        return '''每支燈管買斷費*燈管支數
-=${buyoutPrice.toStringAsFixed(0)}*${step3LightCount.toStringAsFixed(0)}=${totalBuyout.toStringAsFixed(1)}元''';
-
       case '買斷總費用（燈管＋網關）':
+      case '買斷總費用': // 版本 14.0 更新，合併處理
         double buyoutPrice = double.tryParse(buyoutPriceController.text) ?? 0;
         double step3LightCount =
             double.tryParse(step3LightCountController.text) ?? 0;
@@ -503,10 +504,15 @@ class _CalculatorPageState extends State<CalculatorPage> {
         double gatewayCount = double.tryParse(gatewayCountController.text) ?? 0;
         double gatewayBuyout = gatewayBuyoutPrice * gatewayCount;
 
-        double totalBuyout = lightBuyout + gatewayBuyout;
-        return '''(每支燈管買斷費*燈管支數)+(每台網關買斷費*網關數量)
-=(${buyoutPrice.toStringAsFixed(0)}*${step3LightCount.toStringAsFixed(0)})+(${gatewayBuyoutPrice.toStringAsFixed(0)}*${gatewayCount.toStringAsFixed(0)})
-=${lightBuyout.toStringAsFixed(1)}+${gatewayBuyout.toStringAsFixed(1)}=${totalBuyout.toStringAsFixed(1)}元''';
+        double installationFee = double.tryParse(installationFeeController.text) ?? 0;
+        double installationTotal = installationFee * step3LightCount;
+
+        double setupFee = double.tryParse(setupFeeController.text) ?? 0;
+
+        double totalBuyout = lightBuyout + gatewayBuyout + installationTotal + setupFee;
+        return '''燈管買斷費*支數 + 網關買斷費*個數 + 安裝工程費*支數 + 設定費
+=(${buyoutPrice.toStringAsFixed(0)}*${step3LightCount.toStringAsFixed(0)})+(${gatewayBuyoutPrice.toStringAsFixed(0)}*${gatewayCount.toStringAsFixed(0)})+(${installationFee.toStringAsFixed(0)}*${step3LightCount.toStringAsFixed(0)})+${setupFee.toStringAsFixed(0)}
+=${lightBuyout.toStringAsFixed(1)}+${gatewayBuyout.toStringAsFixed(1)}+${installationTotal.toStringAsFixed(1)}+${setupFee.toStringAsFixed(1)}=${totalBuyout.toStringAsFixed(1)}元''';
 
       case '多久時間攤提(月)':
         double savingUnits = monthlySavings ?? 0;
@@ -524,10 +530,15 @@ class _CalculatorPageState extends State<CalculatorPage> {
               double.tryParse(gatewayCountController.text) ?? 0;
           double gatewayBuyout = gatewayBuyoutPrice * gatewayCount;
 
-          buyoutTotal = lightBuyout + gatewayBuyout;
+          // 版本 14.0 新增：安裝工程費和設定費
+          double installationFee = double.tryParse(installationFeeController.text) ?? 0;
+          double installationTotal = installationFee * step3LightCount;
+          double setupFee = double.tryParse(setupFeeController.text) ?? 0;
+
+          buyoutTotal = lightBuyout + gatewayBuyout + installationTotal + setupFee;
         }
         double paybackPeriod = totalSaving > 0 ? buyoutTotal / totalSaving : 0;
-        return '''買斷總費用（燈管＋網關）/共節省電費
+        return '''買斷總費用/共節省電費
 =${buyoutTotal.toStringAsFixed(1)}/${totalSaving.toStringAsFixed(1)}=${paybackPeriod.toStringAsFixed(1)}個月''';
 
       default:
@@ -1385,8 +1396,15 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
                 double.parse(gatewayBuyoutPriceController.text);
             double gatewayBuyout = gatewayBuyoutPrice * gatewayCount;
 
-            // 總買斷費用（燈管+網關）
-            double buyoutTotal = lightBuyout + gatewayBuyout;
+            // 安裝工程費（版本 14.0 新增）
+            double installationFee = double.parse(installationFeeController.text);
+            double installationTotal = installationFee * step3LightCount;
+
+            // 設定費（版本 14.0 新增）
+            double setupFee = double.parse(setupFeeController.text);
+
+            // 總買斷費用（版本 14.0 更新公式：燈管+網關+安裝工程費+設定費）
+            double buyoutTotal = lightBuyout + gatewayBuyout + installationTotal + setupFee;
             double paybackPeriod = buyoutTotal / totalMonthlySavingAmount;
 
             buyoutTotalController.text =
@@ -1569,8 +1587,15 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
                   double.parse(gatewayBuyoutPriceController.text);
               double gatewayBuyout = gatewayBuyoutPrice * gatewayCount;
 
-              // 總買斷費用（燈管+網關）
-              double buyoutTotal = lightBuyout + gatewayBuyout;
+              // 安裝工程費（版本 14.0 新增）
+              double installationFee = double.parse(installationFeeController.text);
+              double installationTotal = installationFee * step3LightCount;
+
+              // 設定費（版本 14.0 新增）
+              double setupFee = double.parse(setupFeeController.text);
+
+              // 總買斷費用（版本 14.0 更新公式：燈管+網關+安裝工程費+設定費）
+              double buyoutTotal = lightBuyout + gatewayBuyout + installationTotal + setupFee;
               double paybackPeriod = buyoutTotal / totalMonthlySavingAmount;
 
               buyoutTotalController.text =
@@ -1719,7 +1744,34 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
       double parkingConsumption = (parkingDaytimeConsumption ?? 0) +
                                    (parkingNighttimeConsumption ?? 0);
 
-      // 呼叫 PDF 生成器 (版本 13.1 - 新格式)
+      // 計算時段長度（版本 13.1 新增）
+      double drivewayDayHours;
+      double drivewayNightHours;
+      if (drivewayAllDay) {
+        drivewayDayHours = 24.0;
+        drivewayNightHours = 0.0;
+      } else {
+        double dayStart = drivewayDaytimeStart.hour + drivewayDaytimeStart.minute / 60.0;
+        double dayEnd = drivewayDaytimeEnd.hour + drivewayDaytimeEnd.minute / 60.0;
+        double dayDiff = dayEnd - dayStart;
+        drivewayDayHours = dayDiff < 0 ? dayDiff + 24 : dayDiff;
+        drivewayNightHours = 24.0 - drivewayDayHours;
+      }
+
+      double parkingDayHours;
+      double parkingNightHours;
+      if (parkingAllDay) {
+        parkingDayHours = 24.0;
+        parkingNightHours = 0.0;
+      } else {
+        double dayStart = parkingDaytimeStart.hour + parkingDaytimeStart.minute / 60.0;
+        double dayEnd = parkingDaytimeEnd.hour + parkingDaytimeEnd.minute / 60.0;
+        double dayDiff = dayEnd - dayStart;
+        parkingDayHours = dayDiff < 0 ? dayDiff + 24 : dayDiff;
+        parkingNightHours = 24.0 - parkingDayHours;
+      }
+
+      // 呼叫 PDF 生成器 (版本 13.1 - 新格式，日間/夜間分離)
       await PdfGenerator.generateAndDownloadReport(
         // 專案資訊
         projectName: projectName,
@@ -1736,13 +1788,29 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
         oldMonthlyCost: oldMonthlyCost.toStringAsFixed(1),
         newMonthlyCost: newMonthlyCost.toStringAsFixed(1),
 
-        // 亮燈策略百分比（版本 13.1 新增）
-        drivewayBeforeBrightness: drivewayDayBrightnessBefore,
-        drivewayAfterBrightness: drivewayDayBrightnessAfter,
-        parkingBeforeBrightness: parkingDayBrightnessBefore,
-        parkingAfterBrightness: parkingDayBrightnessAfter,
+        // 亮燈策略百分比與時段（版本 13.1 更新 - 分日間/夜間）
+        drivewayDayBrightnessBefore: drivewayDayBrightnessBefore,
+        drivewayDayBrightnessAfter: drivewayDayBrightnessAfter,
+        drivewayNightBrightnessBefore: drivewayNightBrightnessBefore,
+        drivewayNightBrightnessAfter: drivewayNightBrightnessAfter,
+        parkingDayBrightnessBefore: parkingDayBrightnessBefore,
+        parkingDayBrightnessAfter: parkingDayBrightnessAfter,
+        parkingNightBrightnessBefore: parkingNightBrightnessBefore,
+        parkingNightBrightnessAfter: parkingNightBrightnessAfter,
 
-        // Step 3 數據 (攤提計算) - 僅租賃模式
+        // 時段長度
+        drivewayDayHours: drivewayDayHours,
+        drivewayNightHours: drivewayNightHours,
+        parkingDayHours: parkingDayHours,
+        parkingNightHours: parkingNightHours,
+
+        // 日間/夜間耗電量
+        drivewayDayConsumption: drivewayDaytimeConsumption ?? 0,
+        drivewayNightConsumption: drivewayNighttimeConsumption ?? 0,
+        parkingDayConsumption: parkingDaytimeConsumption ?? 0,
+        parkingNightConsumption: parkingNighttimeConsumption ?? 0,
+
+        // Step 3 數據 (攤提計算) - 版本 14.0 支援租賃/買斷
         step3LightCount: step3LightCountController.text,
         lightUnitPrice: pricingMethod == '租賃'
             ? rentalPriceController.text
@@ -1751,8 +1819,11 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
         gatewayUnitPrice: gatewayPricingMethod == '租賃'
             ? gatewayRentalPriceController.text
             : gatewayBuyoutPriceController.text,
+        isRentalMode: pricingMethod == '租賃',
         monthlyRental: monthlyRentalController.text,
         monthlySaving: totalMonthlySavingController.text,
+        buyoutTotal: buyoutTotalController.text,
+        paybackPeriod: paybackPeriodController.text,
 
         // 圖表圖片
         chart1Image: chart1Image,
@@ -2104,6 +2175,10 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
       totalMonthlySavingController: totalMonthlySavingController,
       buyoutTotalController: buyoutTotalController,
       paybackPeriodController: paybackPeriodController,
+      installationFeeController: installationFeeController, // 版本 14.0
+      onInstallationFeeChanged: (_) => setState(() {}), // 版本 14.0
+      setupFeeController: setupFeeController, // 版本 14.0
+      onSetupFeeChanged: (_) => setState(() {}), // 版本 14.0
       onInfoTap: _showFieldInfo,
       onCalculateStep3: _calculateStep3,
       step1Calculated: step1Calculated,
@@ -2391,6 +2466,10 @@ ${perLightWattage.toStringAsFixed(2)}W *$count支燈管*30天/1000=${monthlyCons
           totalMonthlySavingController: totalMonthlySavingController,
           buyoutTotalController: buyoutTotalController,
           paybackPeriodController: paybackPeriodController,
+          installationFeeController: installationFeeController, // 版本 14.0
+          onInstallationFeeChanged: (_) => setState(() {}), // 版本 14.0
+          setupFeeController: setupFeeController, // 版本 14.0
+          onSetupFeeChanged: (_) => setState(() {}), // 版本 14.0
           onInfoTap: _showFieldInfo,
           onCalculateStep3: _calculateStep3,
           step1Calculated: step1Calculated,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../utils/number_formatter.dart'; // 版本 14.0
 
 //step3
 /// 攤提時間摘要圖表
@@ -149,7 +150,7 @@ class PaybackSummaryChart extends StatelessWidget {
               SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  '攤提期間過後，每月可節省 ${(monthlyElectricitySaving ?? 0).toStringAsFixed(0)} 元電費 💰',
+                  '攤提期間過後，每月可節省 ${NumberFormatter.formatWithComma(monthlyElectricitySaving ?? 0, decimals: 0)} 元電費 💰',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[700],
@@ -227,7 +228,7 @@ class PaybackSummaryChart extends StatelessWidget {
                     color: iconColor,
                   ),
                   children: [
-                    TextSpan(text: value.toStringAsFixed(0)),
+                    TextSpan(text: NumberFormatter.formatWithComma(value, decimals: 0)),
                     TextSpan(
                       text: ' $unit',
                       style: TextStyle(
@@ -331,7 +332,7 @@ class PaybackSummaryChart extends StatelessWidget {
                     color: iconColor,
                   ),
                   children: [
-                    TextSpan(text: monthlySaving.toStringAsFixed(0)),
+                    TextSpan(text: NumberFormatter.formatWithComma(monthlySaving, decimals: 0)),
                     TextSpan(
                       text: ' 元/月',
                       style: TextStyle(
@@ -367,7 +368,7 @@ class PaybackSummaryChart extends StatelessWidget {
                     color: iconColor,
                   ),
                   children: [
-                    TextSpan(text: yearlySaving.toStringAsFixed(0)),
+                    TextSpan(text: NumberFormatter.formatWithComma(yearlySaving, decimals: 0)),
                     TextSpan(
                       text: ' 元/年',
                       style: TextStyle(

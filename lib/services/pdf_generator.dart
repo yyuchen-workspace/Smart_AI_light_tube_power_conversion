@@ -51,19 +51,38 @@ class PdfGenerator {
     required String oldMonthlyCost,
     required String newMonthlyCost,
 
-    // 亮燈策略百分比（版本 13.1 新增）
-    required int drivewayBeforeBrightness, // 車道感應前亮度 %
-    required int drivewayAfterBrightness,  // 車道感應後亮度 %
-    required int parkingBeforeBrightness,  // 車位感應前亮度 %
-    required int parkingAfterBrightness,   // 車位感應後亮度 %
+    // 亮燈策略百分比與時段（版本 13.1 更新 - 分日間/夜間）
+    required int drivewayDayBrightnessBefore,    // 車道日間感應前亮度 %
+    required int drivewayDayBrightnessAfter,     // 車道日間感應後亮度 %
+    required int drivewayNightBrightnessBefore,  // 車道夜間感應前亮度 %
+    required int drivewayNightBrightnessAfter,   // 車道夜間感應後亮度 %
+    required int parkingDayBrightnessBefore,     // 車位日間感應前亮度 %
+    required int parkingDayBrightnessAfter,      // 車位日間感應後亮度 %
+    required int parkingNightBrightnessBefore,   // 車位夜間感應前亮度 %
+    required int parkingNightBrightnessAfter,    // 車位夜間感應後亮度 %
+    required double drivewayDayHours,            // 車道日間時段長度(小時)
+    required double drivewayNightHours,          // 車道夜間時段長度(小時)
+    required double parkingDayHours,             // 車位日間時段長度(小時)
+    required double parkingNightHours,           // 車位夜間時段長度(小時)
+    required double drivewayDayConsumption,      // 車道日間耗電(度/月)
+    required double drivewayNightConsumption,    // 車道夜間耗電(度/月)
+    required double parkingDayConsumption,       // 車位日間耗電(度/月)
+    required double parkingNightConsumption,     // 車位夜間耗電(度/月)
 
-    // Step 3 數據 (攤提計算) - 僅租賃模式
+    // Step 3 數據 (攤提計算) - 版本 14.0 支援租賃/買斷
     required String step3LightCount,
     required String lightUnitPrice,
     required String gatewayCount,
     required String gatewayUnitPrice,
-    required String monthlyRental,
-    required String monthlySaving,
+    required bool isRentalMode, // 是否為租賃模式（版本 14.0 新增）
+
+    // 租賃模式專用參數
+    required String monthlyRental, // 每月租賃費用
+    required String monthlySaving, // 每月淨利
+
+    // 買斷模式專用參數
+    required String buyoutTotal, // 買斷總費用
+    required String paybackPeriod, // 攤提時間(月)
 
     // 圖表圖片（可選，未來實作）
     Uint8List? chart1Image,
@@ -106,29 +125,42 @@ class PdfGenerator {
               oldLightCount: oldLightCount,
               oldLightWattage: oldLightWattage,
               oldMonthlyConsumption: oldMonthlyConsumption,
-              drivewayConsumption: drivewayConsumption,
-              parkingConsumption: parkingConsumption,
               monthlySavings: monthlySavings,
               monthlyCostSaving: monthlyCostSaving,
               yearlyCostSaving: yearlyCostSaving,
-              drivewayBeforeBrightness: drivewayBeforeBrightness,
-              drivewayAfterBrightness: drivewayAfterBrightness,
-              parkingBeforeBrightness: parkingBeforeBrightness,
-              parkingAfterBrightness: parkingAfterBrightness,
+              drivewayDayBrightnessBefore: drivewayDayBrightnessBefore,
+              drivewayDayBrightnessAfter: drivewayDayBrightnessAfter,
+              drivewayNightBrightnessBefore: drivewayNightBrightnessBefore,
+              drivewayNightBrightnessAfter: drivewayNightBrightnessAfter,
+              parkingDayBrightnessBefore: parkingDayBrightnessBefore,
+              parkingDayBrightnessAfter: parkingDayBrightnessAfter,
+              parkingNightBrightnessBefore: parkingNightBrightnessBefore,
+              parkingNightBrightnessAfter: parkingNightBrightnessAfter,
+              drivewayDayHours: drivewayDayHours,
+              drivewayNightHours: drivewayNightHours,
+              parkingDayHours: parkingDayHours,
+              parkingNightHours: parkingNightHours,
+              drivewayDayConsumption: drivewayDayConsumption,
+              drivewayNightConsumption: drivewayNightConsumption,
+              parkingDayConsumption: parkingDayConsumption,
+              parkingNightConsumption: parkingNightConsumption,
             ),
 
             // 強制換頁，確保「費用攤提」從新頁開始
             pw.NewPage(),
 
-            // 第二區域：費用攤提
+            // 第二區域：費用攤提（版本 14.0 - 支援租賃/買斷）
             _buildPaybackSection(
               step3LightCount: step3LightCount,
               lightUnitPrice: lightUnitPrice,
               gatewayCount: gatewayCount,
               gatewayUnitPrice: gatewayUnitPrice,
+              isRentalMode: isRentalMode,
               monthlyRental: monthlyRental,
               monthlySaving: monthlySavingValue,
               yearlySaving: yearlySavingValue,
+              buyoutTotal: buyoutTotal,
+              paybackPeriod: paybackPeriod,
             ),
 
             // 第三區域：圖表
@@ -198,15 +230,25 @@ class PdfGenerator {
     required String oldLightCount,
     required String oldLightWattage,
     required String oldMonthlyConsumption,
-    required double drivewayConsumption,
-    required double parkingConsumption,
     required String monthlySavings,
     required double monthlyCostSaving,
     required double yearlyCostSaving,
-    required int drivewayBeforeBrightness,
-    required int drivewayAfterBrightness,
-    required int parkingBeforeBrightness,
-    required int parkingAfterBrightness,
+    required int drivewayDayBrightnessBefore,
+    required int drivewayDayBrightnessAfter,
+    required int drivewayNightBrightnessBefore,
+    required int drivewayNightBrightnessAfter,
+    required int parkingDayBrightnessBefore,
+    required int parkingDayBrightnessAfter,
+    required int parkingNightBrightnessBefore,
+    required int parkingNightBrightnessAfter,
+    required double drivewayDayHours,
+    required double drivewayNightHours,
+    required double parkingDayHours,
+    required double parkingNightHours,
+    required double drivewayDayConsumption,
+    required double drivewayNightConsumption,
+    required double parkingDayConsumption,
+    required double parkingNightConsumption,
   }) {
     // 使用 Column 包裝標題和表格，標題無框線，只有表格有框線
     return pw.Column(
@@ -257,23 +299,43 @@ class PdfGenerator {
               isRed: false,
             ),
 
-            // AI T8節電燈管（車道）- 亮度資料移到耗電瓦數欄位
+            // 車道日間 AI T8節電燈管
             _buildElectricityRow(
-              'AI T8節電燈管（車道）',
-              '感應前:$drivewayBeforeBrightness%\n感應後:$drivewayAfterBrightness%',
+              '(車道)\n日間AI T8節電燈管',
+              '感應前:$drivewayDayBrightnessBefore%\n感應後:$drivewayDayBrightnessAfter%',
               '$drivewayCount 支',
-              '24小時',
-              '${drivewayConsumption.toStringAsFixed(1)} 度',
+              '${drivewayDayHours.toStringAsFixed(1)}小時',
+              '${drivewayDayConsumption.toStringAsFixed(1)} 度',
               isRed: false,
             ),
 
-            // AI T8節電燈管（車位）- 亮度資料移到耗電瓦數欄位
+            // 車道夜間 AI T8節電燈管
             _buildElectricityRow(
-              'AI T8節電燈管（車位）',
-              '感應前:$parkingBeforeBrightness%\n感應後:$parkingAfterBrightness%',
+              '(車道)\n夜間AI T8節電燈管',
+              '感應前:$drivewayNightBrightnessBefore%\n感應後:$drivewayNightBrightnessAfter%',
+              '$drivewayCount 支',
+              '${drivewayNightHours.toStringAsFixed(1)}小時',
+              '${drivewayNightConsumption.toStringAsFixed(1)} 度',
+              isRed: false,
+            ),
+
+            // 車位日間 AI T8節電燈管
+            _buildElectricityRow(
+              '(車位)\n日間AI T8節電燈管',
+              '感應前:$parkingDayBrightnessBefore%\n感應後:$parkingDayBrightnessAfter%',
               '$parkingCount 支',
-              '24小時',
-              '${parkingConsumption.toStringAsFixed(1)} 度',
+              '${parkingDayHours.toStringAsFixed(1)}小時',
+              '${parkingDayConsumption.toStringAsFixed(1)} 度',
+              isRed: false,
+            ),
+
+            // 車位夜間 AI T8節電燈管
+            _buildElectricityRow(
+              '(車位)\n夜間AI T8節電燈管',
+              '感應前:$parkingNightBrightnessBefore%\n感應後:$parkingNightBrightnessAfter%',
+              '$parkingCount 支',
+              '${parkingNightHours.toStringAsFixed(1)}小時',
+              '${parkingNightConsumption.toStringAsFixed(1)} 度',
               isRed: false,
             ),
 
@@ -337,15 +399,18 @@ class PdfGenerator {
     );
   }
 
-  /// 建立第二區域：費用攤提（黑字白底表格）
+  /// 建立第二區域：費用攤提（黑字白底表格）- 版本 14.0 支援租賃/買斷
   static pw.Widget _buildPaybackSection({
     required String step3LightCount,
     required String lightUnitPrice,
     required String gatewayCount,
     required String gatewayUnitPrice,
-    required String monthlyRental,
-    required double monthlySaving,
-    required double yearlySaving,
+    required bool isRentalMode, // 是否為租賃模式
+    required String monthlyRental, // 租賃模式專用
+    required double monthlySaving, // 租賃模式專用
+    required double yearlySaving, // 租賃模式專用
+    required String buyoutTotal, // 買斷模式專用
+    required String paybackPeriod, // 買斷模式專用
   }) {
     // 計算金額
     final lightAmount = (double.tryParse(step3LightCount) ?? 0) *
@@ -406,34 +471,56 @@ class PdfGenerator {
               '${gatewayAmount.toStringAsFixed(0)}',
             ),
 
-            // 設備月租費（重要行，加大字體）
-            _buildPaybackRow(
-              '設備月租費',
-              '-',
-              '-',
-              '$monthlyRental\$',
-              isImportant: true,
-            ),
+            // 根據租賃/買斷模式顯示不同內容（版本 14.0）
+            if (isRentalMode) ...[
+              // 租賃模式：設備月租費
+              _buildPaybackRow(
+                '設備月租費',
+                '',
+                '',
+                '$monthlyRental\$',
+                isImportant: true,
+              ),
 
-            // 社區電費淨利(月)（重要行，加大字體，紅色）
-            _buildPaybackRow(
-              '社區電費淨利(月)',
-              '-',
-              '-',
-              '${monthlySaving.toStringAsFixed(0)}\$',
-              isRed: true,
-              isImportant: true,
-            ),
+              // 租賃模式：社區電費淨利(月)
+              _buildPaybackRow(
+                '社區電費淨利(月)',
+                '',
+                '',
+                '${monthlySaving.toStringAsFixed(0)}\$',
+                isRed: true,
+                isImportant: true,
+              ),
 
-            // 社區電費淨利(年)（重要行，加大字體，紅色）
-            _buildPaybackRow(
-              '社區電費淨利(年)',
-              '-',
-              '-',
-              '${yearlySaving.toStringAsFixed(0)}\$',
-              isRed: true,
-              isImportant: true,
-            ),
+              // 租賃模式：社區電費淨利(年)
+              _buildPaybackRow(
+                '社區電費淨利(年)',
+                '',
+                '',
+                '${yearlySaving.toStringAsFixed(0)}\$',
+                isRed: true,
+                isImportant: true,
+              ),
+            ] else ...[
+              // 買斷模式：買斷總費用
+              _buildPaybackRow(
+                '買斷總費用',
+                '',
+                '',
+                '$buyoutTotal\$',
+                isImportant: true,
+              ),
+
+              // 買斷模式：攤提時間
+              _buildPaybackRow(
+                '攤提時間',
+                '',
+                '',
+                '$paybackPeriod 個月',
+                isRed: true,
+                isImportant: true,
+              ),
+            ],
           ],
         ),
       ],

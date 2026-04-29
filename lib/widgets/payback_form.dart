@@ -40,6 +40,12 @@ class PaybackForm extends StatelessWidget {
   final TextEditingController buyoutTotalController;
   final TextEditingController paybackPeriodController;
 
+  // 買斷模式額外費用（版本 14.0 新增）
+  final TextEditingController installationFeeController; // 安裝工程費
+  final ValueChanged<String>? onInstallationFeeChanged;
+  final TextEditingController setupFeeController; // 設定費
+  final ValueChanged<String>? onSetupFeeChanged;
+
   // 資訊按鈕回調
   final void Function(String fieldName) onInfoTap;
 
@@ -79,6 +85,10 @@ class PaybackForm extends StatelessWidget {
     required this.totalMonthlySavingController,
     required this.buyoutTotalController,
     required this.paybackPeriodController,
+    required this.installationFeeController, // 版本 14.0
+    this.onInstallationFeeChanged, // 版本 14.0
+    required this.setupFeeController, // 版本 14.0
+    this.onSetupFeeChanged, // 版本 14.0
     required this.onInfoTap,
     this.onCalculateStep3,
     required this.step1Calculated,
@@ -119,6 +129,26 @@ class PaybackForm extends StatelessWidget {
                 integerOnly: true,
                 onChanged: onLightCountChanged,
               ),
+
+              // 買斷模式專用欄位（版本 14.0）
+              if (pricingMethod == '買斷') ...[
+                SizedBox(height: 16),
+                _buildInputFieldWithUnit(
+                  '安裝工程費',
+                  installationFeeController,
+                  '元/支',
+                  integerOnly: true,
+                  onChanged: onInstallationFeeChanged,
+                ),
+                SizedBox(height: 16),
+                _buildInputFieldWithUnit(
+                  '設定費（一次性）',
+                  setupFeeController,
+                  '元',
+                  integerOnly: true,
+                  onChanged: onSetupFeeChanged,
+                ),
+              ],
             ],
           ),
         ),
@@ -183,7 +213,7 @@ class PaybackForm extends StatelessWidget {
                 ),
               ] else if (pricingMethodsMatch && pricingMethod == '買斷') ...[
                 _buildReadOnlyFieldWithUnit(
-                  '買斷總費用（燈管＋網關）',
+                  '買斷總費用',
                   buyoutTotalController,
                   '元',
                   hasInfo: true,

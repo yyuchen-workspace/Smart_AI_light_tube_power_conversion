@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../utils/number_formatter.dart'; // 版本 14.0
 
+//step 2
 /// 電費組成分析圓餅圖（可展開）
 ///
 /// 顯示基本電價、流動電價、超約費用的佔比
 /// 包含互動式圖例，顯示具體金額
 class ElectricityCostPieChart extends StatelessWidget {
-  final double basicElectricity;   // 基本電價（元）
-  final double flowElectricity;    // 流動電價（元）
-  final double excessDemand;       // 超約費用（元）
+  final double basicElectricity; // 基本電價（元）
+  final double flowElectricity; // 流動電價（元）
+  final double excessDemand; // 超約費用（元）
 
   const ElectricityCostPieChart({
     Key? key,
@@ -63,7 +65,8 @@ class ElectricityCostPieChart extends StatelessWidget {
                         // 基本電價（藍色）
                         PieChartSectionData(
                           value: basicElectricity,
-                          title: '${(basicElectricity / total * 100).toStringAsFixed(1)}%',
+                          title:
+                              '${(basicElectricity / total * 100).toStringAsFixed(1)}%',
                           color: Colors.blue[400],
                           radius: 80,
                           titleStyle: TextStyle(
@@ -75,7 +78,8 @@ class ElectricityCostPieChart extends StatelessWidget {
                         // 流動電價（橙色）
                         PieChartSectionData(
                           value: flowElectricity,
-                          title: '${(flowElectricity / total * 100).toStringAsFixed(1)}%',
+                          title:
+                              '${(flowElectricity / total * 100).toStringAsFixed(1)}%',
                           color: Colors.orange[400],
                           radius: 80,
                           titleStyle: TextStyle(
@@ -88,7 +92,8 @@ class ElectricityCostPieChart extends StatelessWidget {
                         if (excessDemand > 0)
                           PieChartSectionData(
                             value: excessDemand,
-                            title: '${(excessDemand / total * 100).toStringAsFixed(1)}%',
+                            title:
+                                '${(excessDemand / total * 100).toStringAsFixed(1)}%',
                             color: Colors.red[400],
                             radius: 80,
                             titleStyle: TextStyle(
@@ -108,16 +113,20 @@ class ElectricityCostPieChart extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildLegendItem('基本電價', basicElectricity, Colors.blue[400]!),
+                      _buildLegendItem(
+                          '基本電價', basicElectricity, Colors.blue[400]!),
                       SizedBox(height: 8),
-                      _buildLegendItem('流動電價', flowElectricity, Colors.orange[400]!),
+                      _buildLegendItem(
+                          '流動電價', flowElectricity, Colors.orange[400]!),
                       if (excessDemand > 0) ...[
                         SizedBox(height: 8),
-                        _buildLegendItem('超約費用', excessDemand, Colors.red[400]!),
+                        _buildLegendItem(
+                            '超約費用', excessDemand, Colors.red[400]!),
                       ],
                       SizedBox(height: 16),
                       Divider(),
-                      _buildLegendItem('總計', total, Colors.grey[700]!, isBold: true),
+                      _buildLegendItem('總計', total, Colors.grey[700]!,
+                          isBold: true),
                     ],
                   ),
                 ),
@@ -130,7 +139,8 @@ class ElectricityCostPieChart extends StatelessWidget {
   }
 
   /// 建構圖例項目
-  Widget _buildLegendItem(String label, double value, Color color, {bool isBold = false}) {
+  Widget _buildLegendItem(String label, double value, Color color,
+      {bool isBold = false}) {
     return Row(
       children: [
         Container(
@@ -154,7 +164,7 @@ class ElectricityCostPieChart extends StatelessWidget {
                 ),
               ),
               Text(
-                '${_roundUpFirstDecimal(value).toStringAsFixed(1)} 元',
+                '${NumberFormatter.formatWithComma(_roundUpFirstDecimal(value), decimals: 1)} 元',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: isBold ? FontWeight.bold : FontWeight.normal,

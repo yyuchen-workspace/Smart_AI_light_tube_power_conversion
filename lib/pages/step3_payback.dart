@@ -46,6 +46,12 @@ class Step3Payback extends StatelessWidget {
   final TextEditingController buyoutTotalController;
   final TextEditingController paybackPeriodController;
 
+  // 買斷模式額外費用（版本 14.0 新增）
+  final TextEditingController installationFeeController; // 安裝工程費
+  final ValueChanged<String>? onInstallationFeeChanged;
+  final TextEditingController setupFeeController; // 設定費
+  final ValueChanged<String>? onSetupFeeChanged;
+
   // 資訊按鈕回調
   final void Function(String fieldName) onInfoTap;
 
@@ -82,6 +88,10 @@ class Step3Payback extends StatelessWidget {
     required this.totalMonthlySavingController,
     required this.buyoutTotalController,
     required this.paybackPeriodController,
+    required this.installationFeeController, // 版本 14.0
+    this.onInstallationFeeChanged, // 版本 14.0
+    required this.setupFeeController, // 版本 14.0
+    this.onSetupFeeChanged, // 版本 14.0
     required this.onInfoTap,
     this.onCalculateStep3,
     required this.step1Calculated,
@@ -138,6 +148,10 @@ class Step3Payback extends StatelessWidget {
             totalMonthlySavingController: totalMonthlySavingController,
             buyoutTotalController: buyoutTotalController,
             paybackPeriodController: paybackPeriodController,
+            installationFeeController: installationFeeController, // 版本 14.0
+            onInstallationFeeChanged: onInstallationFeeChanged, // 版本 14.0
+            setupFeeController: setupFeeController, // 版本 14.0
+            onSetupFeeChanged: onSetupFeeChanged, // 版本 14.0
             onInfoTap: onInfoTap,
             onCalculateStep3: onCalculateStep3,
             step1Calculated: step1Calculated,
