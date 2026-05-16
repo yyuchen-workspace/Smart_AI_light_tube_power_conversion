@@ -35,12 +35,14 @@ jobs:
       run: flutter doctor -v
       
     - name: Install dependencies
+      working-directory: ./Smart_AI_Tube_Light
       run: flutter pub get
-      
+
     - name: Enable web
       run: flutter config --enable-web
-      
+
     - name: Build web (with optimization)
+      working-directory: ./Smart_AI_Tube_Light
       run: |
         flutter build web \
           --release \
@@ -55,7 +57,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        path: './build/web'
+        path: './Smart_AI_Tube_Light/build/web'
         
     - name: Deploy to GitHub Pages
       id: deployment
